@@ -7,6 +7,7 @@ The `MarkdownView` component is a versatile and customizable Markdown renderer d
 - **Customizable Appearance:** Offers extensive support for customizing text appearance, including font size, color, and line break modes for different Markdown elements.
 - **Bindable Properties:** Enables dynamic updates and data binding for Markdown content and styling properties.
 - **Supported Markdown Elements:** Renders basic Markdown elements, including headers, lists, block quotes, images, and code blocks.
+- **Multiple Image Sources:** The `MarkdownView` supports various sources for displaying images within Markdown content, including image URLs, local file paths, and base64 encoded strings. This flexibility allows for a wide range of image content to be seamlessly integrated into your Markdown text.
 
 ## Bindable Properties
 
@@ -24,15 +25,29 @@ The `MarkdownView` component offers several bindable properties to customize the
 - **CodeBlockFontSize:** Sets the font size for code blocks.
 - **PlaceholderBackgroundColor:** Sets the background color for placeholder elements, such as space between Markdown elements.
 
-## Supported Markdown Tags
+## Supported Markdown Tags and Features
 
-The `MarkdownView` supports a subset of Markdown elements, suitable for most text formatting needs:
+The `MarkdownView` supports a subset of Markdown elements and features, suitable for most text formatting needs:
 
-- **Headers (H1, H2, H3):** `#`, `##`, `###` at the beginning of a line.
-- **Unordered Lists:** Lines starting with `-` or `*`.
-- **Block Quotes:** Lines starting with `>`.
-- **Images:** Markdown image syntax `![alt text](image_url)`.
-- **Code Blocks:** Inline code with `` `code` `` and fenced code blocks with triple backticks ```.
+- **Headers (H1, H2, H3):** Marked by `#`, `##`, `###` at the beginning of a line.
+- **Unordered Lists:** Created with lines starting with `-` or `*`.
+- **Block Quotes:** Denoted by lines starting with `>`.
+- **Images:** Uses the Markdown image syntax `![alt text](image_url)`, where the URL can be an http(s) link, a local file path, or a base64 encoded string. This enables the embedding of images from various sources directly within the Markdown content.
+- **Code Blocks:** Supports inline code with `` `code` `` and fenced code blocks with triple backticks ```.
+
+### Image Support Details
+
+- **Image URLs:** Direct links to images hosted online.
+- **Local File Paths:** Path to an image file stored locally within the application's directories.
+- **Base64 Encoded Strings:** A base64 encoded representation of an image, allowing for embedding image data directly within the Markdown string.
+
+To include an image, simply use the standard Markdown image syntax with the desired source type. The `MarkdownView` component will automatically detect and handle the image source accordingly, ensuring that images are rendered correctly regardless of the source type.
+
+```markdown
+![Alt text](http://example.com/image.jpg)  // Image URL
+![Alt text](image.png)      // Local file
+![Alt text](base64,...)     // Base64 encoded string
+```
 
 ## Customization and Extension
 

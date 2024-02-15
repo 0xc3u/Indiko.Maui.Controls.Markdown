@@ -62,9 +62,12 @@ To include an image, simply use the standard Markdown image syntax with the desi
 ![Alt text](base64,...)     // Base64 encoded string
 ```
 
-## Customization and Extension
+### Platform supported
 
-The `MarkdownView` component is designed with customization in mind. Developers can extend or modify it to support additional Markdown elements or to enhance the styling and rendering logic. The use of bindable properties enables seamless integration with MVVM patterns, allowing for dynamic content updates and styling adjustments.
+| Platform | Minimum Version Supported |
+|----------|--------------------------|
+| iOS      |   14.2+         |
+| Android  |   21+   |
 
 ## Usage
 

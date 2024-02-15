@@ -2,7 +2,7 @@
 
 # MarkdownView Component for MAUI.NET
 
-The `MarkdownView` component is a versatile and customizable Markdown renderer designed for MAUI.NET applications. It extends `ContentView` and allows developers to display Markdown-formatted text within their MAUI.NET applications, providing a rich text experience.
+The `MarkdownView` component is a versatile and customizable Markdown renderer designed for MAUI.NET applications. It allows developers to display Markdown-formatted text within their MAUI.NET applications, providing a rich text experience.
 
 ## Build Status
 ![ci](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/actions/workflows/ci.yml/badge.svg)

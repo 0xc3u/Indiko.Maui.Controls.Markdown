@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:vm="clr-namespace:Indiko.Maui.Controls.Markdown.Sample.ViewModels"
+			 xmlns:models="clr-namespace:Indiko.Maui.Controls.Markdown.Sample.Models"
+             xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
+             x:Class="Indiko.Maui.Controls.Markdown.Sample.MainPage"
+			 x:DataType="vm:MainPageViewModel"
+             Title="Indiko.Maui.Controls.Markdown.Sample">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+
+            <Label Text="Markdown View" FontSize="Header" TextColor="{StaticResource Primary}"></Label>
+            
+            <idk:MarkdownView MarkdownText="{Binding MarkdownText}" 
+                          H1FontSize="20"
+                          H1Color="{StaticResource Blue100Accent}" 
+                          H2FontSize="18"
+                          H2Color="{StaticResource Blue200Accent}"
+                          H3FontSize="16"
+                          H3Color="{StaticResource Blue300Accent}"
+                          TextColor="{StaticResource Black}"
+                          CodeBlockBackgroundColor="{StaticResource GrayQuote}"
+                          CodeBlockTextColor="{StaticResource Gray500}"
+                          CodeBlockBorderColor="{StaticResource GrayQuoteBorder}"
+                          PlaceholderBackgroundColor="{StaticResource White}"
+                          TextFontSize="12">
+
+            </idk:MarkdownView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

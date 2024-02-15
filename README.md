@@ -2,7 +2,18 @@
 
 # MarkdownView Component for MAUI.NET
 
-The `MarkdownView` component is a versatile and customizable Markdown renderer designed for MAUI.NET applications. It extends `ContentView` and allows developers to display Markdown-formatted text within their MAUI.NET applications, providing a rich text experience. This document outlines the key features, bindable properties, and supported Markdown tags of the `MarkdownView` component.
+The `MarkdownView` component is a versatile and customizable Markdown renderer designed for MAUI.NET applications. It extends `ContentView` and allows developers to display Markdown-formatted text within their MAUI.NET applications, providing a rich text experience.
+
+## Build Status
+![ci](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/actions/workflows/ci.yml/badge.svg)
+
+## Install Controls
+[![NuGet](https://img.shields.io/nuget/v/Indiko.Maui.Controls.Markdown.svg?label=NuGet)](https://www.nuget.org/packages/Indiko.Maui.Controls.Markdown/)
+
+Available on [NuGet](http://www.nuget.org/packages/Indiko.Maui.Controls.Markdown.Markdown).
+
+Install with the dotnet CLI: `dotnet add package Indiko.Maui.Controls.Markdown`, or through the NuGet Package Manager in Visual Studio.
+
 
 ## Features
 
@@ -60,7 +71,7 @@ The `MarkdownView` component is designed with customization in mind. Developers 
 To use the `MarkdownView` in your MAUI.NET application, include it in your XAML or C# code and bind or set the `MarkdownText` property to your Markdown-formatted string. Customize the appearance using the available bindable properties to match your application's design.
 
 ```xml
-xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
+xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown.Markdown;assembly=Indiko.Maui.Controls.Markdown.Markdown"
 
 ...
 

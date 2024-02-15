@@ -43,11 +43,11 @@ The `MarkdownView` component is designed with customization in mind. Developers 
 To use the `MarkdownView` in your MAUI.NET application, include it in your XAML or C# code and bind or set the `MarkdownText` property to your Markdown-formatted string. Customize the appearance using the available bindable properties to match your application's design.
 
 ```xml
-<local:MarkdownView MarkdownText="{Binding YourMarkdownContent}" />
+xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
+
+...
+
+<idk:MarkdownView MarkdownText="{Binding YourMarkdownContent}" />
 ```
 
 Ensure to include the namespace reference for `MarkdownView` in your XAML or add the component programmatically in your C# code.
-
-## Conclusion
-
-The `MarkdownView` component for MAUI.NET provides a powerful and flexible way to include Markdown rendering capabilities in your applications. With its customizable properties and support for essential Markdown elements, it allows for the creation of rich text content, enhancing the user experience.

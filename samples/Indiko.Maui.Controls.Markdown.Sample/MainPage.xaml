@@ -20,12 +20,22 @@
                           H2Color="{StaticResource Blue200Accent}"
                           H3FontSize="16"
                           H3Color="{StaticResource Blue300Accent}"
-                          TextColor="{StaticResource Black}"
                           CodeBlockBackgroundColor="{StaticResource GrayQuote}"
-                          CodeBlockTextColor="{StaticResource Gray500}"
+                          CodeBlockTextColor="{StaticResource Gray600}"
                           CodeBlockBorderColor="{StaticResource GrayQuoteBorder}"
+                          CodeBlockFontFace="CamingoCodeRegular"
+                          BlockQuoteBackgroundColor="{StaticResource Yellow300Accent}"
+                          BlockQuoteTextColor="{StaticResource Gray600}"
+                          BlockQuoteBorderColor="{StaticResource Yellow100Accent}"
+                          BlockQuoteFontFace="CamingoCodeItalic"
                           PlaceholderBackgroundColor="{StaticResource White}"
-                          TextFontSize="12">
+                          TextFontFace="OpenSansRegular"
+                          TextFontSize="13"
+                          TextColor="{StaticResource Black}"
+                          HyperlinkColor="{StaticResource Blue100Accent}"
+                          LineColor="{StaticResource GrayQuoteBorder}"
+                          LinkCommand="{Binding LinkReceivedCommand}"
+                          OnHyperLinkClicked="MarkdownView_HyperLinkClicked">
 
             </idk:MarkdownView>
 

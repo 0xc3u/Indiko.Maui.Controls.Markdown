@@ -20,8 +20,8 @@
 		<Authors>INDIKO</Authors>
 		<Copyright>Copyright © INDIKO and contributors</Copyright>
 		<IsPackable>True</IsPackable>
-		<PackageProjectUrl>https://github.com/0xc3u/Idk.Maui.Controls</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/0xc3u/Idk.Maui.Controls</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/0xc3u/Indiko.Maui.Controls.Markdown</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/0xc3u/Indiko.Maui.Controls.Markdown</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>dotnet-maui;maui;ui;markdown;control;</PackageTags>
 		<IncludeSymbols>True</IncludeSymbols>

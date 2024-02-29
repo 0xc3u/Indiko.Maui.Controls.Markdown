@@ -1,12 +1,21 @@
 ﻿using Indiko.Maui.Controls.Markdown.Utils;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using System.Windows.Input;
+using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
 
+public class LinkEventArgs : EventArgs
+{
+    public string Url { get; set; }
+}
+
 public class MarkdownView : ContentView
 {
-    // MarkdownText property
+    public delegate void HyperLinkClicked(object Sender, LinkEventArgs e);
+    public static event HyperLinkClicked OnHyperLinkClicked;
+
     public static readonly BindableProperty MarkdownTextProperty =
         BindableProperty.Create(nameof(MarkdownText), typeof(string), typeof(MarkdownView), default(string), propertyChanged: OnMarkdownTextChanged);
 
@@ -34,7 +43,6 @@ public class MarkdownView : ContentView
         set => SetValue(LineBreakModeHeaderProperty, value);
     }
 
-    // H1Color property
     public static readonly BindableProperty H1ColorProperty =
         BindableProperty.Create(nameof(H1Color), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
 
@@ -54,7 +62,6 @@ public class MarkdownView : ContentView
         set => SetValue(H1FontSizeProperty, value);
     }
 
-    // H2Color property
     public static readonly BindableProperty H2ColorProperty =
         BindableProperty.Create(nameof(H2Color), typeof(Color), typeof(MarkdownView), Colors.DarkGray, propertyChanged: OnMarkdownTextChanged);
 
@@ -94,6 +101,8 @@ public class MarkdownView : ContentView
         set => SetValue(H3FontSizeProperty, value);
     }
 
+    /* ****** Text Styling ******** */
+
     public static readonly BindableProperty TextColorProperty =
        BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
 
@@ -113,6 +122,39 @@ public class MarkdownView : ContentView
         set => SetValue(TextFontSizeProperty, value);
     }
 
+    public static readonly BindableProperty TextFontFaceProperty =
+      BindableProperty.Create(nameof(TextFontFace), typeof(string), typeof(MarkdownView), defaultValue: "OpenSansRegular", propertyChanged: OnMarkdownTextChanged);
+
+    public string TextFontFace
+    {
+        get => (string)GetValue(TextFontFaceProperty);
+        set => SetValue(TextFontFaceProperty, value);
+    }
+
+    /* ****** Spacer Block Styling ******** */
+
+    public static readonly BindableProperty PlaceholderBackgroundColorProperty =
+    BindableProperty.Create(nameof(PlaceholderBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+
+    public Color PlaceholderBackgroundColor
+    {
+        get => (Color)GetValue(PlaceholderBackgroundColorProperty);
+        set => SetValue(PlaceholderBackgroundColorProperty, value);
+    }
+
+    /* ****** Line Block Styling ******** */
+
+    public static readonly BindableProperty LineColorProperty =
+    BindableProperty.Create(nameof(LineColor), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
+
+    public Color LineColor
+    {
+        get => (Color)GetValue(LineColorProperty);
+        set => SetValue(LineColorProperty, value);
+    }
+
+    /* ****** Code Block Styling ******** */
+
     public static readonly BindableProperty CodeBlockBackgroundColorProperty =
        BindableProperty.Create(nameof(CodeBlockBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
 
@@ -129,15 +171,6 @@ public class MarkdownView : ContentView
     {
         get => (Color)GetValue(CodeBlockBorderColorProperty);
         set => SetValue(CodeBlockBorderColorProperty, value);
-    }
-
-    public static readonly BindableProperty PlaceholderBackgroundColorProperty =
-     BindableProperty.Create(nameof(PlaceholderBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
-
-    public Color PlaceholderBackgroundColor
-    {
-        get => (Color)GetValue(PlaceholderBackgroundColorProperty);
-        set => SetValue(PlaceholderBackgroundColorProperty, value);
     }
 
     public static readonly BindableProperty CodeBlockTextColorProperty =
@@ -157,6 +190,82 @@ public class MarkdownView : ContentView
     {
         get => (double)GetValue(CodeBlockFontSizeProperty);
         set => SetValue(CodeBlockFontSizeProperty, value);
+    }
+
+    public static readonly BindableProperty CodeBlockFontFaceProperty =
+      BindableProperty.Create(nameof(CodeBlockFontFace), typeof(string), typeof(MarkdownView), defaultValue: "OpenSansRegular", propertyChanged: OnMarkdownTextChanged);
+
+    public string CodeBlockFontFace
+    {
+        get => (string)GetValue(CodeBlockFontFaceProperty);
+        set => SetValue(CodeBlockFontFaceProperty, value);
+    }
+
+    /* ****** BlockQuote Block Styling ******** */
+
+    public static readonly BindableProperty BlockQuoteBackgroundColorProperty =
+     BindableProperty.Create(nameof(BlockQuoteBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
+
+    public Color BlockQuoteBackgroundColor
+    {
+        get => (Color)GetValue(BlockQuoteBackgroundColorProperty);
+        set => SetValue(BlockQuoteBackgroundColorProperty, value);
+    }
+
+    public static readonly BindableProperty BlockQuoteBorderColorProperty =
+      BindableProperty.Create(nameof(BlockQuoteBorderColor), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
+
+    public Color BlockQuoteBorderColor
+    {
+        get => (Color)GetValue(BlockQuoteBorderColorProperty);
+        set => SetValue(BlockQuoteBorderColorProperty, value);
+    }
+
+    public static readonly BindableProperty BlockQuoteTextColorProperty =
+      BindableProperty.Create(nameof(BlockQuoteTextColor), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
+
+    public Color BlockQuoteTextColor
+    {
+        get => (Color)GetValue(BlockQuoteTextColorProperty);
+        set => SetValue(BlockQuoteTextColorProperty, value);
+    }
+
+    public static readonly BindableProperty BlockQuoteFontFaceProperty =
+     BindableProperty.Create(nameof(BlockQuoteFontFace), typeof(string), typeof(MarkdownView), defaultValue: "Consolas", propertyChanged: OnMarkdownTextChanged);
+
+    public string BlockQuoteFontFace
+    {
+        get => (string)GetValue(BlockQuoteFontFaceProperty);
+        set => SetValue(BlockQuoteFontFaceProperty, value);
+    }
+
+    /* ****** Hyplerlink Styling ******** */
+
+    public static readonly BindableProperty HyperlinkColorProperty =
+     BindableProperty.Create(nameof(HyperlinkColor), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
+
+    public Color HyperlinkColor
+    {
+        get => (Color)GetValue(HyperlinkColorProperty);
+        set => SetValue(HyperlinkColorProperty, value);
+    }
+
+    public static readonly BindableProperty LinkCommandProperty =
+    BindableProperty.Create(nameof(LinkCommand), typeof(ICommand), typeof(MarkdownView));
+
+    public ICommand LinkCommand
+    {
+        get => (ICommand)GetValue(LinkCommandProperty);
+        set => SetValue(LinkCommandProperty, value);
+    }
+
+    public static readonly BindableProperty LinkCommandParameterProperty =
+        BindableProperty.Create(nameof(LinkCommandParameter), typeof(object), typeof(MarkdownView));
+
+    public object LinkCommandParameter
+    {
+        get => GetValue(LinkCommandParameterProperty);
+        set => SetValue(LinkCommandParameterProperty, value);
     }
 
     private static void OnMarkdownTextChanged(BindableObject bindable, object oldValue, object newValue)
@@ -206,10 +315,8 @@ public class MarkdownView : ContentView
         int gridRow = 0;
         bool isUnorderedListActive = false;
 
-
         foreach (var line in lines.Select(line => line.Trim()))
         {
-            // Add a new RowDefinition for the content
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             if (line.StartsWith("# ") || line.StartsWith("## ") || line.StartsWith("### "))
@@ -220,6 +327,7 @@ public class MarkdownView : ContentView
                     TextColor = line.StartsWith("# ") ? H1Color : line.StartsWith("## ") ? H2Color : H3Color,
                     FontAttributes = FontAttributes.Bold,
                     FontSize = line.StartsWith("# ") ? H1FontSize : line.StartsWith("## ") ? H2FontSize : H3FontSize,
+                    FontFamily = TextFontFace,
                     LineBreakMode = LineBreakModeHeader,
                     HorizontalOptions = LayoutOptions.Start,
                     VerticalOptions = LayoutOptions.Center
@@ -241,13 +349,13 @@ public class MarkdownView : ContentView
                 Grid.SetColumnSpan(image, 2);
                 Grid.SetRow(image, gridRow++);
             }
-            else if (line.StartsWith(">"))
+            else if (line.StartsWith('>'))
             {
                 var box = new Frame
                 {
                     Margin = new Thickness(0),
-                    BackgroundColor = CodeBlockBorderColor,
-                    BorderColor = CodeBlockBorderColor,
+                    BackgroundColor = BlockQuoteBorderColor,
+                    BorderColor = BlockQuoteBorderColor,
                     CornerRadius = 0,
                     HorizontalOptions = LayoutOptions.Fill,
                     VerticalOptions = LayoutOptions.Fill
@@ -255,8 +363,9 @@ public class MarkdownView : ContentView
 
                 var blockQuotelabel = new Label
                 {
-                    FormattedText = CreateFormattedString(line.Substring(1).Trim(), CodeBlockTextColor),
+                    FormattedText = CreateFormattedString(line.Substring(1).Trim(), BlockQuoteTextColor),
                     LineBreakMode = LineBreakModeText,
+                    FontFamily = BlockQuoteFontFace,
                     HorizontalOptions = LayoutOptions.Fill,
                     VerticalOptions = LayoutOptions.Center,
                     Padding = new Thickness(5)
@@ -272,7 +381,6 @@ public class MarkdownView : ContentView
                         new ColumnDefinition { Width = GridLength.Star } // For text
                     }
                 };
-               
 
                 blockQuoteGrid.Children.Add(box);
                 Grid.SetRow(box, 0);
@@ -286,17 +394,14 @@ public class MarkdownView : ContentView
                 {
                     Padding = new Thickness(0),
                     CornerRadius = 0,
-                    BackgroundColor = CodeBlockBackgroundColor,
-                    BorderColor = CodeBlockBackgroundColor,
+                    BackgroundColor = BlockQuoteBackgroundColor,
+                    BorderColor = BlockQuoteBackgroundColor,
                     Content  = blockQuoteGrid
                 };
 
                 grid.Children.Add(blockquote);
                 Grid.SetColumnSpan(blockquote, 2);
                 Grid.SetRow(blockquote, gridRow++);
-
-               
-
             }
             else if (line.StartsWith("- ") || line.StartsWith("* "))
             {
@@ -309,6 +414,7 @@ public class MarkdownView : ContentView
                 {
                     Text = "\u2022",
                     FontSize = 14,
+                    FontFamily = TextFontFace,
                     VerticalOptions = LayoutOptions.Start,
                     HorizontalOptions = LayoutOptions.Start,
                     Margin = new Thickness(5, 0)
@@ -318,8 +424,8 @@ public class MarkdownView : ContentView
                 Grid.SetRow(bulletPoint, gridRow);
                 Grid.SetColumn(bulletPoint, 0);
 
-                var listItemText = line.Substring(2); // Remove the "- " or "* " marker
-                var formattedString = CreateFormattedString(listItemText, TextColor); // Use a method to handle markdown within the list item
+                var listItemText = line[2..];
+                var formattedString = CreateFormattedString(listItemText, TextColor);
 
                 var listItemLabel = new Label
                 {
@@ -343,18 +449,33 @@ public class MarkdownView : ContentView
                 Grid.SetColumnSpan(codeBlock, 2);
                 gridRow++;
             }
+            else if (line.StartsWith("---") || line.StartsWith("***") || line.StartsWith("___"))
+            {
+                var horizontalLine = new BoxView
+                {
+                    HeightRequest = 2,
+                    Color = LineColor,
+                    BackgroundColor = LineColor,
+                    HorizontalOptions = LayoutOptions.Fill,
+                    VerticalOptions = LayoutOptions.Center
+                };
+
+                grid.Children.Add(horizontalLine);
+                Grid.SetRow(horizontalLine, gridRow);
+                Grid.SetColumnSpan(horizontalLine, 2);
+
+                gridRow++;
+            }
             else // Regular text
             {
                 if (isUnorderedListActive)
                 {
                     isUnorderedListActive = false;
-                    // Optionally add extra space after a list
                     grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
                     grid.Children.Add(new BoxView { Color = Colors.Transparent });
                     gridRow++;
                 }
 
-                // Handle regular text and potential formatting
                 var formattedString = CreateFormattedString(line, TextColor);
                 var label = new Label
                 {
@@ -367,11 +488,10 @@ public class MarkdownView : ContentView
                 grid.Children.Add(label);
                 Grid.SetRow(label, gridRow);
                 Grid.SetColumn(label, 0);
-                Grid.SetColumnSpan(label, 2); // Span across both columns for normal text
+                Grid.SetColumnSpan(label, 2);
 
                 gridRow++;
 
-                // After handling an element, add an empty row for space
                 AddEmptyRow(grid, ref gridRow);
             }
         }
@@ -381,7 +501,7 @@ public class MarkdownView : ContentView
 
     private void AddEmptyRow(Grid grid, ref int gridRow)
     {
-        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10) }); // Adjust the space as needed
+        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10) });
         var spacer = new BoxView { Color = PlaceholderBackgroundColor };
         grid.Children.Add(spacer);
         Grid.SetColumnSpan(spacer, 2);
@@ -392,14 +512,12 @@ public class MarkdownView : ContentView
     {
         try
         {
-            // Image handling
             int startIndex = line.IndexOf('(') + 1;
             int endIndex = line.IndexOf(')', startIndex);
-            string imageUrl = line.Substring(startIndex, endIndex - startIndex);
+            string imageUrl = line[startIndex..endIndex];
 
             ImageSource imageSource = default;
 
-            // check if imageUrl is a base64 string
             if (Validations.IsValidBase64String(imageUrl))
             {
                 byte[] imageBytes = Convert.FromBase64String(imageUrl);
@@ -414,15 +532,13 @@ public class MarkdownView : ContentView
                 imageSource = ImageSource.FromFile(imageUrl);
             }
 
-            var image = new Image
+            return new Image
             {
                 Source = imageSource,
                 Aspect = Aspect.AspectFit,
                 HorizontalOptions = LayoutOptions.Fill,
                 Margin = new Thickness(0, 0, 0, 0)
             };
-
-            return image;
         }catch(Exception ex)
         {
             Console.WriteLine(ex.Message);
@@ -443,8 +559,8 @@ public class MarkdownView : ContentView
                 Text = codeText.Trim('`', ' '),
                 FontSize = CodeBlockFontSize,
                 FontAutoScalingEnabled = true,
-                FontFamily = "Consolas", // Use a monospaced font family
-                TextColor = CodeBlockTextColor, // Use a suitable text color for code
+                FontFamily = CodeBlockFontFace,
+                TextColor = CodeBlockTextColor,
                 BackgroundColor = Colors.Transparent
             }
         };
@@ -452,46 +568,78 @@ public class MarkdownView : ContentView
 
     private FormattedString CreateFormattedString(string line, Color textColor)
     {
-        // Create a new FormattedString
         var formattedString = new FormattedString();
 
-        // This is a simple parser and will not handle nested or incorrect markdown well.
-        // You may want to use or develop a more robust parser for complex markdown.
-        var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|`.*?`)");
+        var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|`.*?`|\[.*?\]\(.*?\))");
 
         foreach (var part in parts)
         {
-            Span span = new Span();
+            Span span = new();
 
-            if (part.StartsWith("**") && part.EndsWith("**"))
+            if (part.StartsWith("`") && part.EndsWith("`"))
+            {
+                span.Text = part.Trim('`');
+                span.BackgroundColor = CodeBlockBackgroundColor;
+                span.FontFamily = CodeBlockFontFace;
+                span.TextColor = CodeBlockTextColor;
+            }
+            else if (part.StartsWith("**") && part.EndsWith("**"))
             {
                 span.Text = part.Trim('*', ' ');
                 span.FontAttributes = FontAttributes.Bold;
-            }
-            else if (part.StartsWith("_") && part.EndsWith("_"))
-            {
-                span.Text = part.Trim('_', ' ');
-                span.FontAttributes = FontAttributes.Italic;
+                span.TextColor = textColor;
+                span.FontFamily = TextFontFace;
             }
             else if (part.StartsWith("__") && part.EndsWith("__"))
             {
                 span.Text = part.Trim('_', ' ');
                 span.FontAttributes = FontAttributes.Bold;
-                // If you want bold and italic, you can combine flags:
-                // span.FontAttributes = FontAttributes.Bold | FontAttributes.Italic;
+                span.TextColor = textColor;
+                span.FontFamily = TextFontFace;
+            }
+            else if (part.StartsWith('_') && part.EndsWith('_'))
+            {
+                span.Text = part.Trim('_', ' ');
+                span.FontAttributes = FontAttributes.Italic;
+                span.TextColor = textColor;
+                span.FontFamily = TextFontFace;
+            }
+            else if (part.StartsWith('[') && part.Contains("](")) // Link detection
+            {
+                var linkText = part[1..part.IndexOf(']')];
+                var linkUrl = part.Substring(part.IndexOf('(') + 1, part.IndexOf(')') - part.IndexOf('(') - 1);
+
+                span.Text = linkText;
+                span.TextColor = HyperlinkColor;
+                span.TextDecorations = TextDecorations.Underline;
+                span.FontFamily = TextFontFace;
+
+                var linkTapGestureRecognizer = new TapGestureRecognizer();
+                linkTapGestureRecognizer.Tapped += (_, __) => TriggerHyperLinkClicked(linkUrl);
+                span.GestureRecognizers.Add(linkTapGestureRecognizer);
             }
             else
             {
                 span.Text = part;
+                span.TextColor = textColor;
+                span.FontFamily = TextFontFace;
             }
 
-            // Apply the same text color for all spans here, or customize as needed.
-            span.TextColor = textColor;
             span.FontSize = TextFontSize;
 
             formattedString.Spans.Add(span);
         }
 
         return formattedString;
-    }   
+    }
+
+    internal void TriggerHyperLinkClicked(string url)
+    {
+        OnHyperLinkClicked?.Invoke(this,new LinkEventArgs { Url = url });
+
+        if (LinkCommand?.CanExecute(url) == true)
+        {
+            LinkCommand.Execute(url);
+        }
+    }
 }

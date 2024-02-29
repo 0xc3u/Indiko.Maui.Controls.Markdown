@@ -50,6 +50,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\Fonts\CamingoCode-Bold.ttf" />
+	  <None Remove="Resources\Fonts\CamingoCode-BoldItalic.ttf" />
+	  <None Remove="Resources\Fonts\CamingoCode-Italic.ttf" />
+	  <None Remove="Resources\Fonts\CamingoCode-Regular.ttf" />
 	  <None Remove="Resources\Images\dev.png" />
 	  <None Remove="Resources\Images\dotnet_bot.svg" />
 	</ItemGroup>

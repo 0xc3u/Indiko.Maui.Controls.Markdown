@@ -29,10 +29,15 @@
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
 
-	<key>NSHealthShareUsageDescription</key>
-	<string>We need access to your health data to read your steps and other metrics.</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>We need access to write your steps and other metrics.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>OpenSans-Regular.ttf</string>
+		<string>OpenSans-SemiBold.ttf</string>
+		<string>CamingoCode-Bold.ttf</string>
+		<string>CamingoCode-BoldItalic.ttf</string>
+		<string>CamingoCode-Italic.ttf</string>
+		<string>CamingoCode-Regular.ttf</string>
+	</array>
 	
 </dict>
 </plist>

@@ -19,4 +19,8 @@ public partial class MainPage : ContentPage
 		mainPageViewModel.OnAppearing(null);
 	}
 
+    private void MarkdownView_HyperLinkClicked(object sender, LinkEventArgs e)
+    {
+		DisplayAlert(Title, e.Url, "OK");
+    }
 }

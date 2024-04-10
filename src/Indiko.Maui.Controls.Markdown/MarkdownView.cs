@@ -13,6 +13,8 @@ public class LinkEventArgs : EventArgs
 
 public class MarkdownView : ContentView
 {
+    private Dictionary<string, ImageSource> _imageCache = [];
+
     public delegate void HyperLinkClicked(object Sender, LinkEventArgs e);
     public static event HyperLinkClicked OnHyperLinkClicked;
 
@@ -293,7 +295,7 @@ public class MarkdownView : ContentView
                 new ColumnDefinition { Width = GridLength.Star } // For text
             }
         };
-
+     
         // Split markdown text by new lines correctly
         var lineSplitSymbole = "\n";
 
@@ -508,42 +510,29 @@ public class MarkdownView : ContentView
         Grid.SetRow(spacer, gridRow++);
     }
 
-    private static Image CreateImageBlock(string line)
+    private Image CreateImageBlock(string line)
     {
-        try
+        int startIndex = line.IndexOf('(') + 1;
+        int endIndex = line.IndexOf(')', startIndex);
+        string imageUrl = line[startIndex..endIndex];
+
+        var image = new Image
         {
-            int startIndex = line.IndexOf('(') + 1;
-            int endIndex = line.IndexOf(')', startIndex);
-            string imageUrl = line[startIndex..endIndex];
+            Aspect = Aspect.AspectFit,
+            HorizontalOptions = LayoutOptions.Fill,
+            Margin = new Thickness(0)
+        };
 
-            ImageSource imageSource = default;
-
-            if (Validations.IsValidBase64String(imageUrl))
-            {
-                byte[] imageBytes = Convert.FromBase64String(imageUrl);
-                imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
-            }
-            else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
-            {
-                imageSource = ImageSource.FromUri(uriResult);
-            }
-            else
-            {
-                imageSource = ImageSource.FromFile(imageUrl);
-            }
-
-            return new Image
-            {
-                Source = imageSource,
-                Aspect = Aspect.AspectFit,
-                HorizontalOptions = LayoutOptions.Fill,
-                Margin = new Thickness(0, 0, 0, 0)
-            };
-        }catch(Exception ex)
+        LoadImageAsync(imageUrl).ContinueWith(task =>
         {
-            Console.WriteLine(ex.Message);
-        }
-        return default;
+            if (task.Status == TaskStatus.RanToCompletion)
+            {
+                var imageSource = task.Result;
+                MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
+            }
+        });
+
+        return image;
     }
 
     private Frame CreateCodeBlock(string codeText)
@@ -641,5 +630,58 @@ public class MarkdownView : ContentView
         {
             LinkCommand.Execute(url);
         }
+    }
+
+    private async Task<ImageSource> LoadImageAsync(string imageUrl)
+    {
+        ImageSource imageSource = null;
+
+        try
+        {
+            if (Validations.IsValidBase64String(imageUrl))
+            {
+                byte[] imageBytes = Convert.FromBase64String(imageUrl);
+                imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+            }
+            else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
+            {
+                if (_imageCache.TryGetValue(imageUrl, out ImageSource value))
+                {
+                    return value;
+                }
+                else
+                {
+                    try
+                    {
+                        using var httpClient = new HttpClient();
+                        var imageBytes = await httpClient.GetByteArrayAsync(uriResult);
+                        imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+                        _imageCache[imageUrl] = imageSource;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error downloading image: {ex.Message}");
+                        throw;
+                    }
+                }
+            }
+            else
+            {
+                imageSource = ImageSource.FromFile(imageUrl);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load image: {ex.Message}");
+            throw;
+        }
+
+        return imageSource ?? ImageSource.FromFile("icon.png");
+    }
+
+    ~MarkdownView()
+    {
+        _imageCache.Clear();
+        _imageCache = null;
     }
 }

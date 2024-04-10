@@ -10,7 +10,7 @@ The `MarkdownView` component is a versatile and customizable Markdown renderer d
 ## Install Controls
 [![NuGet](https://img.shields.io/nuget/v/Indiko.Maui.Controls.Markdown.svg?label=NuGet)](https://www.nuget.org/packages/Indiko.Maui.Controls.Markdown/)
 
-Available on [NuGet](https://www.nuget.org/packages/Indiko.Maui.Controls.Markdown/).
+Available on [NuGet](http://www.nuget.org/packages/Indiko.Maui.Controls.Markdown).
 
 Install with the dotnet CLI: `dotnet add package Indiko.Maui.Controls.Markdown`, or through the NuGet Package Manager in Visual Studio.
 

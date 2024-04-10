@@ -13,6 +13,8 @@ public class LinkEventArgs : EventArgs
 
 public class MarkdownView : ContentView
 {
+    private Dictionary<string, ImageSource> _imageCache = [];
+
     public delegate void HyperLinkClicked(object Sender, LinkEventArgs e);
     public static event HyperLinkClicked OnHyperLinkClicked;
 
@@ -284,7 +286,7 @@ public class MarkdownView : ContentView
 
         var grid = new Grid
         {
-            Margin = new Thickness(0,0,0,0),
+            Margin = new Thickness(0, 0, 0, 0),
             Padding = new Thickness(0, 0, 0, 0),
             RowSpacing = 2,
             ColumnDefinitions =
@@ -294,23 +296,8 @@ public class MarkdownView : ContentView
             }
         };
 
-        // Split markdown text by new lines correctly
-        var lineSplitSymbole = "\n";
-
-        if (MarkdownText.Contains("\r\n"))
-        {
-            lineSplitSymbole = "\r\n";
-        }
-        else if (MarkdownText.Contains("\r"))
-        {
-            lineSplitSymbole = "\\r";
-        }
-        else
-        {
-            lineSplitSymbole = "\\n";
-        }
-
-        var lines = MarkdownText.Split(new[] { lineSplitSymbole }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = Regex.Split(MarkdownText, @"\r\n?|\n", RegexOptions.Compiled);
+        lines = lines.Where(line => !string.IsNullOrEmpty(line)).ToArray();
 
         int gridRow = 0;
         bool isUnorderedListActive = false;
@@ -319,28 +306,37 @@ public class MarkdownView : ContentView
         {
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            if (line.StartsWith("# ") || line.StartsWith("## ") || line.StartsWith("### "))
+            if (IsHeadline(line, out int headlineLevel))
             {
+                var headlineText = line[(headlineLevel + 1)..].Trim();
+                Color textColor = headlineLevel == 1 ? H1Color :
+                                  headlineLevel == 2 ? H2Color :
+                                  headlineLevel == 3 ? H3Color : TextColor; // Default for h4-h6
+                double fontSize = headlineLevel == 1 ? H1FontSize :
+                                  headlineLevel == 2 ? H2FontSize :
+                                  headlineLevel == 3 ? H3FontSize : TextFontSize; // Default for h4-h6
+
                 var label = new Label
                 {
-                    Text = line[(line.IndexOf(' ') + 1)..].Trim(),
-                    TextColor = line.StartsWith("# ") ? H1Color : line.StartsWith("## ") ? H2Color : H3Color,
+                    Text = headlineText,
+                    TextColor = textColor,
                     FontAttributes = FontAttributes.Bold,
-                    FontSize = line.StartsWith("# ") ? H1FontSize : line.StartsWith("## ") ? H2FontSize : H3FontSize,
+                    FontSize = fontSize,
                     FontFamily = TextFontFace,
                     LineBreakMode = LineBreakModeHeader,
                     HorizontalOptions = LayoutOptions.Start,
                     VerticalOptions = LayoutOptions.Center
                 };
+
                 grid.Children.Add(label);
                 Grid.SetColumnSpan(label, 2);
                 Grid.SetRow(label, gridRow++);
             }
-            else if (line.StartsWith("!["))
+            else if (IsImage(line))
             {
                 var image = CreateImageBlock(line);
 
-                if(image==null)
+                if (image == null)
                 {
                     continue;
                 }
@@ -349,7 +345,7 @@ public class MarkdownView : ContentView
                 Grid.SetColumnSpan(image, 2);
                 Grid.SetRow(image, gridRow++);
             }
-            else if (line.StartsWith('>'))
+            else if (IsBlockQuote(line))
             {
                 var box = new Frame
                 {
@@ -363,7 +359,7 @@ public class MarkdownView : ContentView
 
                 var blockQuotelabel = new Label
                 {
-                    FormattedText = CreateFormattedString(line.Substring(1).Trim(), BlockQuoteTextColor),
+                    FormattedText = CreateFormattedString(line[1..].Trim(), BlockQuoteTextColor),
                     LineBreakMode = LineBreakModeText,
                     FontFamily = BlockQuoteFontFace,
                     HorizontalOptions = LayoutOptions.Fill,
@@ -377,8 +373,8 @@ public class MarkdownView : ContentView
                     ColumnSpacing = 0,
                     ColumnDefinitions =
                     {
-                        new ColumnDefinition { Width = 5 }, // For bullet points
-                        new ColumnDefinition { Width = GridLength.Star } // For text
+                        new ColumnDefinition { Width = 5 },
+                        new ColumnDefinition { Width = GridLength.Star }
                     }
                 };
 
@@ -396,52 +392,26 @@ public class MarkdownView : ContentView
                     CornerRadius = 0,
                     BackgroundColor = BlockQuoteBackgroundColor,
                     BorderColor = BlockQuoteBackgroundColor,
-                    Content  = blockQuoteGrid
+                    Content = blockQuoteGrid
                 };
 
                 grid.Children.Add(blockquote);
                 Grid.SetColumnSpan(blockquote, 2);
                 Grid.SetRow(blockquote, gridRow++);
             }
-            else if (line.StartsWith("- ") || line.StartsWith("* "))
+            else if (IsUnorderedList(line))
             {
                 if (!isUnorderedListActive)
                 {
                     isUnorderedListActive = true;
                 }
 
-                var bulletPoint = new Label
-                {
-                    Text = "\u2022",
-                    FontSize = 14,
-                    FontFamily = TextFontFace,
-                    VerticalOptions = LayoutOptions.Start,
-                    HorizontalOptions = LayoutOptions.Start,
-                    Margin = new Thickness(5, 0)
-                };
-
-                grid.Children.Add(bulletPoint);
-                Grid.SetRow(bulletPoint, gridRow);
-                Grid.SetColumn(bulletPoint, 0);
-
-                var listItemText = line[2..];
-                var formattedString = CreateFormattedString(listItemText, TextColor);
-
-                var listItemLabel = new Label
-                {
-                    FormattedText = formattedString,
-                    VerticalOptions = LayoutOptions.Start,
-                    HorizontalOptions = LayoutOptions.Fill,
-                    Margin = new Thickness(20, 0, 0, 0) // Indent the list item text
-                };
-
-                grid.Children.Add(listItemLabel);
-                Grid.SetRow(listItemLabel, gridRow);
-                Grid.SetColumn(listItemLabel, 1);
+                AddBulletPointToGrid(grid, gridRow);
+                AddListItemTextToGrid(line[2..], grid, gridRow);
 
                 gridRow++;
             }
-            else if (line.StartsWith("```") && line.EndsWith("```"))
+            else if (IsCodeBlock(line))
             {
                 var codeBlock = CreateCodeBlock(line);
                 grid.Children.Add(codeBlock);
@@ -449,7 +419,7 @@ public class MarkdownView : ContentView
                 Grid.SetColumnSpan(codeBlock, 2);
                 gridRow++;
             }
-            else if (line.StartsWith("---") || line.StartsWith("***") || line.StartsWith("___"))
+            else if (IsHorizontalRule(line))
             {
                 var horizontalLine = new BoxView
                 {
@@ -463,7 +433,6 @@ public class MarkdownView : ContentView
                 grid.Children.Add(horizontalLine);
                 Grid.SetRow(horizontalLine, gridRow);
                 Grid.SetColumnSpan(horizontalLine, 2);
-
                 gridRow++;
             }
             else // Regular text
@@ -508,42 +477,81 @@ public class MarkdownView : ContentView
         Grid.SetRow(spacer, gridRow++);
     }
 
-    private static Image CreateImageBlock(string line)
+    private static bool IsHorizontalRule(string line)
     {
-        try
+        string compactLine = line.Replace(" ", "");
+
+        return compactLine.Length >= 3 &&
+               (compactLine.All(c => c == '-') || compactLine.All(c => c == '*') || compactLine.All(c => c == '_'));
+    }
+
+    private static bool IsHeadline(string line, out int level)
+    {
+        level = 0;
+        line = line.TrimStart();
+        while (level < line.Length && line[level] == '#')
         {
-            int startIndex = line.IndexOf('(') + 1;
-            int endIndex = line.IndexOf(')', startIndex);
-            string imageUrl = line[startIndex..endIndex];
-
-            ImageSource imageSource = default;
-
-            if (Validations.IsValidBase64String(imageUrl))
-            {
-                byte[] imageBytes = Convert.FromBase64String(imageUrl);
-                imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
-            }
-            else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
-            {
-                imageSource = ImageSource.FromUri(uriResult);
-            }
-            else
-            {
-                imageSource = ImageSource.FromFile(imageUrl);
-            }
-
-            return new Image
-            {
-                Source = imageSource,
-                Aspect = Aspect.AspectFit,
-                HorizontalOptions = LayoutOptions.Fill,
-                Margin = new Thickness(0, 0, 0, 0)
-            };
-        }catch(Exception ex)
-        {
-            Console.WriteLine(ex.Message);
+            level++;
         }
-        return default;
+        bool isHeadline = level > 0 && level < 7 && line.Length > level && line[level] == ' ';
+
+        if (!isHeadline)
+        {
+            level = 0;
+        }
+        return isHeadline;
+    }
+
+    private static bool IsUnorderedList(string line)
+    {
+        string trimmedLine = line.TrimStart();
+
+        return trimmedLine.StartsWith("- ") || trimmedLine.StartsWith("* ") || trimmedLine.StartsWith("+ ");
+    }
+
+    private static bool IsBlockQuote(string line)
+    {
+        string trimmedLine = line.TrimStart();
+
+        return trimmedLine.StartsWith(">");
+    }
+
+    private static bool IsImage(string line)
+    {
+        string trimmedLine = line.TrimStart();
+
+        return trimmedLine.StartsWith("![");
+    }
+
+    private static bool IsCodeBlock(string line)
+    {
+        string trimmedLine = line.Trim();
+        return trimmedLine.StartsWith("```") && trimmedLine.EndsWith("```");
+    }
+
+    private Image CreateImageBlock(string line)
+    {
+        int startIndex = line.IndexOf('(') + 1;
+        int endIndex = line.IndexOf(')', startIndex);
+        string imageUrl = line[startIndex..endIndex];
+
+        var image = new Image
+        {
+            Aspect = Aspect.AspectFit,
+            HorizontalOptions = LayoutOptions.Fill,
+            Margin = new Thickness(0)
+        };
+
+        LoadImageAsync(imageUrl).ContinueWith(task =>
+        {
+            if (task.Status == TaskStatus.RanToCompletion)
+            {
+                var imageSource = task.Result;
+                MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
+            }
+        });
+
+        return image;
     }
 
     private Frame CreateCodeBlock(string codeText)
@@ -633,13 +641,100 @@ public class MarkdownView : ContentView
         return formattedString;
     }
 
+    private void AddBulletPointToGrid(Grid grid, int gridRow)
+    {
+        var bulletPoint = new Label
+        {
+            Text = "\u2022",
+            FontSize = 14,
+            FontFamily = TextFontFace,
+            VerticalOptions = LayoutOptions.Start,
+            HorizontalOptions = LayoutOptions.Start,
+            Margin = new Thickness(5, 0)
+        };
+
+        grid.Children.Add(bulletPoint);
+        Grid.SetRow(bulletPoint, gridRow);
+        Grid.SetColumn(bulletPoint, 0);
+    }
+
+    private void AddListItemTextToGrid(string listItemText, Grid grid, int gridRow)
+    {
+        var formattedString = CreateFormattedString(listItemText, TextColor);
+
+        var listItemLabel = new Label
+        {
+            FormattedText = formattedString,
+            VerticalOptions = LayoutOptions.Start,
+            HorizontalOptions = LayoutOptions.Fill,
+            Margin = new Thickness(20, 0, 0, 0) // Indent the list item text
+        };
+
+        grid.Children.Add(listItemLabel);
+        Grid.SetRow(listItemLabel, gridRow);
+        Grid.SetColumn(listItemLabel, 1);
+    }
+
     internal void TriggerHyperLinkClicked(string url)
     {
-        OnHyperLinkClicked?.Invoke(this,new LinkEventArgs { Url = url });
+        OnHyperLinkClicked?.Invoke(this, new LinkEventArgs { Url = url });
 
         if (LinkCommand?.CanExecute(url) == true)
         {
             LinkCommand.Execute(url);
         }
+    }
+
+    private async Task<ImageSource> LoadImageAsync(string imageUrl)
+    {
+        ImageSource imageSource = null;
+
+        try
+        {
+            if (Validations.IsValidBase64String(imageUrl))
+            {
+                byte[] imageBytes = Convert.FromBase64String(imageUrl);
+                imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+            }
+            else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
+            {
+                if (_imageCache.TryGetValue(imageUrl, out ImageSource value))
+                {
+                    return value;
+                }
+                else
+                {
+                    try
+                    {
+                        using var httpClient = new HttpClient();
+                        var imageBytes = await httpClient.GetByteArrayAsync(uriResult);
+                        imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+                        _imageCache[imageUrl] = imageSource;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error downloading image: {ex.Message}");
+                        throw;
+                    }
+                }
+            }
+            else
+            {
+                imageSource = ImageSource.FromFile(imageUrl);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load image: {ex.Message}");
+            throw;
+        }
+
+        return imageSource ?? ImageSource.FromFile("icon.png");
+    }
+
+    ~MarkdownView()
+    {
+        _imageCache.Clear();
+        _imageCache = null;
     }
 }

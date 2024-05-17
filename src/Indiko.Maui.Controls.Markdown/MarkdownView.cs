@@ -301,12 +301,21 @@ public class MarkdownView : ContentView
 
         int gridRow = 0;
         bool isUnorderedListActive = false;
+        bool currentLineIsBlockQuote = true;
+        Label activeCodeBlockLabel = null;
 
         foreach (var line in lines.Select(line => line.Trim()))
         {
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            bool lineBeforeWasBlockQuote = currentLineIsBlockQuote;
+            currentLineIsBlockQuote = false;
+            if(activeCodeBlockLabel == null)
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            if (IsHeadline(line, out int headlineLevel))
+            if (activeCodeBlockLabel != null)
+            {
+                HandleActiveCodeBlock(line, ref activeCodeBlockLabel, ref gridRow);
+            }
+            else if (IsHeadline(line, out int headlineLevel))
             {
                 var headlineText = line[(headlineLevel + 1)..].Trim();
                 Color textColor = headlineLevel == 1 ? H1Color :
@@ -347,57 +356,7 @@ public class MarkdownView : ContentView
             }
             else if (IsBlockQuote(line))
             {
-                var box = new Frame
-                {
-                    Margin = new Thickness(0),
-                    BackgroundColor = BlockQuoteBorderColor,
-                    BorderColor = BlockQuoteBorderColor,
-                    CornerRadius = 0,
-                    HorizontalOptions = LayoutOptions.Fill,
-                    VerticalOptions = LayoutOptions.Fill
-                };
-
-                var blockQuotelabel = new Label
-                {
-                    FormattedText = CreateFormattedString(line[1..].Trim(), BlockQuoteTextColor),
-                    LineBreakMode = LineBreakModeText,
-                    FontFamily = BlockQuoteFontFace,
-                    HorizontalOptions = LayoutOptions.Fill,
-                    VerticalOptions = LayoutOptions.Center,
-                    Padding = new Thickness(5)
-                };
-
-                var blockQuoteGrid = new Grid
-                {
-                    RowSpacing = 0,
-                    ColumnSpacing = 0,
-                    ColumnDefinitions =
-                    {
-                        new ColumnDefinition { Width = 5 },
-                        new ColumnDefinition { Width = GridLength.Star }
-                    }
-                };
-
-                blockQuoteGrid.Children.Add(box);
-                Grid.SetRow(box, 0);
-                Grid.SetColumn(box, 0);
-
-                blockQuoteGrid.Children.Add(blockQuotelabel);
-                Grid.SetRow(blockQuotelabel, 0);
-                Grid.SetColumn(blockQuotelabel, 1);
-
-                var blockquote = new Frame
-                {
-                    Padding = new Thickness(0),
-                    CornerRadius = 0,
-                    BackgroundColor = BlockQuoteBackgroundColor,
-                    BorderColor = BlockQuoteBackgroundColor,
-                    Content = blockQuoteGrid
-                };
-
-                grid.Children.Add(blockquote);
-                Grid.SetColumnSpan(blockquote, 2);
-                Grid.SetRow(blockquote, gridRow++);
+                HandleBlockQuote(line, lineBeforeWasBlockQuote, grid, out currentLineIsBlockQuote, ref gridRow);
             }
             else if (IsUnorderedList(line))
             {
@@ -411,13 +370,9 @@ public class MarkdownView : ContentView
 
                 gridRow++;
             }
-            else if (IsCodeBlock(line))
+            else if (IsCodeBlock(line, out bool isSingleLineCodeBlock))
             {
-                var codeBlock = CreateCodeBlock(line);
-                grid.Children.Add(codeBlock);
-                Grid.SetRow(codeBlock, gridRow);
-                Grid.SetColumnSpan(codeBlock, 2);
-                gridRow++;
+                HandleSingleLineOrStartOfCodeBlock(line, grid, ref gridRow, isSingleLineCodeBlock, ref activeCodeBlockLabel);
             }
             else if (IsHorizontalRule(line))
             {
@@ -466,6 +421,93 @@ public class MarkdownView : ContentView
         }
 
         Content = grid;
+    }
+
+    private void HandleBlockQuote(string line, bool lineBeforeWasBlockQuote, Grid grid, out bool currentLineIsBlockQuote, ref int gridRow)
+    {
+        var box = new Frame
+        {
+            Margin = new Thickness(0),
+            BackgroundColor = BlockQuoteBorderColor,
+            BorderColor = BlockQuoteBorderColor,
+            CornerRadius = 0,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill
+        };
+
+        var blockQuotelabel = new Label
+        {
+            FormattedText = CreateFormattedString(line[1..].Trim(), BlockQuoteTextColor),
+            LineBreakMode = LineBreakModeText,
+            FontFamily = BlockQuoteFontFace,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Center,
+            Padding = new Thickness(5)
+        };
+
+        var blockQuoteGrid = new Grid
+        {
+            RowSpacing = 0,
+            ColumnSpacing = 0,
+            ColumnDefinitions =
+            {
+                new ColumnDefinition { Width = 5 },
+                new ColumnDefinition { Width = GridLength.Star }
+            }
+        };
+
+        blockQuoteGrid.Children.Add(box);
+        Grid.SetRow(box, 0);
+        Grid.SetColumn(box, 0);
+
+        blockQuoteGrid.Children.Add(blockQuotelabel);
+        Grid.SetRow(blockQuotelabel, 0);
+        Grid.SetColumn(blockQuotelabel, 1);
+
+        var blockquote = new Frame
+        {
+            Padding = new Thickness(0),
+            CornerRadius = 0,
+            BackgroundColor = BlockQuoteBackgroundColor,
+            BorderColor = BlockQuoteBackgroundColor,
+            Content = blockQuoteGrid
+        };
+
+        if (lineBeforeWasBlockQuote)
+        {
+            blockquote.Margin = new Thickness(0, -grid.RowSpacing, 0, 0);
+        }
+
+        currentLineIsBlockQuote = true;
+
+        grid.Children.Add(blockquote);
+        Grid.SetColumnSpan(blockquote, 2);
+        Grid.SetRow(blockquote, gridRow++);
+    }
+
+    private void HandleSingleLineOrStartOfCodeBlock(string line, Grid grid, ref int gridRow, bool isSingleLineCodeBlock, ref Label activeCodeBlockLabel)
+    {
+        Frame codeBlock = CreateCodeBlock(line, out Label contentLabel);
+        grid.Children.Add(codeBlock);
+        Grid.SetRow(codeBlock, gridRow);
+        Grid.SetColumnSpan(codeBlock, 2);
+        if (isSingleLineCodeBlock)
+            gridRow++;
+        else
+            activeCodeBlockLabel = contentLabel;
+    }
+
+    private static void HandleActiveCodeBlock(string line, ref Label activeCodeBlockLabel, ref int gridRow)
+    {
+        if(IsCodeBlock(line, out bool _))
+        {
+            activeCodeBlockLabel = null;
+            gridRow++;
+        }
+        else
+        {
+            activeCodeBlockLabel.Text += (string.IsNullOrWhiteSpace(activeCodeBlockLabel.Text) ? "" : "\n") + line;
+        }
     }
 
     private void AddEmptyRow(Grid grid, ref int gridRow)
@@ -523,10 +565,14 @@ public class MarkdownView : ContentView
         return trimmedLine.StartsWith("![");
     }
 
-    private static bool IsCodeBlock(string line)
+    private static bool IsCodeBlock(string line, out bool isSingleLineCodeBlock)
     {
         string trimmedLine = line.Trim();
-        return trimmedLine.StartsWith("```") && trimmedLine.EndsWith("```");
+        if (trimmedLine.Count(x => x == '`') >= 6 && trimmedLine.EndsWith("```", StringComparison.Ordinal))
+            isSingleLineCodeBlock = true;
+        else
+            isSingleLineCodeBlock = false;
+        return trimmedLine.StartsWith("```", StringComparison.Ordinal);
     }
 
     private Image CreateImageBlock(string line)
@@ -554,23 +600,25 @@ public class MarkdownView : ContentView
         return image;
     }
 
-    private Frame CreateCodeBlock(string codeText)
+    private Frame CreateCodeBlock(string codeText, out Label contentLabel)
     {
+        Label content = new()
+        {
+            Text = codeText.Trim('`', ' '),
+            FontSize = CodeBlockFontSize,
+            FontAutoScalingEnabled = true,
+            FontFamily = CodeBlockFontFace,
+            TextColor = CodeBlockTextColor,
+            BackgroundColor = Colors.Transparent
+        };
+        contentLabel = content;
         return new Frame
         {
             Padding = new Thickness(10),
             CornerRadius = 4,
             BackgroundColor = CodeBlockBackgroundColor,
             BorderColor = CodeBlockBorderColor,
-            Content = new Label
-            {
-                Text = codeText.Trim('`', ' '),
-                FontSize = CodeBlockFontSize,
-                FontAutoScalingEnabled = true,
-                FontFamily = CodeBlockFontFace,
-                TextColor = CodeBlockTextColor,
-                BackgroundColor = Colors.Transparent
-            }
+            Content = content
         };
     }
 

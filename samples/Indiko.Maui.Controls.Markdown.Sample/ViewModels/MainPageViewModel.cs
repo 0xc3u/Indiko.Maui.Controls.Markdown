@@ -40,6 +40,9 @@ public partial class MainPageViewModel : BaseViewModel
         ## Modern UI Development
 
         > .NET MAUI leverages the latest in UI development, including declarative syntax with XAML or C#, hot reload for rapid UI iteration, and a rich set of controls and layouts that adapt to different screen sizes and devices.
+        > There is much more to consider!
+        .
+        > And so much more that it even deserves another block quote!
 
         ## Performance
 
@@ -59,7 +62,13 @@ public partial class MainPageViewModel : BaseViewModel
         In summary, .NET MAUI offers a unified approach to cross-platform app development, combining ease of use, performance, and extensive ecosystem support, making it an excellent choice for modern app development.
 
 
-        ``` int n= 0; ```
+        ``` 
+        int n= 0; 
+        n++;
+        ```
+
+        
+        ``` int b= 0; ```
 
         [More about Maui.net](https://learn.microsoft.com/en-us/dotnet/maui/?view=net-maui-8.0)
 

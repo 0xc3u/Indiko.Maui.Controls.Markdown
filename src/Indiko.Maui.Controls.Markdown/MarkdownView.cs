@@ -15,11 +15,11 @@ public class MarkdownView : ContentView
 {
     private Dictionary<string, ImageSource> _imageCache = [];
 
-    public delegate void HyperLinkClicked(object Sender, LinkEventArgs e);
+    public delegate void HyperLinkClicked(object sender, LinkEventArgs e);
     public static event HyperLinkClicked OnHyperLinkClicked;
 
     public static readonly BindableProperty MarkdownTextProperty =
-        BindableProperty.Create(nameof(MarkdownText), typeof(string), typeof(MarkdownView), default(string), propertyChanged: OnMarkdownTextChanged);
+        BindableProperty.Create(nameof(MarkdownText), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
     public string MarkdownText
     {
@@ -671,7 +671,7 @@ public class MarkdownView : ContentView
                 span.FontFamily = TextFontFace;
 
                 var linkTapGestureRecognizer = new TapGestureRecognizer();
-                linkTapGestureRecognizer.Tapped += (_, __) => TriggerHyperLinkClicked(linkUrl);
+                linkTapGestureRecognizer.Tapped += (_, _) => TriggerHyperLinkClicked(linkUrl);
                 span.GestureRecognizers.Add(linkTapGestureRecognizer);
             }
             else
@@ -735,7 +735,7 @@ public class MarkdownView : ContentView
 
     private async Task<ImageSource> LoadImageAsync(string imageUrl)
     {
-        ImageSource imageSource = null;
+        ImageSource imageSource;
 
         try
         {
@@ -746,7 +746,7 @@ public class MarkdownView : ContentView
             }
             else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
             {
-                if (_imageCache.TryGetValue(imageUrl, out ImageSource value))
+                if (imageUrl != null && _imageCache.TryGetValue(imageUrl, out ImageSource value))
                 {
                     return value;
                 }
@@ -757,7 +757,7 @@ public class MarkdownView : ContentView
                         using var httpClient = new HttpClient();
                         var imageBytes = await httpClient.GetByteArrayAsync(uriResult);
                         imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
-                        _imageCache[imageUrl] = imageSource;
+                        if (imageUrl != null) _imageCache[imageUrl] = imageSource;
                     }
                     catch (Exception ex)
                     {

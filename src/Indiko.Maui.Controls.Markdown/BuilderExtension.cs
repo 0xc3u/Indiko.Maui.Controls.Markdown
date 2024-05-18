@@ -2,8 +2,10 @@
 
 public static class BuilderExtension
 {
-    public static void UseMarkdownView(this MauiAppBuilder builder)
+    public static MauiAppBuilder UseMarkdownView(this MauiAppBuilder builder)
     {
         // for later
+
+        return builder;
     }
 }

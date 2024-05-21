@@ -13,6 +13,8 @@ public class LinkEventArgs : EventArgs
 
 public class MarkdownView : ContentView
 {
+    const int LIST_OFFSET = 5;
+
     private Dictionary<string, ImageSource> _imageCache = [];
 
     public delegate void HyperLinkClicked(object sender, LinkEventArgs e);
@@ -275,7 +277,6 @@ public class MarkdownView : ContentView
         var control = (MarkdownView)bindable;
         control.RenderMarkdown();
     }
-
     private void RenderMarkdown()
     {
         if (string.IsNullOrWhiteSpace(MarkdownText))
@@ -290,10 +291,10 @@ public class MarkdownView : ContentView
             Padding = new Thickness(0, 0, 0, 0),
             RowSpacing = 2,
             ColumnDefinitions =
-            {
-                new ColumnDefinition { Width = 5 }, // For bullet points
-                new ColumnDefinition { Width = GridLength.Star } // For text
-            }
+        {
+            new ColumnDefinition { Width = LIST_OFFSET }, // For bullet points or ordered list numbers
+            new ColumnDefinition { Width = GridLength.Star } // For text
+        }
         };
 
         var lines = Regex.Split(MarkdownText, @"\r\n?|\n", RegexOptions.Compiled);
@@ -301,6 +302,7 @@ public class MarkdownView : ContentView
 
         int gridRow = 0;
         bool isUnorderedListActive = false;
+        bool isOrderedListActive = false;
         bool currentLineIsBlockQuote = true;
         Label activeCodeBlockLabel = null;
 
@@ -308,7 +310,7 @@ public class MarkdownView : ContentView
         {
             bool lineBeforeWasBlockQuote = currentLineIsBlockQuote;
             currentLineIsBlockQuote = false;
-            if(activeCodeBlockLabel == null)
+            if (activeCodeBlockLabel == null)
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             if (activeCodeBlockLabel != null)
@@ -370,6 +372,18 @@ public class MarkdownView : ContentView
 
                 gridRow++;
             }
+            else if (IsOrderedList(line, out int listItemIndex))
+            {
+                if (!isOrderedListActive)
+                {
+                    isOrderedListActive = true;
+                }
+
+                AddOrderedListItemToGrid(listItemIndex, grid, gridRow);
+                AddListItemTextToGrid(line[(listItemIndex.ToString().Length + 2)..], grid, gridRow);
+
+                gridRow++;
+            }
             else if (IsCodeBlock(line, out bool isSingleLineCodeBlock))
             {
                 HandleSingleLineOrStartOfCodeBlock(line, grid, ref gridRow, isSingleLineCodeBlock, ref activeCodeBlockLabel);
@@ -392,9 +406,10 @@ public class MarkdownView : ContentView
             }
             else // Regular text
             {
-                if (isUnorderedListActive)
+                if (isUnorderedListActive || isOrderedListActive)
                 {
                     isUnorderedListActive = false;
+                    isOrderedListActive = false;
                     grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
                     grid.Children.Add(new BoxView { Color = Colors.Transparent });
                     gridRow++;
@@ -422,6 +437,7 @@ public class MarkdownView : ContentView
 
         Content = grid;
     }
+
 
     private void HandleBlockQuote(string line, bool lineBeforeWasBlockQuote, Grid grid, out bool currentLineIsBlockQuote, ref int gridRow)
     {
@@ -694,16 +710,35 @@ public class MarkdownView : ContentView
         var bulletPoint = new Label
         {
             Text = "\u2022",
-            FontSize = 14,
+            FontSize = TextFontSize,
             FontFamily = TextFontFace,
+            TextColor = TextColor,
             VerticalOptions = LayoutOptions.Start,
             HorizontalOptions = LayoutOptions.Start,
-            Margin = new Thickness(5, 0)
+            Margin = new Thickness(LIST_OFFSET, 0)
         };
 
         grid.Children.Add(bulletPoint);
         Grid.SetRow(bulletPoint, gridRow);
         Grid.SetColumn(bulletPoint, 0);
+    }
+
+    private void AddOrderedListItemToGrid(int listItemIndex, Grid grid, int gridRow)
+    {
+        var orderedListItem = new Label
+        {
+            Text = $"{listItemIndex}.",
+            FontSize = TextFontSize,
+            FontFamily = TextFontFace,
+            TextColor = TextColor,
+            VerticalOptions = LayoutOptions.Start,
+            HorizontalOptions = LayoutOptions.Start,
+            Margin = new Thickness(LIST_OFFSET, 0)
+        };
+
+        grid.Children.Add(orderedListItem);
+        Grid.SetRow(orderedListItem, gridRow);
+        Grid.SetColumn(orderedListItem, 0);
     }
 
     private void AddListItemTextToGrid(string listItemText, Grid grid, int gridRow)
@@ -715,7 +750,7 @@ public class MarkdownView : ContentView
             FormattedText = formattedString,
             VerticalOptions = LayoutOptions.Start,
             HorizontalOptions = LayoutOptions.Fill,
-            Margin = new Thickness(20, 0, 0, 0) // Indent the list item text
+            Margin = new Thickness(15, 0, 0, 0) // Indent the list item text
         };
 
         grid.Children.Add(listItemLabel);
@@ -779,6 +814,23 @@ public class MarkdownView : ContentView
 
         return imageSource ?? ImageSource.FromFile("icon.png");
     }
+
+    private static bool IsOrderedList(string line, out int listItemIndex)
+    {
+        listItemIndex = 0;
+        string trimmedLine = line.TrimStart();
+
+        var match = Regex.Match(trimmedLine, @"^(\d+)\. ");
+        if (match.Success)
+        {
+            listItemIndex = int.Parse(match.Groups[1].Value);
+            return true;
+        }
+
+        return false;
+    }
+
+    
 
     ~MarkdownView()
     {

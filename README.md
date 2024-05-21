@@ -44,6 +44,7 @@ The `MarkdownView` supports a subset of Markdown elements and features, suitable
 
 - **Headers (H1, H2, H3):** Marked by `#`, `##`, `###` at the beginning of a line.
 - **Unordered Lists:** Created with lines starting with `-` or `*`.
+- **Ordered Lists:** Created with lines starting with `1.`.
 - **Block Quotes:** Denoted by lines starting with `>`.
 - **Images:** Uses the Markdown image syntax `![alt text](image_url)`, where the URL can be an http(s) link, a local file path, or a base64 encoded string. This enables the embedding of images from various sources directly within the Markdown content.
 - **Code Blocks:** Supports inline code with `` `code` `` and fenced code blocks with triple backticks ```.

@@ -18,7 +18,7 @@ public partial class MainPageViewModel : BaseViewModel
     [ObservableProperty]
     string markdownText;
 
-    public override async void OnAppearing(object param)
+    public override void OnAppearing(object param)
 	{
       
        MarkdownText = @"# Why .NET MAUI is Awesome
@@ -33,15 +33,21 @@ public partial class MainPageViewModel : BaseViewModel
         - Windows
         with the **same code**.
 
+       _Why you should learn mobile cross-platform_
+       1. **Broader Market Reach**
+       2. **Cost and Time Efficiency**
+       3. **Consistent User Experience**
+
         This significantly reduces development time and effort, allowing developers to focus on `building great features` rather than dealing with platform-specific code.
 
         ![Maui Bot](dev.png)
 
         ## Modern UI Development
-
+        
         > .NET MAUI leverages the latest in UI development, including declarative syntax with XAML or C#, hot reload for rapid UI iteration, and a rich set of controls and layouts that adapt to different screen sizes and devices.
+
         > There is much more to consider!
-        .
+
         > And so much more that it even deserves another block quote!
 
         ## Performance
@@ -61,10 +67,12 @@ public partial class MainPageViewModel : BaseViewModel
 
         In summary, .NET MAUI offers a unified approach to cross-platform app development, combining ease of use, performance, and extensive ecosystem support, making it an excellent choice for modern app development.
 
-
         ``` 
-        int n= 0; 
-        n++;
+        for(int n= 0; n<10; n++)
+        {
+            Console.WriteLine(n);
+        }
+
         ```
 
         
@@ -74,7 +82,7 @@ public partial class MainPageViewModel : BaseViewModel
 
 
         ![Microsoft](https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RWCZER?ver=1433&q=90&m=6&h=157&w=279&b=%23FFFFFFFF&l=f&o=t&aim=true)
-
+      
         ";
     }
 }

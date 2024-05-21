@@ -1,4 +1,4 @@
-﻿using Indiko.Maui.Controls.Markdown.Utils;
+using Indiko.Maui.Controls.Markdown.Utils;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
@@ -292,7 +292,7 @@ public class MarkdownView : ContentView
             RowSpacing = 2,
             ColumnDefinitions =
         {
-            new ColumnDefinition { Width = 5 }, // For bullet points or ordered list numbers
+            new ColumnDefinition { Width = LIST_OFFSET }, // For bullet points or ordered list numbers
             new ColumnDefinition { Width = GridLength.Star } // For text
         }
         };
@@ -446,6 +446,7 @@ public class MarkdownView : ContentView
 
         Content = grid;
     }
+
 
     private void HandleBlockQuote(string line, bool lineBeforeWasBlockQuote, Grid grid, out bool currentLineIsBlockQuote, ref int gridRow)
     {
@@ -800,6 +801,67 @@ public class MarkdownView : ContentView
         Grid.SetColumn(listItemLabel, 1);
     }
 
+    private Grid CreateTable(string[] lines, int startIndex, int endIndex)
+    {
+        var tableGrid = new Grid
+        {
+            ColumnSpacing = 2,
+            RowSpacing = 2,
+            BackgroundColor = Colors.Transparent
+        };
+
+        var headerCells = lines[startIndex].Split('|').Select(cell => cell.Trim()).ToArray();
+        for (int i = 0; i < headerCells.Length; i++)
+        {
+            tableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        }
+
+        tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        for (int colIndex = 0; colIndex < headerCells.Length; colIndex++)
+        {
+            var headerLabel = new Label
+            {
+                Text = headerCells[colIndex],
+                FontAttributes = FontAttributes.Bold,
+                FontSize = TextFontSize,
+                BackgroundColor = CodeBlockBackgroundColor,
+                TextColor = CodeBlockTextColor,
+                HorizontalOptions = LayoutOptions.Fill,
+                VerticalOptions = LayoutOptions.Center,
+                Padding = new Thickness(5)
+            };
+            tableGrid.Children.Add(headerLabel);
+            Grid.SetColumn(headerLabel, colIndex);
+            Grid.SetRow(headerLabel, 0);
+        }
+
+        int rowIndex = 1;
+        for (int i = startIndex + 2; i <= endIndex; i++)
+        {
+            var rowCells = lines[i].Split('|').Select(cell => cell.Trim()).ToArray();
+            tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            for (int colIndex = 0; colIndex < rowCells.Length; colIndex++)
+            {
+                var cellLabel = new Label
+                {
+                    Text = rowCells[colIndex],
+                    FontSize = TextFontSize,
+                    TextColor = TextColor,
+                    HorizontalOptions = LayoutOptions.Fill,
+                    VerticalOptions = LayoutOptions.Center,
+                    Padding = new Thickness(5)
+                };
+                tableGrid.Children.Add(cellLabel);
+                Grid.SetColumn(cellLabel, colIndex);
+                Grid.SetRow(cellLabel, rowIndex);
+            }
+            rowIndex++;
+        }
+
+        return tableGrid;
+    }
+
     internal void TriggerHyperLinkClicked(string url)
     {
         OnHyperLinkClicked?.Invoke(this, new LinkEventArgs { Url = url });
@@ -855,64 +917,6 @@ public class MarkdownView : ContentView
         }
 
         return imageSource ?? ImageSource.FromFile("icon.png");
-    }
-
-    private Grid CreateTable(string[] lines, int startIndex, int endIndex)
-    {
-        var tableGrid = new Grid
-        {
-            ColumnSpacing = 2,
-            RowSpacing = 2,
-            BackgroundColor = Colors.Transparent
-        };
-
-        var headerCells = lines[startIndex].Split('|').Select(cell => cell.Trim()).ToArray();
-        for (int i = 0; i < headerCells.Length; i++)
-        {
-            tableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
-        }
-
-        tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        for (int colIndex = 0; colIndex < headerCells.Length; colIndex++)
-        {
-            var headerLabel = new Label
-            {
-                Text = headerCells[colIndex],
-                FontAttributes = FontAttributes.Bold,
-                TextColor = CodeBlockTextColor,
-                BackgroundColor = CodeBlockBackgroundColor,
-                HorizontalOptions = LayoutOptions.Fill,
-                VerticalOptions = LayoutOptions.Center,
-                Padding = new Thickness(5)
-            };
-            tableGrid.Children.Add(headerLabel);
-            Grid.SetColumn(headerLabel, colIndex);
-            Grid.SetRow(headerLabel, 0);
-        }
-
-        int rowIndex = 1;
-        for (int i = startIndex + 2; i <= endIndex; i++)
-        {
-            var rowCells = lines[i].Split('|').Select(cell => cell.Trim()).ToArray();
-            tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            for (int colIndex = 0; colIndex < rowCells.Length; colIndex++)
-            {
-                var cellLabel = new Label
-                {
-                    Text = rowCells[colIndex],
-                    HorizontalOptions = LayoutOptions.Fill,
-                    VerticalOptions = LayoutOptions.Center,
-                    Padding = new Thickness(5)
-                };
-                tableGrid.Children.Add(cellLabel);
-                Grid.SetColumn(cellLabel, colIndex);
-                Grid.SetRow(cellLabel, rowIndex);
-            }
-            rowIndex++;
-        }
-
-        return tableGrid;
     }
 
     ~MarkdownView()

@@ -82,6 +82,12 @@ public partial class MainPageViewModel : BaseViewModel
 
 
         ![Microsoft](https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RWCZER?ver=1433&q=90&m=6&h=157&w=279&b=%23FFFFFFFF&l=f&o=t&aim=true)
+
+ Header 1 | Header 2 | Header 3 
+----------|----------|----------
+ A1 | B1 | C1 
+ A2 | B2 | C2 
+ A3 | B3 | C3 
       
         ";
     }

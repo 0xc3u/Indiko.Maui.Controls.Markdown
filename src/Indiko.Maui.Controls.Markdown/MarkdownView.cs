@@ -292,7 +292,7 @@ public class MarkdownView : ContentView
             RowSpacing = 2,
             ColumnDefinitions =
         {
-            new ColumnDefinition { Width = LIST_OFFSET }, // For bullet points or ordered list numbers
+            new ColumnDefinition { Width = 5 }, // For bullet points or ordered list numbers
             new ColumnDefinition { Width = GridLength.Star } // For text
         }
         };
@@ -306,8 +306,9 @@ public class MarkdownView : ContentView
         bool currentLineIsBlockQuote = true;
         Label activeCodeBlockLabel = null;
 
-        foreach (var line in lines.Select(line => line.Trim()))
+        for (int i = 0; i < lines.Length; i++)
         {
+            string line = lines[i].Trim();
             bool lineBeforeWasBlockQuote = currentLineIsBlockQuote;
             currentLineIsBlockQuote = false;
             if (activeCodeBlockLabel == null)
@@ -404,6 +405,14 @@ public class MarkdownView : ContentView
                 Grid.SetColumnSpan(horizontalLine, 2);
                 gridRow++;
             }
+            else if (IsTable(lines, i, out int tableEndIndex)) // Detect table
+            {
+                var table = CreateTable(lines, i, tableEndIndex);
+                grid.Children.Add(table);
+                Grid.SetColumnSpan(table, 2);
+                Grid.SetRow(table, gridRow++);
+                i = tableEndIndex; // Skip processed lines
+            }
             else // Regular text
             {
                 if (isUnorderedListActive || isOrderedListActive)
@@ -437,7 +446,6 @@ public class MarkdownView : ContentView
 
         Content = grid;
     }
-
 
     private void HandleBlockQuote(string line, bool lineBeforeWasBlockQuote, Grid grid, out bool currentLineIsBlockQuote, ref int gridRow)
     {
@@ -589,6 +597,40 @@ public class MarkdownView : ContentView
         else
             isSingleLineCodeBlock = false;
         return trimmedLine.StartsWith("```", StringComparison.Ordinal);
+    }
+
+    private static bool IsOrderedList(string line, out int listItemIndex)
+    {
+        listItemIndex = 0;
+        string trimmedLine = line.TrimStart();
+
+        var match = Regex.Match(trimmedLine, @"^(\d+)\. ");
+        if (match.Success)
+        {
+            listItemIndex = int.Parse(match.Groups[1].Value);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsTable(string[] lines, int currentIndex, out int tableEndIndex)
+    {
+        tableEndIndex = currentIndex;
+        if (!lines[currentIndex].Contains("|"))
+            return false;
+
+        for (int i = currentIndex + 1; i < lines.Length; i++)
+        {
+            if (!lines[i].Contains("|"))
+            {
+                tableEndIndex = i - 1;
+                return true;
+            }
+        }
+
+        tableEndIndex = lines.Length - 1;
+        return true;
     }
 
     private Image CreateImageBlock(string line)
@@ -815,22 +857,63 @@ public class MarkdownView : ContentView
         return imageSource ?? ImageSource.FromFile("icon.png");
     }
 
-    private static bool IsOrderedList(string line, out int listItemIndex)
+    private Grid CreateTable(string[] lines, int startIndex, int endIndex)
     {
-        listItemIndex = 0;
-        string trimmedLine = line.TrimStart();
-
-        var match = Regex.Match(trimmedLine, @"^(\d+)\. ");
-        if (match.Success)
+        var tableGrid = new Grid
         {
-            listItemIndex = int.Parse(match.Groups[1].Value);
-            return true;
+            ColumnSpacing = 2,
+            RowSpacing = 2,
+            BackgroundColor = Colors.Transparent
+        };
+
+        var headerCells = lines[startIndex].Split('|').Select(cell => cell.Trim()).ToArray();
+        for (int i = 0; i < headerCells.Length; i++)
+        {
+            tableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
         }
 
-        return false;
-    }
+        tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        for (int colIndex = 0; colIndex < headerCells.Length; colIndex++)
+        {
+            var headerLabel = new Label
+            {
+                Text = headerCells[colIndex],
+                FontAttributes = FontAttributes.Bold,
+                TextColor = CodeBlockTextColor,
+                BackgroundColor = CodeBlockBackgroundColor,
+                HorizontalOptions = LayoutOptions.Fill,
+                VerticalOptions = LayoutOptions.Center,
+                Padding = new Thickness(5)
+            };
+            tableGrid.Children.Add(headerLabel);
+            Grid.SetColumn(headerLabel, colIndex);
+            Grid.SetRow(headerLabel, 0);
+        }
 
-    
+        int rowIndex = 1;
+        for (int i = startIndex + 2; i <= endIndex; i++)
+        {
+            var rowCells = lines[i].Split('|').Select(cell => cell.Trim()).ToArray();
+            tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            for (int colIndex = 0; colIndex < rowCells.Length; colIndex++)
+            {
+                var cellLabel = new Label
+                {
+                    Text = rowCells[colIndex],
+                    HorizontalOptions = LayoutOptions.Fill,
+                    VerticalOptions = LayoutOptions.Center,
+                    Padding = new Thickness(5)
+                };
+                tableGrid.Children.Add(cellLabel);
+                Grid.SetColumn(cellLabel, colIndex);
+                Grid.SetRow(cellLabel, rowIndex);
+            }
+            rowIndex++;
+        }
+
+        return tableGrid;
+    }
 
     ~MarkdownView()
     {

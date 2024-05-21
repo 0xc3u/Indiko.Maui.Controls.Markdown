@@ -48,6 +48,7 @@ The `MarkdownView` supports a subset of Markdown elements and features, suitable
 - **Block Quotes:** Denoted by lines starting with `>`.
 - **Images:** Uses the Markdown image syntax `![alt text](image_url)`, where the URL can be an http(s) link, a local file path, or a base64 encoded string. This enables the embedding of images from various sources directly within the Markdown content.
 - **Code Blocks:** Supports inline code with `` `code` `` and fenced code blocks with triple backticks ```.
+- **Table Support:** Basic support for tables, with rows separated by `|` and headers separated by `-`.
 
 ### Image Support Details
 

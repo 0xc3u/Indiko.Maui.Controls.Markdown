@@ -127,7 +127,7 @@ public class MarkdownView : ContentView
     }
 
     public static readonly BindableProperty TextFontFaceProperty =
-      BindableProperty.Create(nameof(TextFontFace), typeof(string), typeof(MarkdownView), defaultValue: "OpenSansRegular", propertyChanged: OnMarkdownTextChanged);
+      BindableProperty.Create(nameof(TextFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
     public string TextFontFace
     {
@@ -197,7 +197,7 @@ public class MarkdownView : ContentView
     }
 
     public static readonly BindableProperty CodeBlockFontFaceProperty =
-      BindableProperty.Create(nameof(CodeBlockFontFace), typeof(string), typeof(MarkdownView), defaultValue: "OpenSansRegular", propertyChanged: OnMarkdownTextChanged);
+      BindableProperty.Create(nameof(CodeBlockFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
     public string CodeBlockFontFace
     {
@@ -750,9 +750,16 @@ public class MarkdownView : ContentView
 
     private void AddBulletPointToGrid(Grid grid, int gridRow)
     {
+        string bulletPointSign = "•";
+
+//#if ANDROID
+//        bulletPointSign = "\u2022";
+//#elif iOS
+//        bulletPointSign = "\u{2029}";
+//#endif
         var bulletPoint = new Label
         {
-            Text = "\u2022",
+            Text = bulletPointSign,
             FontSize = TextFontSize,
             FontFamily = TextFontFace,
             TextColor = TextColor,

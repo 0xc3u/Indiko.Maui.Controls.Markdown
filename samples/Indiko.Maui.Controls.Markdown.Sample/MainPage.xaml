@@ -2,7 +2,6 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 			 xmlns:vm="clr-namespace:Indiko.Maui.Controls.Markdown.Sample.ViewModels"
-			 xmlns:models="clr-namespace:Indiko.Maui.Controls.Markdown.Sample.Models"
              xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
              x:Class="Indiko.Maui.Controls.Markdown.Sample.MainPage"
 			 x:DataType="vm:MainPageViewModel"

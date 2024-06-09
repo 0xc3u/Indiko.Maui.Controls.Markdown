@@ -1,14 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Indiko.Maui.Controls.Markdown.Sample.Services;
 
 namespace Indiko.Maui.Controls.Markdown.Sample.ViewModels;
 public partial class MainPageViewModel : BaseViewModel
 {
-    public MainPageViewModel(INavigationService navigationService) : base(navigationService)
-	{
-	}
-
     [RelayCommand]
     private void OnLinkReceived(object link)
     {

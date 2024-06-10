@@ -290,9 +290,10 @@ public class MarkdownView : ContentView
             Margin = new Thickness(0, 0, 0, 0),
             Padding = new Thickness(0, 0, 0, 0),
             RowSpacing = 2,
+            ColumnSpacing = 0,
             ColumnDefinitions =
         {
-            new ColumnDefinition { Width = LIST_OFFSET }, // For bullet points or ordered list numbers
+            new ColumnDefinition { Width = 15 }, // For bullet points or ordered list numbers
             new ColumnDefinition { Width = GridLength.Star } // For text
         }
         };
@@ -750,22 +751,27 @@ public class MarkdownView : ContentView
 
     private void AddBulletPointToGrid(Grid grid, int gridRow)
     {
-        string bulletPointSign = "•";
+        string bulletPointSign = "-";
 
-//#if ANDROID
-//        bulletPointSign = "\u2022";
-//#elif iOS
-//        bulletPointSign = "\u{2029}";
-//#endif
+#if ANDROID
+        bulletPointSign = "\u2022";
+#endif
+#if iOS
+        bulletPointSign = "\u2029";
+#endif
         var bulletPoint = new Label
         {
             Text = bulletPointSign,
             FontSize = TextFontSize,
             FontFamily = TextFontFace,
             TextColor = TextColor,
-            VerticalOptions = LayoutOptions.Start,
+            FontAutoScalingEnabled = true,
+            VerticalOptions = LayoutOptions.Center,
+            HorizontalTextAlignment = TextAlignment.Start,
+            VerticalTextAlignment = TextAlignment.Center,
             HorizontalOptions = LayoutOptions.Start,
-            Margin = new Thickness(LIST_OFFSET, 0)
+            Margin = new Thickness(0, 0),
+            Padding = new Thickness(0,0)
         };
 
         grid.Children.Add(bulletPoint);
@@ -781,9 +787,13 @@ public class MarkdownView : ContentView
             FontSize = TextFontSize,
             FontFamily = TextFontFace,
             TextColor = TextColor,
-            VerticalOptions = LayoutOptions.Start,
+            FontAutoScalingEnabled = true,
+            VerticalOptions = LayoutOptions.Center,
             HorizontalOptions = LayoutOptions.Start,
-            Margin = new Thickness(LIST_OFFSET, 0)
+            HorizontalTextAlignment = TextAlignment.Start,
+            VerticalTextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 0),
+            Padding = new Thickness(0)
         };
 
         grid.Children.Add(orderedListItem);

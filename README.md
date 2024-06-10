@@ -1,3 +1,4 @@
+
 ![](nuget.png)
 
 # MarkdownView Component for MAUI.NET
@@ -19,8 +20,12 @@ Install with the dotnet CLI: `dotnet add package Indiko.Maui.Controls.Markdown`,
 
 - **Customizable Appearance:** Offers extensive support for customizing text appearance, including font size, color, and line break modes for different Markdown elements.
 - **Bindable Properties:** Enables dynamic updates and data binding for Markdown content and styling properties.
-- **Supported Markdown Elements:** Renders basic Markdown elements, including headers, lists, block quotes, images, and code blocks.
+- **Supported Markdown Elements:** Renders basic Markdown elements, including headers, lists, block quotes, images, tables, and code blocks.
 - **Multiple Image Sources:** The `MarkdownView` supports various sources for displaying images within Markdown content, including image URLs, local file paths, and base64 encoded strings. This flexibility allows for a wide range of image content to be seamlessly integrated into your Markdown text.
+- **Hyperlink Handling:** Supports clickable hyperlinks with customizable color and command handling.
+- **Code Block Styling:** Provides customizable styling for code blocks, including background color, border color, text color, font size, and font face.
+- **Block Quote Styling:** Allows customization of block quote appearance, including background color, border color, text color, and font face.
+- **Line and Placeholder Styling:** Customizes the appearance of horizontal lines and placeholder blocks between elements.
 
 ## Bindable Properties
 
@@ -33,22 +38,34 @@ The `MarkdownView` component offers several bindable properties to customize the
 - **H1FontSize, H2FontSize, H3FontSize:** Sets the font size for H1, H2, and H3 headers, respectively.
 - **TextColor:** The default text color for the Markdown content.
 - **TextFontSize:** The default font size for the Markdown content.
-- **CodeBlockBackgroundColor, CodeBlockBorderColor:** Customize the background and border colors for code blocks.
+- **TextFontFace:** Sets the font family for the Markdown content.
+- **CodeBlockBackgroundColor:** Customize the background color for code blocks.
+- **CodeBlockBorderColor:** Customize the border color for code blocks.
 - **CodeBlockTextColor:** Sets the text color for code blocks.
 - **CodeBlockFontSize:** Sets the font size for code blocks.
+- **CodeBlockFontFace:** Sets the font face for code blocks.
 - **PlaceholderBackgroundColor:** Sets the background color for placeholder elements, such as space between Markdown elements.
+- **LineColor:** Sets the color for horizontal lines.
+- **BlockQuoteBackgroundColor:** Sets the background color for block quotes.
+- **BlockQuoteBorderColor:** Sets the border color for block quotes.
+- **BlockQuoteTextColor:** Sets the text color for block quotes.
+- **BlockQuoteFontFace:** Sets the font face for block quotes.
+- **HyperlinkColor:** Sets the color for hyperlinks.
+- **LinkCommand:** Command to execute when a hyperlink is clicked.
+- **LinkCommandParameter:** Command parameter to pass when a hyperlink is clicked.
 
 ## Supported Markdown Tags and Features
 
 The `MarkdownView` supports a subset of Markdown elements and features, suitable for most text formatting needs:
 
 - **Headers (H1, H2, H3):** Marked by `#`, `##`, `###` at the beginning of a line.
-- **Unordered Lists:** Created with lines starting with `-` or `*`.
+- **Unordered Lists:** Created with lines starting with `-`, `*`, or `+`.
 - **Ordered Lists:** Created with lines starting with `1.`.
 - **Block Quotes:** Denoted by lines starting with `>`.
 - **Images:** Uses the Markdown image syntax `![alt text](image_url)`, where the URL can be an http(s) link, a local file path, or a base64 encoded string. This enables the embedding of images from various sources directly within the Markdown content.
 - **Code Blocks:** Supports inline code with `` `code` `` and fenced code blocks with triple backticks ```.
 - **Table Support:** Basic support for tables, with rows separated by `|` and headers separated by `-`.
+- **Horizontal Rules:** Creates horizontal rules with lines containing `---`, `***`, or `___`.
 
 ### Image Support Details
 

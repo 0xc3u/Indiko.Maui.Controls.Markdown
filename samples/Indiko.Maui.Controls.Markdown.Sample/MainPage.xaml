@@ -28,7 +28,7 @@
                           BlockQuoteBorderColor="{StaticResource Yellow100Accent}"
                           BlockQuoteFontFace="CamingoCodeItalic"
                           PlaceholderBackgroundColor="{StaticResource White}"
-                          TextFontFace="OpenSansRegular"
+                          TextFontFace="OpenSans"
                           TextFontSize="13"
                           TextColor="{StaticResource Black}"
                           HyperlinkColor="{StaticResource Blue100Accent}"

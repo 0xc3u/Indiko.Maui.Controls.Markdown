@@ -1,4 +1,3 @@
-using Indiko.Maui.Controls.Markdown.Utils;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
@@ -13,8 +12,6 @@ public class LinkEventArgs : EventArgs
 
 public class MarkdownView : ContentView
 {
-    const int LIST_OFFSET = 5;
-
     private Dictionary<string, ImageSource> _imageCache = [];
 
     public delegate void HyperLinkClicked(object sender, LinkEventArgs e);
@@ -448,7 +445,6 @@ public class MarkdownView : ContentView
         Content = grid;
     }
 
-
     private void HandleBlockQuote(string line, bool lineBeforeWasBlockQuote, Grid grid, out bool currentLineIsBlockQuote, ref int gridRow)
     {
         var box = new Frame
@@ -547,7 +543,7 @@ public class MarkdownView : ContentView
 
     private static bool IsHorizontalRule(string line)
     {
-        string compactLine = line.Replace(" ", "");
+        string compactLine = line.Replace(" ", string.Empty);
 
         return compactLine.Length >= 3 &&
                (compactLine.All(c => c == '-') || compactLine.All(c => c == '*') || compactLine.All(c => c == '_'));
@@ -581,7 +577,7 @@ public class MarkdownView : ContentView
     {
         string trimmedLine = line.TrimStart();
 
-        return trimmedLine.StartsWith(">");
+        return trimmedLine.StartsWith('>');
     }
 
     private static bool IsImage(string line)
@@ -594,10 +590,8 @@ public class MarkdownView : ContentView
     private static bool IsCodeBlock(string line, out bool isSingleLineCodeBlock)
     {
         string trimmedLine = line.Trim();
-        if (trimmedLine.Count(x => x == '`') >= 6 && trimmedLine.EndsWith("```", StringComparison.Ordinal))
-            isSingleLineCodeBlock = true;
-        else
-            isSingleLineCodeBlock = false;
+        isSingleLineCodeBlock = trimmedLine.Count(x => x == '`') >= 6 && trimmedLine.EndsWith("```", StringComparison.Ordinal);
+
         return trimmedLine.StartsWith("```", StringComparison.Ordinal);
     }
 
@@ -619,12 +613,12 @@ public class MarkdownView : ContentView
     private static bool IsTable(string[] lines, int currentIndex, out int tableEndIndex)
     {
         tableEndIndex = currentIndex;
-        if (!lines[currentIndex].Contains("|"))
+        if (!lines[currentIndex].Contains('|'))
             return false;
 
         for (int i = currentIndex + 1; i < lines.Length; i++)
         {
-            if (!lines[i].Contains("|"))
+            if (!lines[i].Contains('|'))
             {
                 tableEndIndex = i - 1;
                 return true;
@@ -895,7 +889,7 @@ public class MarkdownView : ContentView
 
         try
         {
-            if (Validations.IsValidBase64String(imageUrl))
+            if (System.Buffers.Text.Base64.IsValid(imageUrl))
             {
                 byte[] imageBytes = Convert.FromBase64String(imageUrl);
                 imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));

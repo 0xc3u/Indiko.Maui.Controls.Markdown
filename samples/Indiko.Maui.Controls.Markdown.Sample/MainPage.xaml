@@ -31,6 +31,7 @@
                           TextFontFace="OpenSans"
                           TextFontSize="13"
                           TextColor="{StaticResource Black}"
+                          ImageAspect="Fill"
                           HyperlinkColor="{StaticResource Blue100Accent}"
                           LineColor="{StaticResource GrayQuoteBorder}"
                           LinkCommand="{Binding LinkReceivedCommand}"

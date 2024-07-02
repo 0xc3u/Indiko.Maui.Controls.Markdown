@@ -269,6 +269,17 @@ public class MarkdownView : ContentView
         set => SetValue(LinkCommandParameterProperty, value);
     }
 
+    /* **************** Image Styling ***********************/
+
+    public static readonly BindableProperty ImageAspectProperty =
+       BindableProperty.Create(nameof(ImageAspect), typeof(Aspect), typeof(MarkdownView), defaultValue: Aspect.AspectFit, propertyChanged: OnMarkdownTextChanged);
+
+    public Aspect ImageAspect
+    {
+        get => (Aspect)GetValue(ImageAspectProperty);
+        set => SetValue(ImageAspectProperty, value);
+    }
+
     private static void OnMarkdownTextChanged(BindableObject bindable, object oldValue, object newValue)
     {
         var control = (MarkdownView)bindable;
@@ -637,9 +648,10 @@ public class MarkdownView : ContentView
 
         var image = new Image
         {
-            Aspect = Aspect.AspectFit,
+            Aspect = ImageAspect,
             HorizontalOptions = LayoutOptions.Fill,
-            Margin = new Thickness(0)
+            VerticalOptions = LayoutOptions.Fill,
+            Margin = new Thickness(0),
         };
 
         LoadImageAsync(imageUrl).ContinueWith(task =>

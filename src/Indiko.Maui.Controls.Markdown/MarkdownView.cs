@@ -692,7 +692,7 @@ public class MarkdownView : ContentView
     {
         var formattedString = new FormattedString();
 
-        var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|`.*?`|\[.*?\]\(.*?\))");
+        var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|`.*?`|\[.*?\]\(.*?\)|\*.*?\*)");
 
         foreach (var part in parts)
         {
@@ -726,6 +726,13 @@ public class MarkdownView : ContentView
                 span.TextColor = textColor;
                 span.FontFamily = TextFontFace;
             }
+            else if (part.StartsWith('*') && part.EndsWith('*'))
+            {
+                span.Text = part.Trim('*', ' ');
+                span.FontAttributes = FontAttributes.Italic;
+                span.TextColor = textColor;
+                span.FontFamily = TextFontFace;
+            }
             else if (part.StartsWith('[') && part.Contains("](")) // Link detection
             {
                 var linkText = part[1..part.IndexOf(']')];
@@ -754,6 +761,7 @@ public class MarkdownView : ContentView
 
         return formattedString;
     }
+
 
     private void AddBulletPointToGrid(Grid grid, int gridRow)
     {

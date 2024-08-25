@@ -5,6 +5,7 @@
              xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
              x:Class="Indiko.Maui.Controls.Markdown.Sample.MainPage"
 			 x:DataType="vm:MainPageViewModel"
+             BackgroundColor="Beige"
              Title="Indiko.Maui.Controls.Markdown.Sample">
 
     <ScrollView>
@@ -27,7 +28,6 @@
                           BlockQuoteTextColor="{StaticResource Gray600}"
                           BlockQuoteBorderColor="{StaticResource Yellow100Accent}"
                           BlockQuoteFontFace="CamingoCodeItalic"
-                          PlaceholderBackgroundColor="{StaticResource White}"
                           TextFontFace="OpenSans"
                           TextFontSize="13"
                           TextColor="{StaticResource Black}"

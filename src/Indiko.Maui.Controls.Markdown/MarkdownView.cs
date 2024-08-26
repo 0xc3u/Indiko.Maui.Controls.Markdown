@@ -132,17 +132,6 @@ public class MarkdownView : ContentView
         set => SetValue(TextFontFaceProperty, value);
     }
 
-    /* ****** Spacer Block Styling ******** */
-
-    public static readonly BindableProperty PlaceholderBackgroundColorProperty =
-    BindableProperty.Create(nameof(PlaceholderBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
-
-    public Color PlaceholderBackgroundColor
-    {
-        get => (Color)GetValue(PlaceholderBackgroundColorProperty);
-        set => SetValue(PlaceholderBackgroundColorProperty, value);
-    }
-
     /* ****** Line Block Styling ******** */
 
     public static readonly BindableProperty LineColorProperty =
@@ -449,7 +438,8 @@ public class MarkdownView : ContentView
 
                 gridRow++;
 
-                AddEmptyRow(grid, ref gridRow);
+                // never finish with empty superfluous empty line
+                if (i != lines.Length - 1) AddEmptyRow(grid, ref gridRow);
             }
         }
 
@@ -546,10 +536,7 @@ public class MarkdownView : ContentView
     private void AddEmptyRow(Grid grid, ref int gridRow)
     {
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10) });
-        var spacer = new BoxView { Color = PlaceholderBackgroundColor };
-        grid.Children.Add(spacer);
-        Grid.SetColumnSpan(spacer, 2);
-        Grid.SetRow(spacer, gridRow++);
+        gridRow++;
     }
 
     private static bool IsHorizontalRule(string line)

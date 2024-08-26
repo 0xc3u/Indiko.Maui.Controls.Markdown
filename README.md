@@ -25,7 +25,7 @@ Install with the dotnet CLI: `dotnet add package Indiko.Maui.Controls.Markdown`,
 - **Hyperlink Handling:** Supports clickable hyperlinks with customizable color and command handling.
 - **Code Block Styling:** Provides customizable styling for code blocks, including background color, border color, text color, font size, and font face.
 - **Block Quote Styling:** Allows customization of block quote appearance, including background color, border color, text color, and font face.
-- **Line and Placeholder Styling:** Customizes the appearance of horizontal lines and placeholder blocks between elements.
+- **Line Styling:** Customizes the appearance of horizontal lines between elements.
 
 ## Bindable Properties
 
@@ -44,7 +44,6 @@ The `MarkdownView` component offers several bindable properties to customize the
 - **CodeBlockTextColor:** Sets the text color for code blocks.
 - **CodeBlockFontSize:** Sets the font size for code blocks.
 - **CodeBlockFontFace:** Sets the font face for code blocks.
-- **PlaceholderBackgroundColor:** Sets the background color for placeholder elements, such as space between Markdown elements.
 - **LineColor:** Sets the color for horizontal lines.
 - **BlockQuoteBackgroundColor:** Sets the background color for block quotes.
 - **BlockQuoteBorderColor:** Sets the border color for block quotes.

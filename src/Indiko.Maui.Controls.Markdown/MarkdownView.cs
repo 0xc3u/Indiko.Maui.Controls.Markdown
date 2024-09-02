@@ -5,17 +5,12 @@ using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
 
-public class LinkEventArgs : EventArgs
-{
-    public string Url { get; set; }
-}
-
 public class MarkdownView : ContentView
 {
     private Dictionary<string, ImageSource> _imageCache = [];
 
     public delegate void HyperLinkClicked(object sender, LinkEventArgs e);
-    public static event HyperLinkClicked OnHyperLinkClicked;
+    public event HyperLinkClicked OnHyperLinkClicked;
 
     public static readonly BindableProperty MarkdownTextProperty =
         BindableProperty.Create(nameof(MarkdownText), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
@@ -144,7 +139,6 @@ public class MarkdownView : ContentView
     }
 
     /* ****** Code Block Styling ******** */
-
     public static readonly BindableProperty CodeBlockBackgroundColorProperty =
        BindableProperty.Create(nameof(CodeBlockBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
 

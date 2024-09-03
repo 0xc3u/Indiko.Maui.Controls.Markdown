@@ -41,10 +41,6 @@ public partial class MainPageViewModel : BaseViewModel
         
         > .NET MAUI leverages the latest in UI development, including declarative syntax with XAML or C#, hot reload for rapid UI iteration, and a rich set of controls and layouts that adapt to different screen sizes and devices.
 
-        > There is much more to consider!
-
-        > And so much more that it even deserves another block quote!
-
         ## Performance
 
         Leveraging the power of .NET 6 and beyond, .NET MAUI apps boast high performance. 
@@ -84,6 +80,6 @@ public partial class MainPageViewModel : BaseViewModel
  A2 | B2 | C2 
  A3 | B3 | C3 
       
-        ";
+        We moved from ~~~Xamarin.Forms~~~ to **.NET MAUI** and we are loving it!";
     }
 }

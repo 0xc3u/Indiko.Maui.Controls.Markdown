@@ -80,6 +80,10 @@ public partial class MainPageViewModel : BaseViewModel
  A2 | B2 | C2 
  A3 | B3 | C3 
       
-        We moved from ~~~Xamarin.Forms~~~ to **.NET MAUI** and we are loving it!";
+        We moved from ~~~Xamarin.Forms~~~ to **.NET MAUI** and we are loving it!
+
+    **Some bold text with a [link](https://www.github.com) blah blah**
+
+";
     }
 }

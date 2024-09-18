@@ -669,15 +669,95 @@ public class MarkdownView : ContentView
         };
     }
 
+    //private FormattedString CreateFormattedString(string line, Color textColor)
+    //{
+    //    var formattedString = new FormattedString();
+
+    //    var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|~~.*?~~|`.*?`|\[.*?\]\(.*?\)|\*.*?\*)");
+
+    //    foreach (var part in parts)
+    //    {
+    //        Span span = new();
+
+    //        if (part.StartsWith("`") && part.EndsWith("`"))
+    //        {
+    //            span.Text = part.Trim('`');
+    //            span.BackgroundColor = CodeBlockBackgroundColor;
+    //            span.FontFamily = CodeBlockFontFace;
+    //            span.TextColor = CodeBlockTextColor;
+    //        }
+    //        else if (part.StartsWith("**") && part.EndsWith("**"))
+    //        {
+    //            span.Text = part.Trim('*', ' ');
+    //            span.FontAttributes = FontAttributes.Bold;
+    //            span.TextColor = textColor;
+    //            span.FontFamily = TextFontFace;
+    //        }
+    //        else if (part.StartsWith("__") && part.EndsWith("__"))
+    //        {
+    //            span.Text = part.Trim('_', ' ');
+    //            span.FontAttributes = FontAttributes.Bold;
+    //            span.TextColor = textColor;
+    //            span.FontFamily = TextFontFace;
+    //        }
+    //        else if (part.StartsWith('_') && part.EndsWith('_'))
+    //        {
+    //            span.Text = part.Trim('_', ' ');
+    //            span.FontAttributes = FontAttributes.Italic;
+    //            span.TextColor = textColor;
+    //            span.FontFamily = TextFontFace;
+    //        }
+    //        else if (part.StartsWith('*') && part.EndsWith('*'))
+    //        {
+    //            span.Text = part.Trim('*', ' ');
+    //            span.FontAttributes = FontAttributes.Italic;
+    //            span.TextColor = textColor;
+    //            span.FontFamily = TextFontFace;
+    //        }
+    //        else if (part.StartsWith("~~") && part.EndsWith("~~")) // StrikeThrough detection
+    //        {
+    //            span.Text = part.Trim('~', ' ');
+    //            span.TextDecorations = TextDecorations.Strikethrough;
+    //            span.TextColor = textColor;
+    //            span.FontFamily = TextFontFace;
+    //        }
+    //        else if (part.StartsWith('[') && part.Contains("](")) // Link detection
+    //        {
+    //            var linkText = part[1..part.IndexOf(']')];
+    //            var linkUrl = part.Substring(part.IndexOf('(') + 1, part.IndexOf(')') - part.IndexOf('(') - 1);
+
+    //            span.Text = linkText;
+    //            span.TextColor = HyperlinkColor;
+    //            span.TextDecorations = TextDecorations.Underline;
+    //            span.FontFamily = TextFontFace;
+
+    //            var linkTapGestureRecognizer = new TapGestureRecognizer();
+    //            linkTapGestureRecognizer.Tapped += (_, _) => TriggerHyperLinkClicked(linkUrl);
+    //            span.GestureRecognizers.Add(linkTapGestureRecognizer);
+    //        }
+    //        else
+    //        {
+    //            span.Text = part;
+    //            span.TextColor = textColor;
+    //            span.FontFamily = TextFontFace;
+    //        }
+
+    //        span.FontSize = TextFontSize;
+
+    //        formattedString.Spans.Add(span);
+    //    }
+
+    //    return formattedString;
+    //}
+
     private FormattedString CreateFormattedString(string line, Color textColor)
     {
         var formattedString = new FormattedString();
-
         var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|~~.*?~~|`.*?`|\[.*?\]\(.*?\)|\*.*?\*)");
 
         foreach (var part in parts)
         {
-            Span span = new();
+            Span span = new Span();
 
             if (part.StartsWith("`") && part.EndsWith("`"))
             {
@@ -688,67 +768,61 @@ public class MarkdownView : ContentView
             }
             else if (part.StartsWith("**") && part.EndsWith("**"))
             {
-                span.Text = part.Trim('*', ' ');
-                span.FontAttributes = FontAttributes.Bold;
-                span.TextColor = textColor;
-                span.FontFamily = TextFontFace;
+                var nestedFormatted = CreateFormattedString(part.Trim('*', ' '), textColor);
+                foreach (var nestedSpan in nestedFormatted.Spans)
+                {
+                    nestedSpan.FontAttributes = FontAttributes.Bold;
+                    formattedString.Spans.Add(nestedSpan);
+                }
+                continue;
             }
             else if (part.StartsWith("__") && part.EndsWith("__"))
             {
                 span.Text = part.Trim('_', ' ');
                 span.FontAttributes = FontAttributes.Bold;
-                span.TextColor = textColor;
-                span.FontFamily = TextFontFace;
             }
             else if (part.StartsWith('_') && part.EndsWith('_'))
             {
                 span.Text = part.Trim('_', ' ');
                 span.FontAttributes = FontAttributes.Italic;
-                span.TextColor = textColor;
-                span.FontFamily = TextFontFace;
             }
-            else if (part.StartsWith('*') && part.EndsWith('*'))
+            else if (part.StartsWith("~~") && part.EndsWith("~~"))
             {
-                span.Text = part.Trim('*', ' ');
-                span.FontAttributes = FontAttributes.Italic;
-                span.TextColor = textColor;
-                span.FontFamily = TextFontFace;
-            }
-            else if (part.StartsWith("~~") && part.EndsWith("~~")) // StrikeThrough detection
-            {
-                span.Text = part.Trim('~', ' ');
+                span.Text = part.Trim('~');
                 span.TextDecorations = TextDecorations.Strikethrough;
-                span.TextColor = textColor;
-                span.FontFamily = TextFontFace;
             }
-            else if (part.StartsWith('[') && part.Contains("](")) // Link detection
+            else if (part.StartsWith('[') && part.Contains("](")) // Detect link
             {
-                var linkText = part[1..part.IndexOf(']')];
+                var linkText = part.Substring(1, part.IndexOf(']') - 1);
                 var linkUrl = part.Substring(part.IndexOf('(') + 1, part.IndexOf(')') - part.IndexOf('(') - 1);
 
                 span.Text = linkText;
                 span.TextColor = HyperlinkColor;
                 span.TextDecorations = TextDecorations.Underline;
-                span.FontFamily = TextFontFace;
-
                 var linkTapGestureRecognizer = new TapGestureRecognizer();
                 linkTapGestureRecognizer.Tapped += (_, _) => TriggerHyperLinkClicked(linkUrl);
                 span.GestureRecognizers.Add(linkTapGestureRecognizer);
             }
+            else if (part.StartsWith('*') && part.EndsWith('*'))
+            {
+                span.Text = part.Trim('*');
+                span.FontAttributes = FontAttributes.Italic;
+            }
             else
             {
                 span.Text = part;
-                span.TextColor = textColor;
-                span.FontFamily = TextFontFace;
             }
 
             span.FontSize = TextFontSize;
+            span.TextColor = textColor;
+            span.FontFamily = TextFontFace;
 
             formattedString.Spans.Add(span);
         }
 
         return formattedString;
     }
+
 
     private void AddBulletPointToGrid(Grid grid, int gridRow)
     {

@@ -5,7 +5,7 @@
              xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
              x:Class="Indiko.Maui.Controls.Markdown.Sample.MainPage"
 			 x:DataType="vm:MainPageViewModel"
-             BackgroundColor="Beige"
+             BackgroundColor="White"
              Title="Indiko.Maui.Controls.Markdown.Sample">
 
     <ScrollView>
@@ -24,6 +24,7 @@
                           CodeBlockTextColor="{StaticResource Gray600}"
                           CodeBlockBorderColor="{StaticResource GrayQuoteBorder}"
                           CodeBlockFontFace="CamingoCodeRegular"
+                          CodeBlockFontSize="12"
                           BlockQuoteBackgroundColor="{StaticResource Yellow300Accent}"
                           BlockQuoteTextColor="{StaticResource Gray600}"
                           BlockQuoteBorderColor="{StaticResource Yellow100Accent}"
@@ -31,12 +32,18 @@
                           TextFontFace="OpenSans"
                           TextFontSize="13"
                           TextColor="{StaticResource Black}"
+                          TableHeaderBackgroundColor="{StaticResource Gray100}"
+                          TableHeaderFontFace="OpenSans"
+                          TableHeaderFontSize="13"
+                          TableHeaderTextColor="{StaticResource Gray900}"
+                          TableRowFontFace="OpenSans"
+                          TableRowFontSize="11"
+                          TableRowTextColor="{StaticResource Gray600}"
                           ImageAspect="Fill"
                           HyperlinkColor="{StaticResource Blue100Accent}"
                           LineColor="{StaticResource GrayQuoteBorder}"
                           LinkCommand="{Binding LinkReceivedCommand}"
                           OnHyperLinkClicked="MarkdownView_HyperLinkClicked">
-
             </idk:MarkdownView>
 
         </VerticalStackLayout>

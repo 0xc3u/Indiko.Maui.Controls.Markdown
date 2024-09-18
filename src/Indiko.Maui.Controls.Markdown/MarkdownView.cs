@@ -98,6 +98,76 @@ public class MarkdownView : ContentView
         set => SetValue(H3FontSizeProperty, value);
     }
 
+    /* **** Table Header Style ***/
+
+    public static readonly BindableProperty TableHeaderFontSizeProperty =
+        BindableProperty.Create(nameof(TableHeaderFontSize), typeof(double), typeof(MarkdownView), defaultValue: 14d, propertyChanged: OnMarkdownTextChanged);
+
+    [TypeConverter(typeof(FontSizeConverter))]
+    public double TableHeaderFontSize
+    {
+        get => (double)GetValue(TableHeaderFontSizeProperty);
+        set => SetValue(TableHeaderFontSizeProperty, value);
+    }
+
+    public static readonly BindableProperty TableHeaderTextColorProperty =
+      BindableProperty.Create(nameof(TableHeaderTextColor), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
+
+    public Color TableHeaderTextColor
+    {
+        get => (Color)GetValue(TableHeaderTextColorProperty);
+        set => SetValue(TableHeaderTextColorProperty, value);
+    }
+
+    public static readonly BindableProperty TableHeaderBackgroundColorProperty =
+     BindableProperty.Create(nameof(TableHeaderBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGrey, propertyChanged: OnMarkdownTextChanged);
+
+    public Color TableHeaderBackgroundColor
+    {
+        get => (Color)GetValue(TableHeaderBackgroundColorProperty);
+        set => SetValue(TableHeaderBackgroundColorProperty, value);
+    }
+
+    public static readonly BindableProperty TableHeaderFontFaceProperty =
+        BindableProperty.Create(nameof(TableHeaderFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string TableHeaderFontFace
+    {
+        get => (string)GetValue(TableHeaderFontFaceProperty);
+        set => SetValue(TableHeaderFontFaceProperty, value);
+    }
+
+    /***** Table Row Styling **/
+
+    public static readonly BindableProperty TableRowFontFaceProperty =
+       BindableProperty.Create(nameof(TableRowFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string TableRowFontFace
+    {
+        get => (string)GetValue(TableRowFontFaceProperty);
+        set => SetValue(TableRowFontFaceProperty, value);
+    }
+
+    public static readonly BindableProperty TableRowTextColorProperty =
+     BindableProperty.Create(nameof(TableRowTextColor), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
+
+    public Color TableRowTextColor
+    {
+        get => (Color)GetValue(TableRowTextColorProperty);
+        set => SetValue(TableRowTextColorProperty, value);
+    }
+
+    public static readonly BindableProperty TableRowFontSizeProperty =
+       BindableProperty.Create(nameof(TableRowFontSize), typeof(double), typeof(MarkdownView), defaultValue: 12d, propertyChanged: OnMarkdownTextChanged);
+
+    [TypeConverter(typeof(FontSizeConverter))]
+    public double TableRowFontSize
+    {
+        get => (double)GetValue(TableRowFontSizeProperty);
+        set => SetValue(TableRowFontSizeProperty, value);
+    }
+
+
     /* ****** Text Styling ******** */
 
     public static readonly BindableProperty TextColorProperty =
@@ -840,7 +910,7 @@ public class MarkdownView : ContentView
 
             var border = new Border
             {
-                BackgroundColor = CodeBlockBackgroundColor,
+                BackgroundColor = TableHeaderBackgroundColor,
                 Padding = new Thickness(5)
             };
 
@@ -848,8 +918,9 @@ public class MarkdownView : ContentView
             {
                 Text = headerCells[colIndex],
                 FontAttributes = FontAttributes.Bold,
-                FontSize = TextFontSize,
-                TextColor = CodeBlockTextColor,
+                FontSize = TableHeaderFontSize,
+                FontFamily = TableHeaderFontFace,
+                TextColor = TableHeaderTextColor,
                 HorizontalOptions = alignment,
                 VerticalOptions = LayoutOptions.Center,
             };
@@ -876,8 +947,9 @@ public class MarkdownView : ContentView
                 var cellLabel = new Label
                 {
                     Text = rowCells[colIndex],
-                    FontSize = TextFontSize,
-                    TextColor = TextColor,
+                    FontSize = TableRowFontSize,
+                    FontFamily = TableRowFontFace,
+                    TextColor = TableRowTextColor,
                     HorizontalOptions = alignment, 
                     VerticalOptions = LayoutOptions.Center,
                     Padding = new Thickness(5)

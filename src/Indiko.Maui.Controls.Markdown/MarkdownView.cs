@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
+using Microsoft.Maui.Controls.Shapes;
 using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
@@ -383,10 +384,10 @@ public class MarkdownView : ContentView
             }
             else if (IsHorizontalRule(line))
             {
-                var horizontalLine = new BoxView
+                var horizontalLine = new Rectangle
                 {
-                    HeightRequest = 2,
-                    Color = LineColor,
+                    MinimumHeightRequest = 2,
+                    Background = LineColor,
                     BackgroundColor = LineColor,
                     HorizontalOptions = LayoutOptions.Fill,
                     VerticalOptions = LayoutOptions.Center
@@ -442,12 +443,12 @@ public class MarkdownView : ContentView
 
     private void HandleBlockQuote(string line, bool lineBeforeWasBlockQuote, Grid grid, out bool currentLineIsBlockQuote, ref int gridRow)
     {
-        var box = new Frame
+        var box = new Border
         {
             Margin = new Thickness(0),
             BackgroundColor = BlockQuoteBorderColor,
-            BorderColor = BlockQuoteBorderColor,
-            CornerRadius = 0,
+            Stroke = new SolidColorBrush(BlockQuoteBorderColor),
+            StrokeShape = new RoundRectangle { CornerRadius = 0 },
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill
         };
@@ -481,12 +482,12 @@ public class MarkdownView : ContentView
         Grid.SetRow(blockQuotelabel, 0);
         Grid.SetColumn(blockQuotelabel, 1);
 
-        var blockquote = new Frame
+        var blockquote = new Border
         {
             Padding = new Thickness(0),
-            CornerRadius = 0,
+            Stroke = new SolidColorBrush(BlockQuoteBorderColor),
+            StrokeShape = new RoundRectangle { CornerRadius = 0 },
             BackgroundColor = BlockQuoteBackgroundColor,
-            BorderColor = BlockQuoteBackgroundColor,
             Content = blockQuoteGrid
         };
 
@@ -504,7 +505,7 @@ public class MarkdownView : ContentView
 
     private void HandleSingleLineOrStartOfCodeBlock(string line, Grid grid, ref int gridRow, bool isSingleLineCodeBlock, ref Label activeCodeBlockLabel)
     {
-        Frame codeBlock = CreateCodeBlock(line, out Label contentLabel);
+        Border codeBlock = CreateCodeBlock(line, out Label contentLabel);
         grid.Children.Add(codeBlock);
         Grid.SetRow(codeBlock, gridRow);
         Grid.SetColumnSpan(codeBlock, 2);
@@ -647,7 +648,7 @@ public class MarkdownView : ContentView
         return image;
     }
 
-    private Frame CreateCodeBlock(string codeText, out Label contentLabel)
+    private Border CreateCodeBlock(string codeText, out Label contentLabel)
     {
         Label content = new()
         {
@@ -659,97 +660,16 @@ public class MarkdownView : ContentView
             BackgroundColor = Colors.Transparent
         };
         contentLabel = content;
-        return new Frame
+        return new Border
         {
             Padding = new Thickness(10),
-            CornerRadius = 4,
+            Stroke = new SolidColorBrush(CodeBlockBorderColor),
+            StrokeShape = new RoundRectangle { CornerRadius = 4 },
+            StrokeThickness = 1f,
             BackgroundColor = CodeBlockBackgroundColor,
-            BorderColor = CodeBlockBorderColor,
             Content = content
         };
     }
-
-    //private FormattedString CreateFormattedString(string line, Color textColor)
-    //{
-    //    var formattedString = new FormattedString();
-
-    //    var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|~~.*?~~|`.*?`|\[.*?\]\(.*?\)|\*.*?\*)");
-
-    //    foreach (var part in parts)
-    //    {
-    //        Span span = new();
-
-    //        if (part.StartsWith("`") && part.EndsWith("`"))
-    //        {
-    //            span.Text = part.Trim('`');
-    //            span.BackgroundColor = CodeBlockBackgroundColor;
-    //            span.FontFamily = CodeBlockFontFace;
-    //            span.TextColor = CodeBlockTextColor;
-    //        }
-    //        else if (part.StartsWith("**") && part.EndsWith("**"))
-    //        {
-    //            span.Text = part.Trim('*', ' ');
-    //            span.FontAttributes = FontAttributes.Bold;
-    //            span.TextColor = textColor;
-    //            span.FontFamily = TextFontFace;
-    //        }
-    //        else if (part.StartsWith("__") && part.EndsWith("__"))
-    //        {
-    //            span.Text = part.Trim('_', ' ');
-    //            span.FontAttributes = FontAttributes.Bold;
-    //            span.TextColor = textColor;
-    //            span.FontFamily = TextFontFace;
-    //        }
-    //        else if (part.StartsWith('_') && part.EndsWith('_'))
-    //        {
-    //            span.Text = part.Trim('_', ' ');
-    //            span.FontAttributes = FontAttributes.Italic;
-    //            span.TextColor = textColor;
-    //            span.FontFamily = TextFontFace;
-    //        }
-    //        else if (part.StartsWith('*') && part.EndsWith('*'))
-    //        {
-    //            span.Text = part.Trim('*', ' ');
-    //            span.FontAttributes = FontAttributes.Italic;
-    //            span.TextColor = textColor;
-    //            span.FontFamily = TextFontFace;
-    //        }
-    //        else if (part.StartsWith("~~") && part.EndsWith("~~")) // StrikeThrough detection
-    //        {
-    //            span.Text = part.Trim('~', ' ');
-    //            span.TextDecorations = TextDecorations.Strikethrough;
-    //            span.TextColor = textColor;
-    //            span.FontFamily = TextFontFace;
-    //        }
-    //        else if (part.StartsWith('[') && part.Contains("](")) // Link detection
-    //        {
-    //            var linkText = part[1..part.IndexOf(']')];
-    //            var linkUrl = part.Substring(part.IndexOf('(') + 1, part.IndexOf(')') - part.IndexOf('(') - 1);
-
-    //            span.Text = linkText;
-    //            span.TextColor = HyperlinkColor;
-    //            span.TextDecorations = TextDecorations.Underline;
-    //            span.FontFamily = TextFontFace;
-
-    //            var linkTapGestureRecognizer = new TapGestureRecognizer();
-    //            linkTapGestureRecognizer.Tapped += (_, _) => TriggerHyperLinkClicked(linkUrl);
-    //            span.GestureRecognizers.Add(linkTapGestureRecognizer);
-    //        }
-    //        else
-    //        {
-    //            span.Text = part;
-    //            span.TextColor = textColor;
-    //            span.FontFamily = TextFontFace;
-    //        }
-
-    //        span.FontSize = TextFontSize;
-
-    //        formattedString.Spans.Add(span);
-    //    }
-
-    //    return formattedString;
-    //}
-
     private FormattedString CreateFormattedString(string line, Color textColor)
     {
         var formattedString = new FormattedString();
@@ -837,13 +757,13 @@ public class MarkdownView : ContentView
         var bulletPoint = new Label
         {
             Text = bulletPointSign,
-            FontSize = TextFontSize,
+            FontSize = Math.Ceiling(TextFontSize * 1.1),
             FontFamily = TextFontFace,
             TextColor = TextColor,
-            FontAutoScalingEnabled = true,
-            VerticalOptions = LayoutOptions.Center,
+            FontAutoScalingEnabled = false,
+            VerticalOptions = LayoutOptions.Start,
             HorizontalTextAlignment = TextAlignment.Start,
-            VerticalTextAlignment = TextAlignment.Center,
+            VerticalTextAlignment = TextAlignment.Start,
             HorizontalOptions = LayoutOptions.Start,
             Margin = new Thickness(0, 0),
             Padding = new Thickness(0,0)
@@ -863,10 +783,10 @@ public class MarkdownView : ContentView
             FontFamily = TextFontFace,
             TextColor = TextColor,
             FontAutoScalingEnabled = true,
-            VerticalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Start,
             HorizontalOptions = LayoutOptions.Start,
             HorizontalTextAlignment = TextAlignment.Start,
-            VerticalTextAlignment = TextAlignment.Center,
+            VerticalTextAlignment = TextAlignment.Start,
             Margin = new Thickness(0, 0),
             Padding = new Thickness(0)
         };
@@ -902,31 +822,47 @@ public class MarkdownView : ContentView
             BackgroundColor = Colors.Transparent
         };
 
+        // Parse header cells and alignment indicators
         var headerCells = lines[startIndex].Split('|').Select(cell => cell.Trim()).ToArray();
+        var alignmentIndicators = lines[startIndex + 1].Split('|').Select(cell => cell.Trim()).ToArray();
+
+        // Add columns based on the number of header cells
         for (int i = 0; i < headerCells.Length; i++)
         {
             tableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
         }
 
+        // Add header row with alignment
         tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         for (int colIndex = 0; colIndex < headerCells.Length; colIndex++)
         {
+            var alignment = GetTextAlignment(alignmentIndicators[colIndex]);
+
+            var border = new Border
+            {
+                BackgroundColor = CodeBlockBackgroundColor,
+                Padding = new Thickness(5)
+            };
+
             var headerLabel = new Label
             {
                 Text = headerCells[colIndex],
                 FontAttributes = FontAttributes.Bold,
                 FontSize = TextFontSize,
-                BackgroundColor = CodeBlockBackgroundColor,
                 TextColor = CodeBlockTextColor,
-                HorizontalOptions = LayoutOptions.Fill,
+                HorizontalOptions = alignment,
                 VerticalOptions = LayoutOptions.Center,
-                Padding = new Thickness(5)
             };
-            tableGrid.Children.Add(headerLabel);
-            Grid.SetColumn(headerLabel, colIndex);
-            Grid.SetRow(headerLabel, 0);
+
+            border.Content = headerLabel;
+
+            tableGrid.Children.Add(border);
+
+            Grid.SetColumn(border, colIndex);
+            Grid.SetRow(border, 0);
         }
 
+        // Add rows for table content
         int rowIndex = 1;
         for (int i = startIndex + 2; i <= endIndex; i++)
         {
@@ -935,12 +871,14 @@ public class MarkdownView : ContentView
 
             for (int colIndex = 0; colIndex < rowCells.Length; colIndex++)
             {
+                var alignment = GetTextAlignment(alignmentIndicators[colIndex]);
+
                 var cellLabel = new Label
                 {
                     Text = rowCells[colIndex],
                     FontSize = TextFontSize,
                     TextColor = TextColor,
-                    HorizontalOptions = LayoutOptions.Fill,
+                    HorizontalOptions = alignment, 
                     VerticalOptions = LayoutOptions.Center,
                     Padding = new Thickness(5)
                 };
@@ -953,6 +891,27 @@ public class MarkdownView : ContentView
 
         return tableGrid;
     }
+
+
+    private LayoutOptions GetTextAlignment(string alignmentIndicator)
+    {
+        if (alignmentIndicator.StartsWith(":") && alignmentIndicator.EndsWith(":"))
+        {
+            return LayoutOptions.Center;
+        }
+        else if (alignmentIndicator.StartsWith(":"))
+        {
+            return LayoutOptions.Start;
+        }
+        else if (alignmentIndicator.EndsWith(":"))
+        {
+            return LayoutOptions.End;
+        }
+
+        // Default alignment if no indicators are found
+        return LayoutOptions.Start;
+    }
+
 
     internal void TriggerHyperLinkClicked(string url)
     {

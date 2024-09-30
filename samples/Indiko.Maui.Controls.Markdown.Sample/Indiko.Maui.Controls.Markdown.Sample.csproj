@@ -59,8 +59,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.82" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.91" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -74,5 +74,9 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\src\Indiko.Maui.Controls.Markdown\Indiko.Maui.Controls.Markdown.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="8.0.91" />
 	</ItemGroup>
 </Project>

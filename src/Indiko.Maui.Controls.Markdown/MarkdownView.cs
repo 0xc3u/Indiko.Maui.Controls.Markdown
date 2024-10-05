@@ -367,6 +367,7 @@ public class MarkdownView : ContentView
         bool isUnorderedListActive = false;
         bool isOrderedListActive = false;
         bool currentLineIsBlockQuote = true;
+        bool isExitingList = false;
         Label activeCodeBlockLabel = null;
 
         for (int i = 0; i < lines.Length; i++)
@@ -406,6 +407,7 @@ public class MarkdownView : ContentView
                 grid.Children.Add(label);
                 Grid.SetColumnSpan(label, 2);
                 Grid.SetRow(label, gridRow++);
+                isExitingList = false;
             }
             else if (IsImage(line))
             {
@@ -419,10 +421,12 @@ public class MarkdownView : ContentView
                 grid.Children.Add(image);
                 Grid.SetColumnSpan(image, 2);
                 Grid.SetRow(image, gridRow++);
+                isExitingList = false;
             }
             else if (IsBlockQuote(line))
             {
                 HandleBlockQuote(line, lineBeforeWasBlockQuote, grid, out currentLineIsBlockQuote, ref gridRow);
+                isExitingList = false;
             }
             else if (IsUnorderedList(line))
             {
@@ -435,6 +439,7 @@ public class MarkdownView : ContentView
                 AddListItemTextToGrid(line[2..], grid, gridRow);
 
                 gridRow++;
+                isExitingList = true;
             }
             else if (IsOrderedList(line, out int listItemIndex))
             {
@@ -447,10 +452,12 @@ public class MarkdownView : ContentView
                 AddListItemTextToGrid(line[(listItemIndex.ToString().Length + 2)..], grid, gridRow);
 
                 gridRow++;
+                isExitingList = true;
             }
             else if (IsCodeBlock(line, out bool isSingleLineCodeBlock))
             {
                 HandleSingleLineOrStartOfCodeBlock(line, grid, ref gridRow, isSingleLineCodeBlock, ref activeCodeBlockLabel);
+                isExitingList = false;
             }
             else if (IsHorizontalRule(line))
             {
@@ -467,6 +474,7 @@ public class MarkdownView : ContentView
                 Grid.SetRow(horizontalLine, gridRow);
                 Grid.SetColumnSpan(horizontalLine, 2);
                 gridRow++;
+                isExitingList = false;
             }
             else if (IsTable(lines, i, out int tableEndIndex)) // Detect table
             {
@@ -475,16 +483,17 @@ public class MarkdownView : ContentView
                 Grid.SetColumnSpan(table, 2);
                 Grid.SetRow(table, gridRow++);
                 i = tableEndIndex; // Skip processed lines
+                isExitingList = false;
             }
             else // Regular text
             {
-                if (isUnorderedListActive || isOrderedListActive)
+                if (isUnorderedListActive || isOrderedListActive || isExitingList)
                 {
                     isUnorderedListActive = false;
                     isOrderedListActive = false;
-                    grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                    grid.Children.Add(new BoxView { Color = Colors.Transparent });
+                    isExitingList = false;
                     gridRow++;
+                    grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
                 }
 
                 var formattedString = CreateFormattedString(line, TextColor);
@@ -587,7 +596,7 @@ public class MarkdownView : ContentView
 
     private static void HandleActiveCodeBlock(string line, ref Label activeCodeBlockLabel, ref int gridRow)
     {
-        if(IsCodeBlock(line, out bool _))
+        if (IsCodeBlock(line, out bool _))
         {
             activeCodeBlockLabel = null;
             gridRow++;
@@ -836,7 +845,7 @@ public class MarkdownView : ContentView
             VerticalTextAlignment = TextAlignment.Start,
             HorizontalOptions = LayoutOptions.Start,
             Margin = new Thickness(0, 0),
-            Padding = new Thickness(0,0)
+            Padding = new Thickness(0, 0)
         };
 
         grid.Children.Add(bulletPoint);
@@ -950,7 +959,7 @@ public class MarkdownView : ContentView
                     FontSize = TableRowFontSize,
                     FontFamily = TableRowFontFace,
                     TextColor = TableRowTextColor,
-                    HorizontalOptions = alignment, 
+                    HorizontalOptions = alignment,
                     VerticalOptions = LayoutOptions.Center,
                     Padding = new Thickness(5)
                 };

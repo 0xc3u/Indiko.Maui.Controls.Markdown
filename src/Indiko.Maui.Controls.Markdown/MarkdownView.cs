@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using Microsoft.Maui.Controls.Shapes;
+using SkiaSharp;
 using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
@@ -1017,6 +1019,7 @@ public class MarkdownView : ContentView
             }
             else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
             {
+
                 if (imageUrl != null && _imageCache.TryGetValue(imageUrl, out ImageSource value))
                 {
                     return value;
@@ -1025,10 +1028,60 @@ public class MarkdownView : ContentView
                 {
                     try
                     {
-                        using var httpClient = new HttpClient();
-                        var imageBytes = await httpClient.GetByteArrayAsync(uriResult);
-                        imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
-                        if (imageUrl != null) _imageCache[imageUrl] = imageSource;
+                        if (imageUrl.ToLowerInvariant().EndsWith(".svg"))
+                        {
+                            var httpClient = new HttpClient();
+
+                            var imageBytes = await httpClient.GetByteArrayAsync(uriResult)
+                                .ConfigureAwait(false);
+                            if (imageBytes != null)
+                            {
+                                var svgString = Encoding.UTF8.GetString(imageBytes);
+                                var svg = new SkiaSharp.Extended.Svg.SKSvg();
+                                using (var stream = new MemoryStream(imageBytes))
+                                {
+                                    svg.Load(stream);
+                                }
+                                var image = new SKBitmap((int)svg.Picture.CullRect.Width, (int)svg.Picture.CullRect.Height);
+                                using (var surface = SKSurface.Create(new SKImageInfo(image.Width, image.Height)))
+                                {
+                                    var canvas = surface.Canvas;
+                                    canvas.Clear(SKColors.Transparent);
+                                    canvas.DrawPicture(svg.Picture);
+                                    canvas.Flush();
+                                    surface.Snapshot().ReadPixels(image.Info, image.GetPixels(), image.RowBytes, 0, 0);
+                                }
+                                var imageStream = new MemoryStream();
+                                image.Encode(SKEncodedImageFormat.Png, 100).SaveTo(imageStream);
+                                imageStream.Position = 0;
+                                imageSource = ImageSource.FromStream(() => imageStream);
+                                if (imageUrl != null) _imageCache[imageUrl] = imageSource;
+
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Failed to download image: {imageUrl}");
+                                imageSource = default;
+                            }
+                            httpClient.Dispose();
+                        }
+                        else
+                        {
+                            using var httpClient = new HttpClient();
+                            var imageBytes = await httpClient.GetByteArrayAsync(uriResult)
+                                .ConfigureAwait(false);
+                            if (imageBytes != null)
+                            {
+                                imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+                                if (imageUrl != null) _imageCache[imageUrl] = imageSource;
+                            }
+                            else
+                            {
+                                imageSource = default;
+                                Console.WriteLine($"Failed to download image: {imageUrl}");
+                            }
+                            httpClient.Dispose();
+                        }
                     }
                     catch (Exception ex)
                     {

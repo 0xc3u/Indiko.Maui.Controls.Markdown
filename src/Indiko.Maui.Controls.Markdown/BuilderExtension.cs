@@ -1,11 +1,13 @@
-﻿namespace Indiko.Maui.Controls.Markdown;
+﻿
+using SkiaSharp.Views.Maui.Controls.Hosting;
+
+namespace Indiko.Maui.Controls.Markdown;
 
 public static class BuilderExtension
 {
     public static MauiAppBuilder UseMarkdownView(this MauiAppBuilder builder)
     {
-        // for later
-
+        builder.UseSkiaSharp();
         return builder;
     }
 }

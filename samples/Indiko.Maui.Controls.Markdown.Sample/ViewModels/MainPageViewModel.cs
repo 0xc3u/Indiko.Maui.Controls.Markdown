@@ -96,6 +96,17 @@ public partial class MainPageViewModel : BaseViewModel
 
             **Some bold text with a [link](https://www.github.com) some text behind the link.**
 
+        ### Lokal SVG Image
+
+        ![Lokal SVG ](dotnet_bot.svg)
+
+
+        ### Web Source SVG Image
+
+        ![Web Source SVG](https://www.svgrepo.com/show/530402/honor.svg)
+
+
+
 
         ";
     }

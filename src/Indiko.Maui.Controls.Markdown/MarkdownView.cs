@@ -10,6 +10,7 @@ namespace Indiko.Maui.Controls.Markdown;
 
 public class MarkdownView : ContentView
 {
+    private readonly Thickness _defaultListIndent = new(10, 0, 10, 0);
     private Dictionary<string, ImageSource> _imageCache = [];
 
     public delegate void HyperLinkClicked(object sender, LinkEventArgs e);
@@ -336,6 +337,16 @@ public class MarkdownView : ContentView
         set => SetValue(ImageAspectProperty, value);
     }
 
+
+    public static readonly BindableProperty ListIndentProperty =
+    BindableProperty.Create(nameof(ListIndent), typeof(Thickness), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public Thickness ListIndent
+    {
+        get => (Thickness)GetValue(ListIndentProperty);
+        set => SetValue(ListIndentProperty, value);
+    }
+
     private static void OnMarkdownTextChanged(BindableObject bindable, object oldValue, object newValue)
     {
         var control = (MarkdownView)bindable;
@@ -346,20 +357,19 @@ public class MarkdownView : ContentView
         if (string.IsNullOrWhiteSpace(MarkdownText))
             return;
 
-        // Clear existing content
         Content = null;
 
         var grid = new Grid
         {
             Margin = new Thickness(0, 0, 0, 0),
             Padding = new Thickness(0, 0, 0, 0),
-            RowSpacing = 2,
+            RowSpacing = 3,
             ColumnSpacing = 0,
             ColumnDefinitions =
-        {
-            new ColumnDefinition { Width = 15 }, // For bullet points or ordered list numbers
-            new ColumnDefinition { Width = GridLength.Star } // For text
-        }
+            {
+                new ColumnDefinition { Width = GridLength.Auto },
+                new ColumnDefinition { Width = GridLength.Star }
+            }
         };
 
         var lines = Regex.Split(MarkdownText, @"\r\n?|\n", RegexOptions.Compiled);
@@ -825,16 +835,47 @@ public class MarkdownView : ContentView
     }
 
 
+    //    private void AddBulletPointToGrid(Grid grid, int gridRow)
+    //    {
+    //        string bulletPointSign = "-";
+
+    //#if ANDROID
+    //        bulletPointSign = "\u2022";
+    //#endif
+    //#if iOS
+    //        bulletPointSign = "\u2029";
+    //#endif
+    //        var bulletPoint = new Label
+    //        {
+    //            Text = bulletPointSign,
+    //            FontSize = Math.Ceiling(TextFontSize * 1.1),
+    //            FontFamily = TextFontFace,
+    //            TextColor = TextColor,
+    //            FontAutoScalingEnabled = false,
+    //            VerticalOptions = LayoutOptions.Start,
+    //            HorizontalTextAlignment = TextAlignment.Start,
+    //            VerticalTextAlignment = TextAlignment.Start,
+    //            HorizontalOptions = LayoutOptions.Start,
+    //            Margin = new Thickness(0, 0),
+    //            Padding = new Thickness(0, 0)
+    //        };
+
+    //        grid.Children.Add(bulletPoint);
+    //        Grid.SetRow(bulletPoint, gridRow);
+    //        Grid.SetColumn(bulletPoint, 0);
+    //    }
+
     private void AddBulletPointToGrid(Grid grid, int gridRow)
     {
         string bulletPointSign = "-";
 
 #if ANDROID
-        bulletPointSign = "\u2022";
+    bulletPointSign = "\u2022";
 #endif
 #if iOS
-        bulletPointSign = "\u2029";
+    bulletPointSign = "\u2029";
 #endif
+
         var bulletPoint = new Label
         {
             Text = bulletPointSign,
@@ -846,14 +887,15 @@ public class MarkdownView : ContentView
             HorizontalTextAlignment = TextAlignment.Start,
             VerticalTextAlignment = TextAlignment.Start,
             HorizontalOptions = LayoutOptions.Start,
-            Margin = new Thickness(0, 0),
-            Padding = new Thickness(0, 0)
+            Margin = (ListIndent != _defaultListIndent) ? ListIndent : _defaultListIndent,
+            Padding = new Thickness(0, 0),
         };
 
         grid.Children.Add(bulletPoint);
         Grid.SetRow(bulletPoint, gridRow);
         Grid.SetColumn(bulletPoint, 0);
     }
+
 
     private void AddOrderedListItemToGrid(int listItemIndex, Grid grid, int gridRow)
     {
@@ -863,13 +905,14 @@ public class MarkdownView : ContentView
             FontSize = TextFontSize,
             FontFamily = TextFontFace,
             TextColor = TextColor,
-            FontAutoScalingEnabled = true,
+            FontAutoScalingEnabled = false,
             VerticalOptions = LayoutOptions.Start,
             HorizontalOptions = LayoutOptions.Start,
             HorizontalTextAlignment = TextAlignment.Start,
             VerticalTextAlignment = TextAlignment.Start,
-            Margin = new Thickness(0, 0),
-            Padding = new Thickness(0)
+            Margin = (ListIndent != _defaultListIndent) ? ListIndent : _defaultListIndent,
+            Padding = new Thickness(0),
+            LineBreakMode = LineBreakMode.NoWrap
         };
 
         grid.Children.Add(orderedListItem);
@@ -886,7 +929,8 @@ public class MarkdownView : ContentView
             FormattedText = formattedString,
             VerticalOptions = LayoutOptions.Start,
             HorizontalOptions = LayoutOptions.Fill,
-            Margin = new Thickness(15, 0, 0, 0) // Indent the list item text
+            Padding = new Thickness(0),
+            Margin = new Thickness(0)
         };
 
         grid.Children.Add(listItemLabel);

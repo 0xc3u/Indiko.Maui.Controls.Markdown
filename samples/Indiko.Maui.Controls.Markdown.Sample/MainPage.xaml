@@ -43,6 +43,7 @@
                           HyperlinkColor="{StaticResource Blue100Accent}"
                           LineColor="{StaticResource GrayQuoteBorder}"
                           LinkCommand="{Binding LinkReceivedCommand}"
+                          ListIndent="10,0,10,0"
                           OnHyperLinkClicked="MarkdownView_HyperLinkClicked">
             </idk:MarkdownView>
 

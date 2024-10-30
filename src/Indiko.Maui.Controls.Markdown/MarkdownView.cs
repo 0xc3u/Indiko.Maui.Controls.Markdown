@@ -10,6 +10,8 @@ namespace Indiko.Maui.Controls.Markdown;
 
 public class MarkdownView : ContentView
 {
+
+    private static readonly Regex KaTeXBlockRegex = new Regex(@"\$\$(.*?)\$\$", RegexOptions.Compiled | RegexOptions.Singleline);
     private readonly Thickness _defaultListIndent = new(10, 0, 10, 0);
     private Dictionary<string, ImageSource> _imageCache = [];
 
@@ -385,6 +387,7 @@ public class MarkdownView : ContentView
         for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i].Trim();
+
             bool lineBeforeWasBlockQuote = currentLineIsBlockQuote;
             currentLineIsBlockQuote = false;
             if (activeCodeBlockLabel == null)
@@ -440,6 +443,13 @@ public class MarkdownView : ContentView
                 HandleBlockQuote(line, lineBeforeWasBlockQuote, grid, out currentLineIsBlockQuote, ref gridRow);
                 isExitingList = false;
             }
+            else if (IsTaskList(line, out bool isChecked))
+            {
+                AddTaskListItemToGrid(line[6..], isChecked, grid, gridRow);
+                gridRow++;
+                isExitingList = true;
+                continue;
+            }
             else if (IsUnorderedList(line))
             {
                 if (!isUnorderedListActive)
@@ -488,6 +498,30 @@ public class MarkdownView : ContentView
                 gridRow++;
                 isExitingList = false;
             }
+
+            else if (IsKaTeXBlock(line))
+            {
+                var match = KaTeXBlockRegex.Match(line);
+                var latexFormula = match.Groups[1].Value;
+
+                var latexView = new LatexView
+                {
+                    Text = latexFormula,
+                    FontSize = 48f,
+                    TextColor = TextColor,
+                    HighlightColor = Colors.Transparent,
+                    ErrorColor = Colors.Red,
+                    HorizontalOptions = LayoutOptions.Start,
+                    VerticalOptions = LayoutOptions.Center,
+                    HeightRequest = 50
+                };
+
+                grid.Children.Add(latexView);
+                Grid.SetRow(latexView, gridRow++);
+                Grid.SetColumnSpan(latexView, 2);
+                continue;
+            }
+
             else if (IsTable(lines, i, out int tableEndIndex)) // Detect table
             {
                 var table = CreateTable(lines, i, tableEndIndex);
@@ -625,6 +659,12 @@ public class MarkdownView : ContentView
         gridRow++;
     }
 
+    private static bool IsKaTeXBlock(string line)
+    {
+        string trimmedLine = line.TrimStart();
+        return KaTeXBlockRegex.IsMatch(trimmedLine);
+    }
+
     private static bool IsHorizontalRule(string line)
     {
         string compactLine = line.Replace(" ", string.Empty);
@@ -693,6 +733,13 @@ public class MarkdownView : ContentView
 
         return false;
     }
+
+    private static bool IsTaskList(string line, out bool isChecked)
+    {
+        isChecked = line.StartsWith("- [x]", StringComparison.OrdinalIgnoreCase);
+        return line.StartsWith("- [ ]") || isChecked;
+    }
+
 
     private static bool IsTable(string[] lines, int currentIndex, out int tableEndIndex)
     {
@@ -834,37 +881,6 @@ public class MarkdownView : ContentView
         return formattedString;
     }
 
-
-    //    private void AddBulletPointToGrid(Grid grid, int gridRow)
-    //    {
-    //        string bulletPointSign = "-";
-
-    //#if ANDROID
-    //        bulletPointSign = "\u2022";
-    //#endif
-    //#if iOS
-    //        bulletPointSign = "\u2029";
-    //#endif
-    //        var bulletPoint = new Label
-    //        {
-    //            Text = bulletPointSign,
-    //            FontSize = Math.Ceiling(TextFontSize * 1.1),
-    //            FontFamily = TextFontFace,
-    //            TextColor = TextColor,
-    //            FontAutoScalingEnabled = false,
-    //            VerticalOptions = LayoutOptions.Start,
-    //            HorizontalTextAlignment = TextAlignment.Start,
-    //            VerticalTextAlignment = TextAlignment.Start,
-    //            HorizontalOptions = LayoutOptions.Start,
-    //            Margin = new Thickness(0, 0),
-    //            Padding = new Thickness(0, 0)
-    //        };
-
-    //        grid.Children.Add(bulletPoint);
-    //        Grid.SetRow(bulletPoint, gridRow);
-    //        Grid.SetColumn(bulletPoint, 0);
-    //    }
-
     private void AddBulletPointToGrid(Grid grid, int gridRow)
     {
         string bulletPointSign = "-";
@@ -895,7 +911,6 @@ public class MarkdownView : ContentView
         Grid.SetRow(bulletPoint, gridRow);
         Grid.SetColumn(bulletPoint, 0);
     }
-
 
     private void AddOrderedListItemToGrid(int listItemIndex, Grid grid, int gridRow)
     {
@@ -936,6 +951,38 @@ public class MarkdownView : ContentView
         grid.Children.Add(listItemLabel);
         Grid.SetRow(listItemLabel, gridRow);
         Grid.SetColumn(listItemLabel, 1);
+    }
+
+    private void AddTaskListItemToGrid(string taskText, bool isChecked, Grid grid, int gridRow)
+    {
+        var checkbox = new CheckBox
+        {
+            IsChecked = isChecked,
+            HorizontalOptions = LayoutOptions.Start,
+            VerticalOptions = LayoutOptions.Center,
+            HeightRequest = 18,
+            WidthRequest = 18,
+            Margin = (ListIndent != _defaultListIndent) ? ListIndent : _defaultListIndent,
+        };
+
+        grid.Children.Add(checkbox);
+        Grid.SetRow(checkbox, gridRow);
+        Grid.SetColumn(checkbox, 0);
+
+        // Add the task list item text
+        var formattedString = CreateFormattedString(taskText, TextColor);
+        var taskLabel = new Label
+        {
+            FormattedText = formattedString,
+            VerticalOptions = LayoutOptions.Center,
+            HorizontalOptions = LayoutOptions.Fill,
+            Padding = new Thickness(0),
+            Margin = new Thickness(0)
+        };
+
+        grid.Children.Add(taskLabel);
+        Grid.SetRow(taskLabel, gridRow);
+        Grid.SetColumn(taskLabel, 1);
     }
 
     private Grid CreateTable(string[] lines, int startIndex, int endIndex)

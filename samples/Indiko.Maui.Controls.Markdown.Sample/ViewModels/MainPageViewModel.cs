@@ -27,8 +27,8 @@ public partial class MainPageViewModel : BaseViewModel
                 - macOS 
                 - Windows
                 with the **same code**.
-
-               _Why you should learn mobile cross-platform_
+                
+               **Why you should learn mobile cross-platform**
                1. **Broader Market Reach**
                2. **Cost and Time Efficiency**
                3. **Consistent User Experience**
@@ -63,16 +63,14 @@ public partial class MainPageViewModel : BaseViewModel
                 {
                     Console.WriteLine(n);
                 }
-
                 ```
-
 
                 ``` int b= 0; ```
 
                 [More about Maui.net](https://learn.microsoft.com/en-us/dotnet/maui/?view=net-maui-8.0)
 
-
-                ![Microsoft](https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RWCZER?ver=1433&q=90&m=6&h=157&w=279&b=%23FFFFFFFF&l=f&o=t&aim=true)
+        ### Table Support
+        The MarkdownView supports basic tables as well as tables with alignments.
 
         #### Basic Table
 
@@ -92,9 +90,12 @@ public partial class MainPageViewModel : BaseViewModel
         A3 | B3 | C3 
 
 
-        We moved from ~~~Xamarin.Forms~~ to **.NET MAUI** and we are loving it!
+        ### KaTex Support
+        based on _CSharpMath_
+        $$\int_0^\infty \mathrm{e}^{-x}\,\mathrm{d}x$$
 
-            **Some bold text with a [link](https://www.github.com) some text behind the link.**
+        $$A_{triangle}=\frac{1}{2}({b}\cdot{h})$$
+        
 
         ### Lokal SVG Image
 

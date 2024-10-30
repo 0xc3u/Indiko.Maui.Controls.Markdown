@@ -2,7 +2,9 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Graphics.Text;
 using SkiaSharp;
 using Image = Microsoft.Maui.Controls.Image;
 
@@ -12,6 +14,8 @@ public class MarkdownView : ContentView
 {
 
     private static readonly Regex KaTeXBlockRegex = new Regex(@"\$\$(.*?)\$\$", RegexOptions.Compiled | RegexOptions.Singleline);
+    private static readonly Regex KaTeXInlineRegex = new Regex(@"\$(.*?)\$", RegexOptions.Compiled);
+
     private readonly Thickness _defaultListIndent = new(10, 0, 10, 0);
     private Dictionary<string, ImageSource> _imageCache = [];
 
@@ -498,7 +502,6 @@ public class MarkdownView : ContentView
                 gridRow++;
                 isExitingList = false;
             }
-
             else if (IsKaTeXBlock(line))
             {
                 var match = KaTeXBlockRegex.Match(line);
@@ -507,13 +510,12 @@ public class MarkdownView : ContentView
                 var latexView = new LatexView
                 {
                     Text = latexFormula,
-                    FontSize = 48f,
+                    FontSize = (float)(TextFontSize * 4),
                     TextColor = TextColor,
                     HighlightColor = Colors.Transparent,
                     ErrorColor = Colors.Red,
-                    HorizontalOptions = LayoutOptions.Start,
+                    HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
-                    HeightRequest = 50
                 };
 
                 grid.Children.Add(latexView);
@@ -521,7 +523,14 @@ public class MarkdownView : ContentView
                 Grid.SetColumnSpan(latexView, 2);
                 continue;
             }
-
+            else if (IsKaTeXInline(line))
+            {
+                var katexGrid = CreateInlineKatexBlock(line, TextColor);
+                grid.Children.Add(katexGrid);
+                Grid.SetRow(katexGrid, gridRow++);
+                Grid.SetColumnSpan(katexGrid, 2);
+                continue;
+            }
             else if (IsTable(lines, i, out int tableEndIndex)) // Detect table
             {
                 var table = CreateTable(lines, i, tableEndIndex);
@@ -665,6 +674,12 @@ public class MarkdownView : ContentView
         return KaTeXBlockRegex.IsMatch(trimmedLine);
     }
 
+    private static bool IsKaTeXInline(string line)
+    {
+        string trimmedLine = line.TrimStart();
+        return KaTeXInlineRegex.IsMatch(trimmedLine);
+    }
+
     private static bool IsHorizontalRule(string line)
     {
         string compactLine = line.Replace(" ", string.Empty);
@@ -740,7 +755,6 @@ public class MarkdownView : ContentView
         return line.StartsWith("- [ ]") || isChecked;
     }
 
-
     private static bool IsTable(string[] lines, int currentIndex, out int tableEndIndex)
     {
         tableEndIndex = currentIndex;
@@ -785,7 +799,6 @@ public class MarkdownView : ContentView
 
         return image;
     }
-
     private Border CreateCodeBlock(string codeText, out Label contentLabel)
     {
         Label content = new()
@@ -883,6 +896,76 @@ public class MarkdownView : ContentView
 
         return formattedString;
     }
+
+    private Grid CreateInlineKatexBlock(string line, Color textColor)
+    {
+        var grid = new Grid
+        {
+            ColumnDefinitions =
+        {
+            new ColumnDefinition { Width = GridLength.Auto },
+            new ColumnDefinition { Width = GridLength.Auto },
+            new ColumnDefinition { Width = GridLength.Auto }
+        },
+            RowDefinitions =
+        {
+            new RowDefinition { Height = GridLength.Auto }
+        }
+        };
+
+        var match = KaTeXInlineRegex.Match(line);
+
+        if (match.Success)
+        {
+            string beforeText = line[..match.Index];
+            string katexFormula = match.Groups[1].Value;
+            string afterText = line[(match.Index + match.Length)..];
+
+            if (!string.IsNullOrEmpty(beforeText))
+            {
+                var beforeLabel = new Label
+                {
+                    Text = beforeText,
+                    TextColor = textColor,
+                    FontSize = TextFontSize,
+                    FontFamily = TextFontFace,
+                    VerticalOptions = LayoutOptions.Center
+                };
+                grid.Children.Add(beforeLabel);
+                Grid.SetColumn(beforeLabel, 0);
+            }
+
+            var latexView = new LatexView
+            {
+                Text = katexFormula,
+                FontSize = (float)TextFontSize * 4,
+                TextColor = TextColor,
+                HighlightColor = Colors.Transparent,
+                ErrorColor = Colors.Red,
+                HorizontalOptions = LayoutOptions.Start,
+                VerticalOptions = LayoutOptions.Center,
+                Margin = new Thickness(-10,-10)
+            };
+            grid.Children.Add(latexView);
+            Grid.SetColumn(latexView, 1);
+
+            if (!string.IsNullOrEmpty(afterText))
+            {
+                var afterLabel = new Label
+                {
+                    Text = afterText,
+                    TextColor = textColor,
+                    FontSize = TextFontSize,
+                    FontFamily = TextFontFace,
+                    VerticalOptions = LayoutOptions.Center
+                };
+                grid.Children.Add(afterLabel);
+                Grid.SetColumn(afterLabel, 2);
+            }
+        }
+        return grid;
+    }
+
 
     private void AddBulletPointToGrid(Grid grid, int gridRow)
     {

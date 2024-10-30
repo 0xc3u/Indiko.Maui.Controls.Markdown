@@ -93,9 +93,9 @@ public partial class MainPageViewModel : BaseViewModel
         ### KaTex Support
         based on _CSharpMath_
         $$\int_0^\infty \mathrm{e}^{-x}\,\mathrm{d}x$$
-
         $$A_{triangle}=\frac{1}{2}({b}\cdot{h})$$
-        
+
+        Area of a circle is $\pi r^2$
 
         ### Lokal SVG Image
 

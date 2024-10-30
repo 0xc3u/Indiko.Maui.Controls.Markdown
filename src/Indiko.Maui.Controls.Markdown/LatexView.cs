@@ -1,11 +1,15 @@
 ﻿using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
+using Typography.OpenFont;
 
 namespace Indiko.Maui.Controls.Markdown;
 
 public sealed class LatexView : SKCanvasView
 {
+
+    private System.Drawing.RectangleF _bounds;
+
     public static readonly BindableProperty TextProperty = BindableProperty.Create(propertyName: nameof(Text),
         returnType: typeof(string), declaringType: typeof(LatexView), propertyChanged: OnLatexChanged);
 
@@ -57,12 +61,14 @@ public sealed class LatexView : SKCanvasView
         {
             var view = bindable as LatexView;
             view?.InvalidateSurface();
+            view?.UpdateSize();
         }
     }
 
     public LatexView()
     {
         PaintSurface += OnPainting;
+        SizeChanged += (s, e) => UpdateSize();
     }
 
     ~LatexView()
@@ -70,10 +76,26 @@ public sealed class LatexView : SKCanvasView
         PaintSurface -= OnPainting;
     }
 
-    protected override void OnSizeAllocated(double width, double height)
+    private void UpdateSize()
     {
-        base.OnSizeAllocated(width, height);
-        InvalidateSurface();
+        if (!string.IsNullOrEmpty(Text))
+        {
+            var painter = new CSharpMath.SkiaSharp.MathPainter
+            {
+                LaTeX = Text,
+                FontSize = FontSize,
+                AntiAlias = true,
+                DisplayErrorInline = true,
+                TextColor = TextColor.ToSKColor(),
+                ErrorColor = ErrorColor.ToSKColor(),
+                HighlightColor = HighlightColor.ToSKColor(),
+                PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill
+            };
+
+            var measuredBounds = painter.Measure();
+            WidthRequest = (measuredBounds.Width * 0.5);
+            HeightRequest = (measuredBounds.Height * 0.5);
+        }
     }
 
     private void OnPainting(object? sender, SKPaintSurfaceEventArgs e)
@@ -100,7 +122,6 @@ public sealed class LatexView : SKCanvasView
             HighlightColor = HighlightColor.ToSKColor(),
             PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill
         };
-
         painter.Draw(canvas);
     }
 }

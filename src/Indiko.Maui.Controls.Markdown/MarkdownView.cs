@@ -836,16 +836,19 @@ public class MarkdownView : ContentView
             }
             else if (part.StartsWith("__") && part.EndsWith("__"))
             {
+                span.TextColor = textColor;
                 span.Text = part.Trim('_', ' ');
                 span.FontAttributes = FontAttributes.Bold;
             }
             else if (part.StartsWith('_') && part.EndsWith('_'))
             {
+                span.TextColor = textColor;
                 span.Text = part.Trim('_', ' ');
                 span.FontAttributes = FontAttributes.Italic;
             }
             else if (part.StartsWith("~~") && part.EndsWith("~~"))
             {
+                span.TextColor = textColor;
                 span.Text = part.Trim('~');
                 span.TextDecorations = TextDecorations.Strikethrough;
             }
@@ -863,6 +866,7 @@ public class MarkdownView : ContentView
             }
             else if (part.StartsWith('*') && part.EndsWith('*'))
             {
+                span.TextColor = textColor;
                 span.Text = part.Trim('*');
                 span.FontAttributes = FontAttributes.Italic;
             }
@@ -872,7 +876,6 @@ public class MarkdownView : ContentView
             }
 
             span.FontSize = TextFontSize;
-            span.TextColor = textColor;
             span.FontFamily = TextFontFace;
 
             formattedString.Spans.Add(span);

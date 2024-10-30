@@ -40,7 +40,7 @@
                           TableRowFontSize="11"
                           TableRowTextColor="{StaticResource Gray600}"
                           ImageAspect="Fill"
-                          HyperlinkColor="{StaticResource Blue100Accent}"
+                          HyperlinkColor="{StaticResource Yellow100Accent}"
                           LineColor="{StaticResource GrayQuoteBorder}"
                           LinkCommand="{Binding LinkReceivedCommand}"
                           ListIndent="10,0,10,0"

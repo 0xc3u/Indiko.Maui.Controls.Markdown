@@ -6,13 +6,28 @@ on:
       - master
     paths-ignore:
       - "**.md"
+
+env:
+  DOTNET_NOLOGO: true                     # Disable the .NET logo
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true # Disable the .NET first time experience
+  DOTNET_CLI_TELEMETRY_OPTOUT: true       # Disable sending .NET CLI telemetry
+  DONET_VERSION: 8.0.402
+ 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Build
-        run: dotnet build src/Indiko.Maui.Controls.Markdown.sln -c Release
+     - name: Setup .NET
+       uses: actions/setup-dotnet@v1
+       with:
+        dotnet-version: ${{ env.DONET_VERSION }}
+        
+     - name: Install MAUI workload
+       run: dotnet workload install maui
+     
+     - uses: actions/checkout@v3
+     - name: Build
+       run: dotnet build src/Indiko.Maui.Controls.Markdown.sln -c Release
 
   symantic-release:
     runs-on: ubuntu-latest

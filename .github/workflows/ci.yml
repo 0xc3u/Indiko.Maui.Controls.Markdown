@@ -1,4 +1,4 @@
-name: SymanticRelease
+name: CI with Semantic Release
 on:
   push:
     branches:

@@ -32,7 +32,7 @@ jobs:
   symantic-release:
     runs-on: ubuntu-latest
     environment:
-      name: ReleaseBuilds
+      name: Release
     needs: build  # This ensures the symantic-release job runs after the build job
     steps:
       - name: Checkout

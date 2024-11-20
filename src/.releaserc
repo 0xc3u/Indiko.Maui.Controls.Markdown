@@ -1,0 +1,31 @@
+{
+  "tagFormat": "v${version}",
+  "branches": [ "master", "main" ],
+  "plugins": [
+
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md"
+        ]
+      }
+    ],
+    [
+    "@semantic-release/github",
+      {
+        "overwrite": true, // Do not attempt to overwrite existing releases,
+        "successComment": false,
+        "failTitle": false
+      }
+    ]
+  ]
+}

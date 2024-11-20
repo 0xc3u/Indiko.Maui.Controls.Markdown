@@ -8,7 +8,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Indiko.Maui.Controls.Markdo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9C4DBE8F-19C9-468A-A26A-A4B975098C6F}"
 	ProjectSection(SolutionItems) = preProject
+		..\src\.releaserc = ..\src\.releaserc
+		..\.github\workflows\ci.yml = ..\.github\workflows\ci.yml
 		..\README.md = ..\README.md
+		..\.github\workflows\release-nuget.yml = ..\.github\workflows\release-nuget.yml
 	EndProjectSection
 EndProject
 Global

@@ -353,6 +353,25 @@ public class MarkdownView : ContentView
         set => SetValue(ListIndentProperty, value);
     }
 
+    public static readonly BindableProperty ParagraphSpacingProperty = BindableProperty.Create(nameof(ParagraphSpacing),
+        typeof(double), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged, defaultValue: 3.0);
+
+    public double ParagraphSpacing
+    {
+        get => (double)GetValue(ParagraphSpacingProperty);
+        set => SetValue(ParagraphSpacingProperty, value);
+    }
+
+    public static readonly BindableProperty LineHeightMultiplierProperty =
+        BindableProperty.Create(nameof(LineHeightMultiplier), typeof(double), typeof(MarkdownView),
+            propertyChanged: OnMarkdownTextChanged, defaultValue: 1.0);
+
+    public double LineHeightMultiplier
+    {
+        get => (double)GetValue(LineHeightMultiplierProperty);
+        set => SetValue(LineHeightMultiplierProperty, value);
+    }
+
     private static void OnMarkdownTextChanged(BindableObject bindable, object oldValue, object newValue)
     {
         var control = (MarkdownView)bindable;
@@ -369,7 +388,7 @@ public class MarkdownView : ContentView
         {
             Margin = new Thickness(0, 0, 0, 0),
             Padding = new Thickness(0, 0, 0, 0),
-            RowSpacing = 3,
+            RowSpacing = ParagraphSpacing,
             ColumnSpacing = 0,
             ColumnDefinitions =
             {
@@ -413,6 +432,7 @@ public class MarkdownView : ContentView
 
                 var label = new Label
                 {
+                    LineHeight = LineHeightMultiplier,
                     Text = headlineText,
                     TextColor = textColor,
                     FontAttributes = FontAttributes.Bold,
@@ -554,6 +574,7 @@ public class MarkdownView : ContentView
                 var formattedString = CreateFormattedString(line, TextColor);
                 var label = new Label
                 {
+                    LineHeight = LineHeightMultiplier,
                     FormattedText = formattedString,
                     LineBreakMode = LineBreakModeText,
                     HorizontalOptions = LayoutOptions.Fill,
@@ -589,6 +610,7 @@ public class MarkdownView : ContentView
 
         var blockQuotelabel = new Label
         {
+            LineHeight = LineHeightMultiplier,
             FormattedText = CreateFormattedString(line[1..].Trim(), BlockQuoteTextColor),
             LineBreakMode = LineBreakModeText,
             FontFamily = BlockQuoteFontFace,
@@ -925,6 +947,7 @@ public class MarkdownView : ContentView
             {
                 var beforeLabel = new Label
                 {
+                    LineHeight = LineHeightMultiplier,
                     Text = beforeText,
                     TextColor = textColor,
                     FontSize = TextFontSize,
@@ -953,6 +976,7 @@ public class MarkdownView : ContentView
             {
                 var afterLabel = new Label
                 {
+                    LineHeight = LineHeightMultiplier,
                     Text = afterText,
                     TextColor = textColor,
                     FontSize = TextFontSize,
@@ -980,6 +1004,7 @@ public class MarkdownView : ContentView
 
         var bulletPoint = new Label
         {
+            LineHeight = LineHeightMultiplier,
             Text = bulletPointSign,
             FontSize = Math.Ceiling(TextFontSize * 1.1),
             FontFamily = TextFontFace,
@@ -1002,6 +1027,7 @@ public class MarkdownView : ContentView
     {
         var orderedListItem = new Label
         {
+            LineHeight = LineHeightMultiplier,
             Text = $"{listItemIndex}.",
             FontSize = TextFontSize,
             FontFamily = TextFontFace,
@@ -1027,6 +1053,7 @@ public class MarkdownView : ContentView
 
         var listItemLabel = new Label
         {
+            LineHeight = LineHeightMultiplier,
             FormattedText = formattedString,
             VerticalOptions = LayoutOptions.Start,
             HorizontalOptions = LayoutOptions.Fill,
@@ -1059,6 +1086,7 @@ public class MarkdownView : ContentView
         var formattedString = CreateFormattedString(taskText, TextColor);
         var taskLabel = new Label
         {
+            LineHeight = LineHeightMultiplier,
             FormattedText = formattedString,
             VerticalOptions = LayoutOptions.Center,
             HorizontalOptions = LayoutOptions.Fill,
@@ -1104,6 +1132,7 @@ public class MarkdownView : ContentView
 
             var headerLabel = new Label
             {
+                LineHeight = LineHeightMultiplier,
                 Text = headerCells[colIndex],
                 FontAttributes = FontAttributes.Bold,
                 FontSize = TableHeaderFontSize,
@@ -1134,6 +1163,7 @@ public class MarkdownView : ContentView
 
                 var cellLabel = new Label
                 {
+                    LineHeight = LineHeightMultiplier,
                     Text = rowCells[colIndex],
                     FontSize = TableRowFontSize,
                     FontFamily = TableRowFontFace,

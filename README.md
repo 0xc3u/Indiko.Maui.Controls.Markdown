@@ -184,7 +184,7 @@ You can respond to hyperlinks in Markdown content using the `LinkCommand` and `O
 
 ## Example Usage
 
-Here’s an example of how to use the `MarkdownView` in your XAML:
+Here's an example of how to use the `MarkdownView` in your XAML:
 
 ```xml
 <idk:MarkdownView 

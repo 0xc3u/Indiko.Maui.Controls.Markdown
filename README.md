@@ -77,6 +77,10 @@ The following is a list of all customizable bindable properties:
 ### Horizontal Rule
 - **`LineColor`**: The color for horizontal rules (default: `LightGray`).
 
+### Spacing
+- **`ParagraphSpacing`**: Modifies the spacing between paragraphs (default: `3`).
+- **`LineHeightMultiplier`** Modifies the line height multiplier for displayed labels (default: `1`). Directly modifies [Label.LineHeight](https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.controls.label.lineheight?view=net-maui-8.0).
+
 ## Supported Markdown Syntax
 
 - **Headings**: MarkdownView supports headings from `H1` to `H6`.
@@ -180,7 +184,7 @@ You can respond to hyperlinks in Markdown content using the `LinkCommand` and `O
 
 ## Example Usage
 
-Here’s an example of how to use the `MarkdownView` in your XAML:
+Hereâ€™s an example of how to use the `MarkdownView` in your XAML:
 
 ```xml
 <idk:MarkdownView 
@@ -214,11 +218,13 @@ Here’s an example of how to use the `MarkdownView` in your XAML:
     HyperlinkColor="{StaticResource Blue100Accent}"
     LineColor="{StaticResource GrayQuoteBorder}"
     LinkCommand="{Binding LinkReceivedCommand}"
-    OnHyperLinkClicked="MarkdownView_HyperLinkClicked">
+    OnHyperLinkClicked="MarkdownView_HyperLinkClicked"
+    LineHeightMultiplier="1.2"
+    ParagraphSpacing=1>
 </idk:MarkdownView>
 ```
 
-Here’s an example of how to use the `MarkdownView` in your c#:
+Hereâ€™s an example of how to use the `MarkdownView` in your c#:
 
 ```csharp
 
@@ -261,7 +267,9 @@ Here’s an example of how to use the `MarkdownView` in your c#:
             TableHeaderFontSize = 14,
             TableHeaderTextColor = Colors.Black,
             TableRowFontSize = 12,
-            TableRowTextColor = Colors.DarkGray
+            TableRowTextColor = Colors.DarkGray,
+            ParagraphSpacing = 1,
+            LineHeightMultiplier = 1.2,
         };
 
         markdownView.OnHyperLinkClicked += (sender, e) =>

@@ -43,8 +43,10 @@
                           HyperlinkColor="{StaticResource Yellow100Accent}"
                           LineColor="{StaticResource GrayQuoteBorder}"
                           LinkCommand="{Binding LinkReceivedCommand}"
+                          EMailCommand="{Binding EMailReceivedCommand}"
                           ListIndent="10,0,10,0"
-                          OnHyperLinkClicked="MarkdownView_HyperLinkClicked">
+                          OnHyperLinkClicked="MarkdownView_HyperLinkClicked"
+                          OnEmailClicked="MarkdownView_OnEmailClicked">
             </idk:MarkdownView>
 
         </VerticalStackLayout>

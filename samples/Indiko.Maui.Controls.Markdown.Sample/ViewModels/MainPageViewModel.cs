@@ -10,6 +10,12 @@ public partial class MainPageViewModel : BaseViewModel
         Console.WriteLine(string.Concat("LINK RECEIVED = '",link, "'"));
     }
 
+    [RelayCommand]
+    private void OnEMailReceived(object email)
+    {
+        Console.WriteLine(string.Concat("E-MAIL RECEIVED = '", email, "'"));
+    }
+
     [ObservableProperty]
     string markdownText;
 
@@ -107,6 +113,10 @@ public partial class MainPageViewModel : BaseViewModel
         ![Web Source SVG](https://www.svgrepo.com/show/530402/honor.svg)
 
 
+
+        ### E-Mail Links
+
+        Contact us at support@example.com.
 
 
         ";

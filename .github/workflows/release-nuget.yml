@@ -10,22 +10,55 @@ on:
   workflow_dispatch:    # Allows manual run
 
 jobs:
-  release-nuget:
-  
+
+  release:
     runs-on: windows-latest
 
+    strategy:
+      matrix:
+        project:
+          - name: "Indiko.Maui.Controls.Markdown"
+            path: "src/Indiko.Maui.Controls.Markdown/Indiko.Maui.Controls.Markdown.csproj"
+          
     steps:
       - uses: actions/checkout@v3
-      - name: Verify commit exists in origin/main
+
+      - name: Fetch all tags
         run: |
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
-          git branch --remote --contains | grep origin/main
-      - name: Get version information from tag
-        id: get_version
+          git fetch --tags
+        shell: bash
+
+      - name: Get latest tag (Manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+          latest_tag_without_v=${latest_tag#v}
+          echo "latest_tag=$latest_tag_without_v" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Use the pushed tag (Push trigger)
+        if: github.event_name == 'push'
+        id: get_version_from_push
         uses: battila7/get-version-action@v2
-      - name: Pack
-        run: dotnet pack src\Indiko.Maui.Controls.Markdown.sln -c Release -p:PackageVersion=${{ steps.get_version.outputs.version-without-v }}
-      - name: Push
-        run: dotnet nuget push src\Indiko.Maui.Controls.Markdown\bin\Release\Indiko.Maui.Controls.Markdown.${{ steps.get_version.outputs.version-without-v }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
+
+      - name: Pack project
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            dotnet pack ${{ matrix.project.path }} -c Release -p:PackageVersion=${{ env.latest_tag }}
+          else
+            version_without_v=${{ steps.get_version_from_push.outputs.version-without-v }}
+            dotnet pack ${{ matrix.project.path }} -c Release -p:PackageVersion=$version_without_v
+          fi
+        shell: bash
+
+      - name: Push to NuGet
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            dotnet nuget push $(dirname ${{ matrix.project.path }})/bin/Release/${{ matrix.project.name }}.${{ env.latest_tag }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
+          else
+            dotnet nuget push $(dirname ${{ matrix.project.path }})/bin/Release/${{ matrix.project.name }}.${{ steps.get_version_from_push.outputs.version-without-v }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
+          fi
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.NUGET_API_KEY }}

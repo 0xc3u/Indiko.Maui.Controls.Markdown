@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -10,17 +11,22 @@ using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
 
-public class MarkdownView : ContentView
+public partial class MarkdownView : ContentView
 {
 
     private static readonly Regex KaTeXBlockRegex = new Regex(@"\$\$(.*?)\$\$", RegexOptions.Compiled | RegexOptions.Singleline);
     private static readonly Regex KaTeXInlineRegex = new Regex(@"\$(.*?)\$", RegexOptions.Compiled);
+    private static readonly Regex EmailRegex = new Regex(@"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", RegexOptions.Compiled);
 
     private readonly Thickness _defaultListIndent = new(10, 0, 10, 0);
     private Dictionary<string, ImageSource> _imageCache = [];
 
     public delegate void HyperLinkClicked(object sender, LinkEventArgs e);
     public event HyperLinkClicked OnHyperLinkClicked;
+
+    public delegate void EmailClickedEventHandler(object sender, EmailEventArgs e);
+    public event EmailClickedEventHandler OnEmailClicked;
+
 
     public static readonly BindableProperty MarkdownTextProperty =
         BindableProperty.Create(nameof(MarkdownText), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
@@ -330,6 +336,26 @@ public class MarkdownView : ContentView
     {
         get => GetValue(LinkCommandParameterProperty);
         set => SetValue(LinkCommandParameterProperty, value);
+    }
+
+    /* **************** E-Mail Links ************************/
+
+    public static readonly BindableProperty EMailCommandProperty =
+   BindableProperty.Create(nameof(EMailCommand), typeof(ICommand), typeof(MarkdownView));
+
+    public ICommand EMailCommand
+    {
+        get => (ICommand)GetValue(EMailCommandProperty);
+        set => SetValue(EMailCommandProperty, value);
+    }
+
+    public static readonly BindableProperty EMailCommandParameterProperty =
+        BindableProperty.Create(nameof(EMailCommandParameter), typeof(object), typeof(MarkdownView));
+
+    public object EMailCommandParameter
+    {
+        get => GetValue(EMailCommandParameterProperty);
+        set => SetValue(EMailCommandParameterProperty, value);
     }
 
     /* **************** Image Styling ***********************/
@@ -843,23 +869,44 @@ public class MarkdownView : ContentView
             Content = content
         };
     }
+
+    /// <summary>
+    /// Parses a single line of text containing Markdown syntax and returns a formatted string.
+    /// </summary>
+    /// <param name="line">The input text line containing Markdown elements.</param>
+    /// <param name="textColor">The default text color for the line.</param>
+    /// <returns>A FormattedString representing the parsed Markdown.</returns>
     private FormattedString CreateFormattedString(string line, Color textColor)
     {
         var formattedString = new FormattedString();
-        var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|~~.*?~~|`.*?`|\[.*?\]\(.*?\)|\*.*?\*)");
+
+        // Split the input line into parts, detecting Markdown syntax and email links
+        var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|~~.*?~~|`.*?`|\[.*?\]\(.*?\)|\*.*?\*|\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b)");
 
         foreach (var part in parts)
         {
             Span span = new Span();
 
-            if (part.StartsWith("`") && part.EndsWith("`"))
+            if (EmailRegex.IsMatch(part)) // Detect email addresses
             {
-                span.Text = part.Trim('`');
+                var email = EmailRegex.Match(part).Value;
+                span.Text = email;
+                span.TextColor = HyperlinkColor; // Use hyperlink color for email
+                span.TextDecorations = TextDecorations.Underline;
+
+                // Add tap gesture recognizer to trigger email link handling
+                var emailTapGestureRecognizer = new TapGestureRecognizer();
+                emailTapGestureRecognizer.Tapped += (_, _) => TriggerEmailClicked(email);
+                span.GestureRecognizers.Add(emailTapGestureRecognizer);
+            }
+            else if (part.StartsWith("`") && part.EndsWith("`")) // Inline code block
+            {
+                span.Text = part.Trim('`'); // Remove the backticks
                 span.BackgroundColor = CodeBlockBackgroundColor;
                 span.FontFamily = CodeBlockFontFace;
                 span.TextColor = CodeBlockTextColor;
             }
-            else if (part.StartsWith("**") && part.EndsWith("**"))
+            else if (part.StartsWith("**") && part.EndsWith("**")) // Bold text
             {
                 var nestedFormatted = CreateFormattedString(part.Trim('*', ' '), textColor);
                 foreach (var nestedSpan in nestedFormatted.Spans)
@@ -867,52 +914,57 @@ public class MarkdownView : ContentView
                     nestedSpan.FontAttributes = FontAttributes.Bold;
                     formattedString.Spans.Add(nestedSpan);
                 }
-                continue;
+                continue; // Skip adding this span since it's already handled
             }
-            else if (part.StartsWith("__") && part.EndsWith("__"))
+            else if (part.StartsWith("__") && part.EndsWith("__")) // Bold text (alternative syntax)
             {
                 span.TextColor = textColor;
                 span.Text = part.Trim('_', ' ');
                 span.FontAttributes = FontAttributes.Bold;
             }
-            else if (part.StartsWith('_') && part.EndsWith('_'))
+            else if (part.StartsWith('_') && part.EndsWith('_')) // Italic text (alternative syntax)
             {
                 span.TextColor = textColor;
                 span.Text = part.Trim('_', ' ');
                 span.FontAttributes = FontAttributes.Italic;
             }
-            else if (part.StartsWith("~~") && part.EndsWith("~~"))
+            else if (part.StartsWith("~~") && part.EndsWith("~~")) // Strikethrough text
             {
                 span.TextColor = textColor;
                 span.Text = part.Trim('~');
                 span.TextDecorations = TextDecorations.Strikethrough;
             }
-            else if (part.StartsWith('[') && part.Contains("](")) // Detect link
+            else if (part.StartsWith('[') && part.Contains("](")) // Markdown links
             {
+                // Extract link text and URL
                 var linkText = part.Substring(1, part.IndexOf(']') - 1);
                 var linkUrl = part.Substring(part.IndexOf('(') + 1, part.IndexOf(')') - part.IndexOf('(') - 1);
 
                 span.Text = linkText;
-                span.TextColor = HyperlinkColor;
+                span.TextColor = HyperlinkColor; // Use hyperlink color for links
                 span.TextDecorations = TextDecorations.Underline;
+
+                // Add tap gesture recognizer to trigger hyperlink handling
                 var linkTapGestureRecognizer = new TapGestureRecognizer();
                 linkTapGestureRecognizer.Tapped += (_, _) => TriggerHyperLinkClicked(linkUrl);
                 span.GestureRecognizers.Add(linkTapGestureRecognizer);
             }
-            else if (part.StartsWith('*') && part.EndsWith('*'))
+            else if (part.StartsWith('*') && part.EndsWith('*')) // Italic text
             {
                 span.TextColor = textColor;
                 span.Text = part.Trim('*');
                 span.FontAttributes = FontAttributes.Italic;
             }
-            else
+            else // Plain text
             {
                 span.Text = part;
             }
 
+            // Apply common properties for all spans
             span.FontSize = TextFontSize;
             span.FontFamily = TextFontFace;
 
+            // Add the span to the formatted string
             formattedString.Spans.Add(span);
         }
 
@@ -1212,6 +1264,18 @@ public class MarkdownView : ContentView
             LinkCommand.Execute(url);
         }
     }
+
+    private void TriggerEmailClicked(string email)
+    {
+        OnEmailClicked?.Invoke(this, new EmailEventArgs { Email = email });
+
+        if (EMailCommand?.CanExecute(email) == true)
+        {
+            EMailCommand.Execute(email);
+        }
+    }
+
+
 
     private async Task<ImageSource> LoadImageAsync(string imageUrl)
     {

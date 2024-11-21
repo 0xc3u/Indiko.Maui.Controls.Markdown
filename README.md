@@ -169,7 +169,7 @@ The following is a list of all customizable bindable properties:
     [Link Text](http://example.com)
     ```
 
-## Image and Hyperlink Handling
+## Image, Hyperlink and E-Mail Handling
 
 ### Image Handling
 The `MarkdownView` supports various sources for displaying images:
@@ -180,7 +180,19 @@ The `MarkdownView` supports various sources for displaying images:
 The `ImageAspect` property allows you to customize how images are displayed within the control.
 
 ### Hyperlink Handling
-You can respond to hyperlinks in Markdown content using the `LinkCommand` and `OnHyperLinkClicked` event. Hyperlinks will also display with the color specified by the `HyperlinkColor` property.
+You can respond to hyperlinks in Markdown content using the `LinkCommand` and `OnHyperLinkClicked` event. Hyperlinks are automatically detected and displayed with the color specified by the `HyperlinkColor` property.
+
+When a user taps on a hyperlink:
+- The `LinkCommand` is executed, if defined, with the hyperlink URL as the command parameter.
+- The `OnHyperLinkClicked` event is triggered, providing the tapped hyperlink URL in the event arguments.
+
+
+### Email Link Handling
+You can respond to email links in Markdown content using the `EMailCommand` and `OnEmailClicked` event. Email links are automatically detected and displayed with the color specified by the `HyperlinkColor` property. 
+
+When a user taps on an email address:
+- The `EMailCommand` is executed, if defined, with the tapped email address as the command parameter.
+- The `OnEmailClicked` event is triggered, providing the tapped email address in the event arguments.
 
 ## Example Usage
 

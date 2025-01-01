@@ -432,6 +432,7 @@ public partial class MarkdownView : ContentView
         bool currentLineIsBlockQuote = true;
         bool isExitingList = false;
         Label activeCodeBlockLabel = null;
+        int startCodeBlock = 0; // Gets the index of the initial code block
 
         for (int i = 0; i < lines.Length; i++)
         {
@@ -444,7 +445,9 @@ public partial class MarkdownView : ContentView
 
             if (activeCodeBlockLabel != null)
             {
-                HandleActiveCodeBlock(line, ref activeCodeBlockLabel, ref gridRow);
+                //Creates an indented code line based on the start code block
+                var indentedCodeLine = CreateIndentedCodeLine(lines[i], lines[startCodeBlock]);
+                HandleActiveCodeBlock(indentedCodeLine, ref activeCodeBlockLabel, ref gridRow);
             }
             else if (IsHeadline(line, out int headlineLevel))
             {
@@ -528,6 +531,7 @@ public partial class MarkdownView : ContentView
             }
             else if (IsCodeBlock(line, out bool isSingleLineCodeBlock))
             {
+                startCodeBlock = i; // Sets the initial code block index
                 HandleSingleLineOrStartOfCodeBlock(line, grid, ref gridRow, isSingleLineCodeBlock, ref activeCodeBlockLabel);
                 isExitingList = false;
             }
@@ -820,6 +824,56 @@ public partial class MarkdownView : ContentView
 
         tableEndIndex = lines.Length - 1;
         return true;
+    }
+
+    private static int CountLeadingSpaces(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return 0; // Empty or null string has no leading spaces
+        }
+
+        int spaceCount = 0;
+        foreach (char c in input)
+        {
+            if (char.IsWhiteSpace(c) || c == '\u3000') // Includes Unicode space
+            {
+                spaceCount++;
+            }
+            else
+            {
+                break; // Stop counting when a non-space char is found
+            }
+        }
+        return spaceCount;
+    }
+
+    private static string CreateIndentedCodeLine(string line, string lineStart)
+    {
+        try
+        {
+            int firstLineIndent = CountLeadingSpaces(line);
+            int secondLineIndent = CountLeadingSpaces(lineStart);
+            
+            if (firstLineIndent >= secondLineIndent) 
+            {
+                // Remove the extra indentation to align the code properly
+                var indentedCodeLine = line.Substring(secondLineIndent);
+                return indentedCodeLine;
+            } 
+            else
+            {
+                // Trim the original line
+                return line.Trim();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating indented code line: {ex.Message}");
+        }
+
+        // Return the original line if an exception occurs
+        return line;
     }
 
     private Image CreateImageBlock(string line)

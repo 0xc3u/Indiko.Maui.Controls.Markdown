@@ -64,10 +64,25 @@ public partial class MainPageViewModel : BaseViewModel
 
                 In summary, .NET MAUI offers a unified approach to cross-platform app development, combining ease of use, performance, and extensive ecosystem support, making it an excellent choice for modern app development.
 
-                ``` 
+                ```
                 for(int n= 0; n<10; n++)
                 {
                     Console.WriteLine(n);
+                }
+                ```
+
+                ```
+                public class SimpleProgram
+                {
+                    public static void Main(string[] args)
+                    {
+                        string message = ""Hello, World!"";
+                        Console.WriteLine(message);
+                        Console.WriteLine(""This is a simple C# program."");
+                        message = null;
+                        if (message == null)
+                            Console.WriteLine(""Message is null!"");
+                    }
                 }
                 ```
 

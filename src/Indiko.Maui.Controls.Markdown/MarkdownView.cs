@@ -939,7 +939,10 @@ public partial class MarkdownView : ContentView
 
         foreach (var part in parts)
         {
-            Span span = new Span();
+            Span span = new()
+            {
+                TextColor = TextColor
+            };
 
             if (EmailRegex.IsMatch(part)) // Detect email addresses
             {

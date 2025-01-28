@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.2.0...v1.2.1) (2025-01-28)
+
+
+### Bug Fixes
+
+*  [#29](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/issues/29) added default text color to span ([fcbf077](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/fcbf07789812b163d61144e24fd985dc66f1cb23))
+
 # [1.2.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.1.0...v1.2.0) (2025-01-07)
 
 

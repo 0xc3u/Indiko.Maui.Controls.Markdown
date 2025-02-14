@@ -4,6 +4,8 @@
 
 The `MarkdownView` control is a flexible component designed for MAUI applications to display and style Markdown content with ease. This control supports various Markdown syntax elements such as headings, blockquotes, code blocks, images, tables, and hyperlinks. It offers extensive customization options via bindable properties and allows you to tailor the appearance of different Markdown elements, making it perfect for integrating rich text content into your app.
 
+![markdownview_screenshots](https://github.com/user-attachments/assets/2485eedb-015d-4ccb-acc2-c19d24ea51d7)
+
 ## Build Status
 ![ci](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/actions/workflows/ci.yml/badge.svg)
 

@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.2.1...v1.3.0) (2025-02-14)
+
+
+### Features
+
+* migrated to .net 9 ([bcf6ef8](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/bcf6ef8ba445393423973bd61b4ce6ce5a8646d9))
+
 ## [1.2.1](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.2.0...v1.2.1) (2025-01-28)
 
 

@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.0...v1.3.1) (2025-03-03)
+
+
+### Bug Fixes
+
+* Index out of range exception in tables ([9e02abc](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/9e02abc72a862a6af1bdad7c44a4e713bba07000))
+
 # [1.3.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.2.1...v1.3.0) (2025-02-14)
 
 

@@ -133,6 +133,8 @@ public partial class MainPageViewModel : BaseViewModel
 
         Contact us at support@example.com.
 
+        [Link1](https://google.com) | [Link2](https://bing.com)
+
 
         ";
     }

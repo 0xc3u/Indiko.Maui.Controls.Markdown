@@ -1221,6 +1221,13 @@ public partial class MarkdownView : ContentView
         var headerCells = lines[startIndex].Split('|').Select(cell => cell.Trim()).ToArray();
         var alignmentIndicators = lines[startIndex + 1].Split('|').Select(cell => cell.Trim()).ToArray();
 
+        // Ensure alignmentIndicators has the same length as headerCells
+        if (alignmentIndicators.Length != headerCells.Length)
+        {
+            // Handle the case where alignment indicators are missing or incorrect
+            alignmentIndicators = [.. Enumerable.Repeat("", headerCells.Length)];
+        }
+
         // Add columns based on the number of header cells
         for (int i = 0; i < headerCells.Length; i++)
         {
@@ -1239,10 +1246,12 @@ public partial class MarkdownView : ContentView
                 Padding = new Thickness(5)
             };
 
+            var formattedString = CreateFormattedString(headerCells[colIndex], TableHeaderTextColor);
+
             var headerLabel = new Label
             {
                 LineHeight = LineHeightMultiplier,
-                Text = headerCells[colIndex],
+                FormattedText = formattedString,
                 FontAttributes = FontAttributes.Bold,
                 FontSize = TableHeaderFontSize,
                 FontFamily = TableHeaderFontFace,
@@ -1269,11 +1278,12 @@ public partial class MarkdownView : ContentView
             for (int colIndex = 0; colIndex < rowCells.Length; colIndex++)
             {
                 var alignment = GetTextAlignment(alignmentIndicators[colIndex]);
+                var formattedString = CreateFormattedString(rowCells[colIndex], TableRowTextColor);
 
                 var cellLabel = new Label
                 {
                     LineHeight = LineHeightMultiplier,
-                    Text = rowCells[colIndex],
+                    FormattedText = formattedString,
                     FontSize = TableRowFontSize,
                     FontFamily = TableRowFontFace,
                     TextColor = TableRowTextColor,

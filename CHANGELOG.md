@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.1...v1.3.2) (2025-03-09)
+
+
+### Bug Fixes
+
+* migration to skiasharp 3.x ([f17541f](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/f17541f6cecda8c2026a1b778896744f7d5a07fc))
+
 ## [1.3.1](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.0...v1.3.1) (2025-03-03)
 
 

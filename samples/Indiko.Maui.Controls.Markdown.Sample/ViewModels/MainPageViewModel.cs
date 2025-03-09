@@ -120,7 +120,7 @@ public partial class MainPageViewModel : BaseViewModel
 
         ### Lokal SVG Image
 
-        ![Lokal SVG ](dotnet_bot.svg)
+        ![Lokal SVG ](dotnet_bot)
 
 
         ### Web Source SVG Image

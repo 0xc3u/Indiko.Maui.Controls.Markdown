@@ -38,10 +38,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.92" />
+	  <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.40" />
+	  <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.40" />
+	  <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.116.1" />
 	  <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
-	  <PackageReference Include="SkiaSharp.Extended.UI.Maui" Version="2.0.0" />
-	  <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
+	  <PackageReference Include="Svg.Skia" Version="2.0.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -54,10 +55,6 @@
 	  <Folder Include="Platforms\MacCatalyst\" />
 	  <Folder Include="Platforms\Tizen\" />
 	  <Folder Include="Platforms\Windows\" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="8.0.92" />
 	</ItemGroup>
 
 </Project>

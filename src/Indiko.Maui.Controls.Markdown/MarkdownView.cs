@@ -3,10 +3,13 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
+using System.Xml;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Graphics.Text;
 using SkiaSharp;
+using Svg.Model;
+using Svg.Skia;
 using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
@@ -1374,12 +1377,18 @@ public partial class MarkdownView : ContentView
                                 .ConfigureAwait(false);
                             if (imageBytes != null)
                             {
-                                var svgString = Encoding.UTF8.GetString(imageBytes);
-                                var svg = new SkiaSharp.Extended.Svg.SKSvg();
-                                using (var stream = new MemoryStream(imageBytes))
+                                XmlDocument xmlDocument = new();
+                                xmlDocument.LoadXml(Encoding.UTF8.GetString(imageBytes));
+                                XmlNodeList commentNodes = xmlDocument.SelectNodes("//comment()");
+                                foreach (XmlNode comment in commentNodes)
                                 {
-                                    svg.Load(stream);
+                                    comment.ParentNode.RemoveChild(comment);
                                 }
+
+                                XmlReader xmlReader = XmlReader.Create(new StringReader(xmlDocument.OuterXml));
+
+                                var svg = new SKSvg();
+                                SKPicture svgImage = svg.Load(xmlReader);
                                 var image = new SKBitmap((int)svg.Picture.CullRect.Width, (int)svg.Picture.CullRect.Height);
                                 using (var surface = SKSurface.Create(new SKImageInfo(image.Width, image.Height)))
                                 {
@@ -1395,6 +1404,8 @@ public partial class MarkdownView : ContentView
                                 imageSource = ImageSource.FromStream(() => imageStream);
                                 if (imageUrl != null) _imageCache[imageUrl] = imageSource;
 
+                                xmlDocument = null;
+                                xmlReader.Dispose();
                             }
                             else
                             {

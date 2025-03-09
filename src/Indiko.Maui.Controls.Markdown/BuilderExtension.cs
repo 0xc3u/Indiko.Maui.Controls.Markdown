@@ -1,5 +1,4 @@
-﻿
-using SkiaSharp.Views.Maui.Controls.Hosting;
+﻿using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace Indiko.Maui.Controls.Markdown;
 

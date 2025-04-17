@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.2...v1.3.3) (2025-04-17)
+
+
+### Bug Fixes
+
+* refactored to use Markdig Parser ([5a12bfb](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/5a12bfb734a933bd3a40a719771bcb3ab0099d94))
+
 ## [1.3.2](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.1...v1.3.2) (2025-03-09)
 
 

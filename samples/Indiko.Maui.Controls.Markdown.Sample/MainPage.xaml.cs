@@ -24,7 +24,7 @@ public partial class MainPage : ContentPage
 		DisplayAlert(Title, e.Url, "OK");
     }
 
-    private void MarkdownView_OnEmailClicked(object sender, MarkdownView.EmailEventArgs e)
+    private void MarkdownView_OnEmailClicked(object sender, EmailEventArgs e)
     {
         DisplayAlert(Title, e.Email, "OK");
     }

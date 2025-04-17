@@ -1,25 +1,34 @@
-using System;
 using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Xml;
-using Microsoft.Maui.Controls;
+using Markdig;
+using Markdig.Extensions.CustomContainers;
+using Markdig.Extensions.Mathematics;
+using Markdig.Extensions.Tables;
+using Markdig.Renderers.Html;
+using Markdig.Syntax;
+using Markdig.Syntax.Inlines;
 using Microsoft.Maui.Controls.Shapes;
-using Microsoft.Maui.Graphics.Text;
 using SkiaSharp;
-using Svg.Model;
 using Svg.Skia;
 using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
 
-public partial class MarkdownView : ContentView
+public sealed class MarkdownView : ContentView
 {
-
-    private static readonly Regex KaTeXBlockRegex = new Regex(@"\$\$(.*?)\$\$", RegexOptions.Compiled | RegexOptions.Singleline);
-    private static readonly Regex KaTeXInlineRegex = new Regex(@"\$(.*?)\$", RegexOptions.Compiled);
     private static readonly Regex EmailRegex = new Regex(@"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", RegexOptions.Compiled);
+    
+    public static readonly BindableProperty MarkdownTextProperty =
+        BindableProperty.Create(nameof(MarkdownText), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string MarkdownText
+    {
+        get => (string)GetValue(MarkdownTextProperty);
+        set => SetValue(MarkdownTextProperty, value);
+    }
 
     private readonly Thickness _defaultListIndent = new(10, 0, 10, 0);
     private Dictionary<string, ImageSource> _imageCache = [];
@@ -29,16 +38,6 @@ public partial class MarkdownView : ContentView
 
     public delegate void EmailClickedEventHandler(object sender, EmailEventArgs e);
     public event EmailClickedEventHandler OnEmailClicked;
-
-
-    public static readonly BindableProperty MarkdownTextProperty =
-        BindableProperty.Create(nameof(MarkdownText), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
-
-    public string MarkdownText
-    {
-        get => (string)GetValue(MarkdownTextProperty);
-        set => SetValue(MarkdownTextProperty, value);
-    }
 
     public static readonly BindableProperty LineBreakModeTextProperty =
        BindableProperty.Create(nameof(LineBreakModeText), typeof(LineBreakMode), typeof(MarkdownView), LineBreakMode.WordWrap, propertyChanged: OnMarkdownTextChanged);
@@ -156,6 +155,16 @@ public partial class MarkdownView : ContentView
     }
 
     /***** Table Row Styling **/
+
+
+    public static readonly BindableProperty TableRowBackgroundColorProperty =
+ BindableProperty.Create(nameof(TableRowBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+
+    public Color TableRowBackgroundColor
+    {
+        get => (Color)GetValue(TableRowBackgroundColorProperty);
+        set => SetValue(TableRowBackgroundColorProperty, value);
+    }
 
     public static readonly BindableProperty TableRowFontFaceProperty =
        BindableProperty.Create(nameof(TableRowFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
@@ -373,9 +382,11 @@ public partial class MarkdownView : ContentView
     }
 
 
+    [Obsolete("This is no longer needed and will be removed in future versions.")]
     public static readonly BindableProperty ListIndentProperty =
     BindableProperty.Create(nameof(ListIndent), typeof(Thickness), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
+    [Obsolete("This is no longer needed and will be removed in future versions.")]
     public Thickness ListIndent
     {
         get => (Thickness)GetValue(ListIndentProperty);
@@ -383,7 +394,7 @@ public partial class MarkdownView : ContentView
     }
 
     public static readonly BindableProperty ParagraphSpacingProperty = BindableProperty.Create(nameof(ParagraphSpacing),
-        typeof(double), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged, defaultValue: 3.0);
+        typeof(double), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged, defaultValue: 1.0);
 
     public double ParagraphSpacing
     {
@@ -401,255 +412,199 @@ public partial class MarkdownView : ContentView
         set => SetValue(LineHeightMultiplierProperty, value);
     }
 
+
     private static void OnMarkdownTextChanged(BindableObject bindable, object oldValue, object newValue)
     {
-        var control = (MarkdownView)bindable;
-        control.RenderMarkdown();
+        if (bindable is MarkdownView view && newValue is string text)
+            view.RenderMarkdown(text);
     }
-    private void RenderMarkdown()
+
+    private void RenderMarkdown(string markdown)
     {
-        if (string.IsNullOrWhiteSpace(MarkdownText))
-            return;
+        var pipeline = new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseAlertBlocks()
+            .UseAbbreviations()
+            .UseEmojiAndSmiley()
+            .UseGridTables()
+            .UsePipeTables()
+            .UseAutoIdentifiers()
+            .UseEmphasisExtras()
+            .UseDefinitionLists()
+            .UseFootnotes()
+            .UseListExtras()
+            .UseCustomContainers()
+            .UseCitations()
+            .UseMediaLinks()
+            .UseTaskLists()
+            .UseEmphasisExtras()
+            .UseAutoLinks()
+            .UseFooters()
+            .UseMathematics()
+            .Build();
 
-        Content = null;
+        MarkdownDocument document = Markdig.Markdown.Parse(markdown, pipeline);
 
-        var grid = new Grid
-        {
-            Margin = new Thickness(0, 0, 0, 0),
-            Padding = new Thickness(0, 0, 0, 0),
-            RowSpacing = ParagraphSpacing,
-            ColumnSpacing = 0,
-            ColumnDefinitions =
-            {
-                new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = GridLength.Star }
-            }
+        var layout = new VerticalStackLayout { 
+            Margin = 0,
+            Padding =0,
+            Spacing = (8 * ParagraphSpacing)
         };
 
-        var lines = Regex.Split(MarkdownText, @"\r\n?|\n", RegexOptions.Compiled);
-        lines = lines.Where(line => !string.IsNullOrEmpty(line)).ToArray();
-
-        int gridRow = 0;
-        bool isUnorderedListActive = false;
-        bool isOrderedListActive = false;
-        bool currentLineIsBlockQuote = true;
-        bool isExitingList = false;
-        Label activeCodeBlockLabel = null;
-        int startCodeBlock = 0; // Gets the index of the initial code block
-
-        for (int i = 0; i < lines.Length; i++)
+        foreach (var block in document)
         {
-            string line = lines[i].Trim();
+            if (RenderBlock(block) is View view)
+                layout.Children.Add(view);
+        }
 
-            bool lineBeforeWasBlockQuote = currentLineIsBlockQuote;
-            currentLineIsBlockQuote = false;
-            if (activeCodeBlockLabel == null)
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        Content = layout;
+    }
 
-            if (activeCodeBlockLabel != null)
+    private View? RenderBlock(Block block)
+    {
+        return block switch
+        {
+            ParagraphBlock p => RenderParagraph(p),
+            HeadingBlock h => RenderHeading(h),
+            ListBlock l => RenderList(l),
+            QuoteBlock q => RenderQuote(q),
+            ThematicBreakBlock => new BoxView { HeightRequest = 1, BackgroundColor = LineColor },
+            Table table => RenderTable(table),
+            CustomContainer cc => RenderCustomContainer(cc),
+            MathBlock m => RenderFormula(m),
+            CodeBlock c => c is FencedCodeBlock fenced ? RenderCode(fenced) : RenderCodeBlock(c),
+            BlankLineBlock => null,
+            _ => null
+        };
+    }
+
+
+    private View RenderParagraph(ParagraphBlock block)
+    {
+        if (block.Inline?.FirstChild is LinkInline link && link.IsImage)
+        {
+
+            var image = new Image
             {
-                //Creates an indented code line based on the start code block
-                var indentedCodeLine = CreateIndentedCodeLine(lines[i], lines[startCodeBlock]);
-                HandleActiveCodeBlock(indentedCodeLine, ref activeCodeBlockLabel, ref gridRow);
-            }
-            else if (IsHeadline(line, out int headlineLevel))
-            {
-                var headlineText = line[(headlineLevel + 1)..].Trim();
-                Color textColor = headlineLevel == 1 ? H1Color :
-                                  headlineLevel == 2 ? H2Color :
-                                  headlineLevel == 3 ? H3Color : TextColor; // Default for h4-h6
-                double fontSize = headlineLevel == 1 ? H1FontSize :
-                                  headlineLevel == 2 ? H2FontSize :
-                                  headlineLevel == 3 ? H3FontSize : TextFontSize; // Default for h4-h6
+                Aspect = ImageAspect,
+                HorizontalOptions = LayoutOptions.Fill,
+                VerticalOptions = LayoutOptions.Fill,
+                Margin = new Thickness(0),
+            };
 
-                var label = new Label
+            LoadImageAsync(link.Url).ContinueWith(task =>
+            {
+                if (task.Status == TaskStatus.RanToCompletion)
                 {
-                    LineHeight = LineHeightMultiplier,
-                    Text = headlineText,
-                    TextColor = textColor,
-                    FontAttributes = FontAttributes.Bold,
-                    FontSize = fontSize,
-                    FontFamily = TextFontFace,
-                    LineBreakMode = LineBreakModeHeader,
-                    HorizontalOptions = LayoutOptions.Start,
-                    VerticalOptions = LayoutOptions.Center
-                };
-
-                grid.Children.Add(label);
-                Grid.SetColumnSpan(label, 2);
-                Grid.SetRow(label, gridRow++);
-                isExitingList = false;
-            }
-            else if (IsImage(line))
-            {
-                var image = CreateImageBlock(line);
-
-                if (image == null)
-                {
-                    continue;
+                    var imageSource = task.Result;
+                    MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
                 }
+            });
 
-                grid.Children.Add(image);
-                Grid.SetColumnSpan(image, 2);
-                Grid.SetRow(image, gridRow++);
-                isExitingList = false;
-            }
-            else if (IsBlockQuote(line))
+            return image;
+
+        }
+
+        return new Label
+        {
+            FormattedText = RenderInlines(block.Inline),
+            LineBreakMode = LineBreakMode.WordWrap,
+        };
+    }
+
+    private View RenderHeading(HeadingBlock block)
+    {
+        var formatted = new FormattedString();
+
+        if (block.Inline != null)
+        {
+            foreach (var inline in block.Inline)
             {
-                HandleBlockQuote(line, lineBeforeWasBlockQuote, grid, out currentLineIsBlockQuote, ref gridRow);
-                isExitingList = false;
-            }
-            else if (IsTaskList(line, out bool isChecked))
-            {
-                AddTaskListItemToGrid(line[6..], isChecked, grid, gridRow);
-                gridRow++;
-                isExitingList = true;
-                continue;
-            }
-            else if (IsUnorderedList(line))
-            {
-                if (!isUnorderedListActive)
+                if (inline is LiteralInline literal)
                 {
-                    isUnorderedListActive = true;
+                    formatted.Spans.Add(new Span
+                    {
+                        Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
+                        FontSize = GetFontsizeForBlockLevel(block.Level),
+                        FontAttributes = FontAttributes.Bold,
+                        TextColor = GetTextColorForBlockLevel(block.Level),
+                        FontFamily = TextFontFace
+                    });
                 }
-
-                AddBulletPointToGrid(grid, gridRow);
-                AddListItemTextToGrid(line[2..], grid, gridRow);
-
-                gridRow++;
-                isExitingList = true;
-            }
-            else if (IsOrderedList(line, out int listItemIndex))
-            {
-                if (!isOrderedListActive)
+                else if (inline is EmphasisInline em)
                 {
-                    isOrderedListActive = true;
+                    var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
+                    formatted.Spans.Add(new Span
+                    {
+                        Text = text,
+                        FontSize = GetFontsizeForBlockLevel(block.Level),
+                        FontAttributes = em.DelimiterCount == 2 ? FontAttributes.Bold : FontAttributes.Italic,
+                        TextColor = GetTextColorForBlockLevel(block.Level),
+                        FontFamily = TextFontFace
+                    });
                 }
-
-                AddOrderedListItemToGrid(listItemIndex, grid, gridRow);
-                AddListItemTextToGrid(line[(listItemIndex.ToString().Length + 2)..], grid, gridRow);
-
-                gridRow++;
-                isExitingList = true;
-            }
-            else if (IsCodeBlock(line, out bool isSingleLineCodeBlock))
-            {
-                startCodeBlock = i; // Sets the initial code block index
-                HandleSingleLineOrStartOfCodeBlock(line, grid, ref gridRow, isSingleLineCodeBlock, ref activeCodeBlockLabel);
-                isExitingList = false;
-            }
-            else if (IsHorizontalRule(line))
-            {
-                var horizontalLine = new Rectangle
+                else if (inline is LineBreakInline)
                 {
-                    MinimumHeightRequest = 2,
-                    Background = LineColor,
-                    BackgroundColor = LineColor,
-                    HorizontalOptions = LayoutOptions.Fill,
-                    VerticalOptions = LayoutOptions.Center
-                };
-
-                grid.Children.Add(horizontalLine);
-                Grid.SetRow(horizontalLine, gridRow);
-                Grid.SetColumnSpan(horizontalLine, 2);
-                gridRow++;
-                isExitingList = false;
-            }
-            else if (IsKaTeXBlock(line))
-            {
-                var match = KaTeXBlockRegex.Match(line);
-                var latexFormula = match.Groups[1].Value;
-
-                var latexView = new LatexView
-                {
-                    Text = latexFormula,
-                    FontSize = (float)(TextFontSize * 4),
-                    TextColor = TextColor,
-                    HighlightColor = Colors.Transparent,
-                    ErrorColor = Colors.Red,
-                    HorizontalOptions = LayoutOptions.Center,
-                    VerticalOptions = LayoutOptions.Center,
-                };
-
-                grid.Children.Add(latexView);
-                Grid.SetRow(latexView, gridRow++);
-                Grid.SetColumnSpan(latexView, 2);
-                continue;
-            }
-            else if (IsKaTeXInline(line))
-            {
-                var katexGrid = CreateInlineKatexBlock(line, TextColor);
-                grid.Children.Add(katexGrid);
-                Grid.SetRow(katexGrid, gridRow++);
-                Grid.SetColumnSpan(katexGrid, 2);
-                continue;
-            }
-            else if (IsTable(lines, i, out int tableEndIndex)) // Detect table
-            {
-                var table = CreateTable(lines, i, tableEndIndex);
-                grid.Children.Add(table);
-                Grid.SetColumnSpan(table, 2);
-                Grid.SetRow(table, gridRow++);
-                i = tableEndIndex; // Skip processed lines
-                isExitingList = false;
-            }
-            else // Regular text
-            {
-                if (isUnorderedListActive || isOrderedListActive || isExitingList)
-                {
-                    isUnorderedListActive = false;
-                    isOrderedListActive = false;
-                    isExitingList = false;
-                    gridRow++;
-                    grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                    formatted.Spans.Add(new Span { Text = "\n" });
                 }
-
-                var formattedString = CreateFormattedString(line, TextColor);
-                var label = new Label
-                {
-                    LineHeight = LineHeightMultiplier,
-                    FormattedText = formattedString,
-                    LineBreakMode = LineBreakModeText,
-                    HorizontalOptions = LayoutOptions.Fill,
-                    VerticalOptions = LayoutOptions.Start
-                };
-
-                grid.Children.Add(label);
-                Grid.SetRow(label, gridRow);
-                Grid.SetColumn(label, 0);
-                Grid.SetColumnSpan(label, 2);
-
-                gridRow++;
-
-                // never finish with empty superfluous empty line
-                if (i != lines.Length - 1) AddEmptyRow(grid, ref gridRow);
             }
         }
 
-        Content = grid;
+        return new Label
+        {
+            FormattedText = formatted,
+            LineBreakMode = LineBreakModeHeader,
+            HorizontalOptions = LayoutOptions.Start,
+            VerticalOptions = LayoutOptions.Center,
+            LineHeight = LineHeightMultiplier
+        };
     }
 
-    private void HandleBlockQuote(string line, bool lineBeforeWasBlockQuote, Grid grid, out bool currentLineIsBlockQuote, ref int gridRow)
+
+    private Color GetTextColorForBlockLevel(int blockLevel)
     {
+        if(blockLevel == 1)
+            return H1Color;
+        else if (blockLevel == 2)
+            return H2Color;
+        else if (blockLevel == 3)
+            return H3Color;
+        else
+            return H3Color;
+    }
+
+    private double GetFontsizeForBlockLevel(int blockLevel)
+    {
+        if (blockLevel == 1)
+            return H1FontSize;
+        else if (blockLevel == 2)
+            return H2FontSize;
+        else if (blockLevel == 3)
+            return H3FontSize;
+        else
+            return H3FontSize;
+    }
+
+    private View RenderQuote(QuoteBlock block)
+    {
+        var quoteContent = new VerticalStackLayout()
+        {
+            Margin = 10
+        };
+        foreach (var subBlock in block)
+        {
+            if (RenderBlock(subBlock) is View view)
+                quoteContent.Children.Add(view);
+        }
+
         var box = new Border
         {
             Margin = new Thickness(0),
             BackgroundColor = BlockQuoteBorderColor,
             Stroke = new SolidColorBrush(BlockQuoteBorderColor),
-            StrokeShape = new RoundRectangle { CornerRadius = 0 },
+            StrokeShape = new RoundRectangle() { CornerRadius = new CornerRadius(4, 0, 4, 0) },
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill
-        };
-
-        var blockQuotelabel = new Label
-        {
-            LineHeight = LineHeightMultiplier,
-            FormattedText = CreateFormattedString(line[1..].Trim(), BlockQuoteTextColor),
-            LineBreakMode = LineBreakModeText,
-            FontFamily = BlockQuoteFontFace,
-            HorizontalOptions = LayoutOptions.Fill,
-            VerticalOptions = LayoutOptions.Center,
-            Padding = new Thickness(5)
         };
 
         var blockQuoteGrid = new Grid
@@ -667,372 +622,117 @@ public partial class MarkdownView : ContentView
         Grid.SetRow(box, 0);
         Grid.SetColumn(box, 0);
 
-        blockQuoteGrid.Children.Add(blockQuotelabel);
-        Grid.SetRow(blockQuotelabel, 0);
-        Grid.SetColumn(blockQuotelabel, 1);
+        blockQuoteGrid.Children.Add(quoteContent);
+        Grid.SetRow(quoteContent, 0);
+        Grid.SetColumn(quoteContent, 1);
 
         var blockquote = new Border
         {
             Padding = new Thickness(0),
             Stroke = new SolidColorBrush(BlockQuoteBorderColor),
-            StrokeShape = new RoundRectangle { CornerRadius = 0 },
+            StrokeShape = new RoundRectangle().WithCornerRadius(4),
             BackgroundColor = BlockQuoteBackgroundColor,
             Content = blockQuoteGrid
         };
 
-        if (lineBeforeWasBlockQuote)
-        {
-            blockquote.Margin = new Thickness(0, -grid.RowSpacing, 0, 0);
-        }
-
-        currentLineIsBlockQuote = true;
-
-        grid.Children.Add(blockquote);
-        Grid.SetColumnSpan(blockquote, 2);
-        Grid.SetRow(blockquote, gridRow++);
+        return blockquote;
     }
 
-    private void HandleSingleLineOrStartOfCodeBlock(string line, Grid grid, ref int gridRow, bool isSingleLineCodeBlock, ref Label activeCodeBlockLabel)
+    private View RenderCode(FencedCodeBlock block)
     {
-        Border codeBlock = CreateCodeBlock(line, out Label contentLabel);
-        grid.Children.Add(codeBlock);
-        Grid.SetRow(codeBlock, gridRow);
-        Grid.SetColumnSpan(codeBlock, 2);
-        if (isSingleLineCodeBlock)
-            gridRow++;
-        else
-            activeCodeBlockLabel = contentLabel;
-    }
-
-    private static void HandleActiveCodeBlock(string line, ref Label activeCodeBlockLabel, ref int gridRow)
-    {
-        if (IsCodeBlock(line, out bool _))
-        {
-            activeCodeBlockLabel = null;
-            gridRow++;
-        }
-        else
-        {
-            activeCodeBlockLabel.Text += (string.IsNullOrWhiteSpace(activeCodeBlockLabel.Text) ? "" : "\n") + line;
-        }
-    }
-
-    private void AddEmptyRow(Grid grid, ref int gridRow)
-    {
-        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10) });
-        gridRow++;
-    }
-
-    private static bool IsKaTeXBlock(string line)
-    {
-        string trimmedLine = line.TrimStart();
-        return KaTeXBlockRegex.IsMatch(trimmedLine);
-    }
-
-    private static bool IsKaTeXInline(string line)
-    {
-        string trimmedLine = line.TrimStart();
-        return KaTeXInlineRegex.IsMatch(trimmedLine);
-    }
-
-    private static bool IsHorizontalRule(string line)
-    {
-        string compactLine = line.Replace(" ", string.Empty);
-
-        return compactLine.Length >= 3 &&
-               (compactLine.All(c => c == '-') || compactLine.All(c => c == '*') || compactLine.All(c => c == '_'));
-    }
-
-    private static bool IsHeadline(string line, out int level)
-    {
-        level = 0;
-        line = line.TrimStart();
-        while (level < line.Length && line[level] == '#')
-        {
-            level++;
-        }
-        bool isHeadline = level > 0 && level < 7 && line.Length > level && line[level] == ' ';
-
-        if (!isHeadline)
-        {
-            level = 0;
-        }
-        return isHeadline;
-    }
-
-    private static bool IsUnorderedList(string line)
-    {
-        string trimmedLine = line.TrimStart();
-
-        return trimmedLine.StartsWith("- ") || trimmedLine.StartsWith("* ") || trimmedLine.StartsWith("+ ");
-    }
-
-    private static bool IsBlockQuote(string line)
-    {
-        string trimmedLine = line.TrimStart();
-
-        return trimmedLine.StartsWith('>');
-    }
-
-    private static bool IsImage(string line)
-    {
-        string trimmedLine = line.TrimStart();
-
-        return trimmedLine.StartsWith("![");
-    }
-
-    private static bool IsCodeBlock(string line, out bool isSingleLineCodeBlock)
-    {
-        string trimmedLine = line.Trim();
-        isSingleLineCodeBlock = trimmedLine.Count(x => x == '`') >= 6 && trimmedLine.EndsWith("```", StringComparison.Ordinal);
-
-        return trimmedLine.StartsWith("```", StringComparison.Ordinal);
-    }
-
-    private static bool IsOrderedList(string line, out int listItemIndex)
-    {
-        listItemIndex = 0;
-        string trimmedLine = line.TrimStart();
-
-        var match = Regex.Match(trimmedLine, @"^(\d+)\. ");
-        if (match.Success)
-        {
-            listItemIndex = int.Parse(match.Groups[1].Value);
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsTaskList(string line, out bool isChecked)
-    {
-        isChecked = line.StartsWith("- [x]", StringComparison.OrdinalIgnoreCase);
-        return line.StartsWith("- [ ]") || isChecked;
-    }
-
-    private static bool IsTable(string[] lines, int currentIndex, out int tableEndIndex)
-    {
-        tableEndIndex = currentIndex;
-        if (!lines[currentIndex].Contains('|'))
-            return false;
-
-        for (int i = currentIndex + 1; i < lines.Length; i++)
-        {
-            if (!lines[i].Contains('|'))
-            {
-                tableEndIndex = i - 1;
-                return true;
-            }
-        }
-
-        tableEndIndex = lines.Length - 1;
-        return true;
-    }
-
-    private static int CountLeadingSpaces(string input)
-    {
-        if (string.IsNullOrEmpty(input))
-        {
-            return 0; // Empty or null string has no leading spaces
-        }
-
-        int spaceCount = 0;
-        foreach (char c in input)
-        {
-            if (char.IsWhiteSpace(c) || c == '\u3000') // Includes Unicode space
-            {
-                spaceCount++;
-            }
-            else
-            {
-                break; // Stop counting when a non-space char is found
-            }
-        }
-        return spaceCount;
-    }
-
-    private static string CreateIndentedCodeLine(string line, string lineStart)
-    {
-        try
-        {
-            int firstLineIndent = CountLeadingSpaces(line);
-            int secondLineIndent = CountLeadingSpaces(lineStart);
-            
-            if (firstLineIndent >= secondLineIndent) 
-            {
-                // Remove the extra indentation to align the code properly
-                var indentedCodeLine = line.Substring(secondLineIndent);
-                return indentedCodeLine;
-            } 
-            else
-            {
-                // Trim the original line
-                return line.Trim();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error creating indented code line: {ex.Message}");
-        }
-
-        // Return the original line if an exception occurs
-        return line;
-    }
-
-    private Image CreateImageBlock(string line)
-    {
-        int startIndex = line.IndexOf('(') + 1;
-        int endIndex = line.IndexOf(')', startIndex);
-        string imageUrl = line[startIndex..endIndex];
-
-        var image = new Image
-        {
-            Aspect = ImageAspect,
-            HorizontalOptions = LayoutOptions.Fill,
-            VerticalOptions = LayoutOptions.Fill,
-            Margin = new Thickness(0),
-        };
-
-        LoadImageAsync(imageUrl).ContinueWith(task =>
-        {
-            if (task.Status == TaskStatus.RanToCompletion)
-            {
-                var imageSource = task.Result;
-                MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
-            }
-        });
-
-        return image;
-    }
-    private Border CreateCodeBlock(string codeText, out Label contentLabel)
-    {
-        Label content = new()
-        {
-            Text = codeText.Trim('`', ' '),
-            FontSize = CodeBlockFontSize,
-            FontAutoScalingEnabled = true,
-            FontFamily = CodeBlockFontFace,
-            TextColor = CodeBlockTextColor,
-            BackgroundColor = Colors.Transparent
-        };
-        contentLabel = content;
         return new Border
         {
-            Padding = new Thickness(10),
-            Stroke = new SolidColorBrush(CodeBlockBorderColor),
-            StrokeShape = new RoundRectangle { CornerRadius = 4 },
-            StrokeThickness = 1f,
             BackgroundColor = CodeBlockBackgroundColor,
-            Content = content
+            Stroke = new SolidColorBrush(CodeBlockBorderColor),
+            Padding = 8,
+            StrokeShape = new RoundRectangle().WithCornerRadius(4),
+            Content = new Label
+            {
+                Text = block.Lines.ToString(),
+                FontFamily = CodeBlockFontFace,
+                TextColor = CodeBlockTextColor,
+                FontSize = CodeBlockFontSize
+            }
         };
     }
 
-    /// <summary>
-    /// Parses a single line of text containing Markdown syntax and returns a formatted string.
-    /// </summary>
-    /// <param name="line">The input text line containing Markdown elements.</param>
-    /// <param name="textColor">The default text color for the line.</param>
-    /// <returns>A FormattedString representing the parsed Markdown.</returns>
-    private FormattedString CreateFormattedString(string line, Color textColor)
+    private View RenderCodeBlock(CodeBlock block)
     {
-        var formattedString = new FormattedString();
-
-        // Split the input line into parts, detecting Markdown syntax and email links
-        var parts = Regex.Split(line, @"(\*\*.*?\*\*|__.*?__|_.*?_|~~.*?~~|`.*?`|\[.*?\]\(.*?\)|\*.*?\*|\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b)");
-
-        foreach (var part in parts)
+        return new Border
         {
-            Span span = new()
+            BackgroundColor = CodeBlockBackgroundColor,
+            Stroke = new SolidColorBrush(CodeBlockBorderColor),
+            Padding = 8,
+            StrokeShape = new RoundRectangle().WithCornerRadius(4),
+            Content = new Label
             {
-                TextColor = TextColor
-            };
-
-            if (EmailRegex.IsMatch(part)) // Detect email addresses
-            {
-                var email = EmailRegex.Match(part).Value;
-                span.Text = email;
-                span.TextColor = HyperlinkColor; // Use hyperlink color for email
-                span.TextDecorations = TextDecorations.Underline;
-
-                // Add tap gesture recognizer to trigger email link handling
-                var emailTapGestureRecognizer = new TapGestureRecognizer();
-                emailTapGestureRecognizer.Tapped += (_, _) => TriggerEmailClicked(email);
-                span.GestureRecognizers.Add(emailTapGestureRecognizer);
+                Text = block.Lines.ToString(),
+                FontFamily = CodeBlockFontFace,
+                TextColor = CodeBlockTextColor,
+                FontSize = CodeBlockFontSize
             }
-            else if (part.StartsWith("`") && part.EndsWith("`")) // Inline code block
-            {
-                span.Text = part.Trim('`'); // Remove the backticks
-                span.BackgroundColor = CodeBlockBackgroundColor;
-                span.FontFamily = CodeBlockFontFace;
-                span.TextColor = CodeBlockTextColor;
-            }
-            else if (part.StartsWith("**") && part.EndsWith("**")) // Bold text
-            {
-                var nestedFormatted = CreateFormattedString(part.Trim('*', ' '), textColor);
-                foreach (var nestedSpan in nestedFormatted.Spans)
-                {
-                    nestedSpan.FontAttributes = FontAttributes.Bold;
-                    formattedString.Spans.Add(nestedSpan);
-                }
-                continue; // Skip adding this span since it's already handled
-            }
-            else if (part.StartsWith("__") && part.EndsWith("__")) // Bold text (alternative syntax)
-            {
-                span.TextColor = textColor;
-                span.Text = part.Trim('_', ' ');
-                span.FontAttributes = FontAttributes.Bold;
-            }
-            else if (part.StartsWith('_') && part.EndsWith('_')) // Italic text (alternative syntax)
-            {
-                span.TextColor = textColor;
-                span.Text = part.Trim('_', ' ');
-                span.FontAttributes = FontAttributes.Italic;
-            }
-            else if (part.StartsWith("~~") && part.EndsWith("~~")) // Strikethrough text
-            {
-                span.TextColor = textColor;
-                span.Text = part.Trim('~');
-                span.TextDecorations = TextDecorations.Strikethrough;
-            }
-            else if (part.StartsWith('[') && part.Contains("](")) // Markdown links
-            {
-                // Extract link text and URL
-                var linkText = part.Substring(1, part.IndexOf(']') - 1);
-                var linkUrl = part.Substring(part.IndexOf('(') + 1, part.IndexOf(')') - part.IndexOf('(') - 1);
-
-                span.Text = linkText;
-                span.TextColor = HyperlinkColor; // Use hyperlink color for links
-                span.TextDecorations = TextDecorations.Underline;
-
-                // Add tap gesture recognizer to trigger hyperlink handling
-                var linkTapGestureRecognizer = new TapGestureRecognizer();
-                linkTapGestureRecognizer.Tapped += (_, _) => TriggerHyperLinkClicked(linkUrl);
-                span.GestureRecognizers.Add(linkTapGestureRecognizer);
-            }
-            else if (part.StartsWith('*') && part.EndsWith('*')) // Italic text
-            {
-                span.TextColor = textColor;
-                span.Text = part.Trim('*');
-                span.FontAttributes = FontAttributes.Italic;
-            }
-            else // Plain text
-            {
-                span.Text = part;
-            }
-
-            // Apply common properties for all spans
-            span.FontSize = TextFontSize;
-            span.FontFamily = TextFontFace;
-
-            // Add the span to the formatted string
-            formattedString.Spans.Add(span);
-        }
-
-        return formattedString;
+        };
     }
 
-    private Grid CreateInlineKatexBlock(string line, Color textColor)
+    private View RenderTable(Table table)
     {
+        var grid = new Grid
+        {
+            ColumnSpacing = 1,
+            RowSpacing = 1,
+            BackgroundColor = Colors.Gray
+        };
+
+
+        for (int i = 0; i < table.ColumnDefinitions.Count; i++)
+            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+
+        int rowIndex = 0;
+
+        foreach (TableRow row in table)
+        {
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+            for (int colIndex = 0; colIndex < row.Count; colIndex++)
+            {
+                var cell = row[colIndex] as TableCell;
+
+
+                var alignment = table.ColumnDefinitions[colIndex].Alignment;
+
+                var horizontalTextAlignment = alignment switch
+                {
+                    TableColumnAlign.Center => TextAlignment.Center,
+                    TableColumnAlign.Right => TextAlignment.End,
+                    _ => TextAlignment.Start
+                };
+
+                var label = new Label
+                {
+                    FormattedText = RenderInlines((cell?.FirstOrDefault() as ParagraphBlock)?.Inline),
+                    BackgroundColor = row.IsHeader ? TableHeaderBackgroundColor : TableRowBackgroundColor,
+                    FontAttributes = row.IsHeader ? FontAttributes.Bold : FontAttributes.None,
+                    TextColor = row.IsHeader ? TableHeaderTextColor : TableRowTextColor,
+                    FontFamily = row.IsHeader ? TableHeaderFontFace : TableRowFontFace,
+                    FontSize = row.IsHeader ? TableHeaderFontSize : TableRowFontSize,
+                    Padding = 4,
+                    HorizontalTextAlignment = horizontalTextAlignment
+                };
+
+
+                grid.Add(label, colIndex, rowIndex);
+            }
+
+            rowIndex++;
+        }
+
+        return grid;
+    }
+
+    private View RenderFormula(MathBlock mathBlock)
+    {
+        string formularText  = mathBlock.Lines.ToString();
+
         var grid = new Grid
         {
             ColumnDefinitions =
@@ -1047,305 +747,215 @@ public partial class MarkdownView : ContentView
         }
         };
 
-        var match = KaTeXInlineRegex.Match(line);
-
-        if (match.Success)
+        var latexView = new LatexView
         {
-            string beforeText = line[..match.Index];
-            string katexFormula = match.Groups[1].Value;
-            string afterText = line[(match.Index + match.Length)..];
-
-            if (!string.IsNullOrEmpty(beforeText))
-            {
-                var beforeLabel = new Label
-                {
-                    LineHeight = LineHeightMultiplier,
-                    Text = beforeText,
-                    TextColor = textColor,
-                    FontSize = TextFontSize,
-                    FontFamily = TextFontFace,
-                    VerticalOptions = LayoutOptions.Center
-                };
-                grid.Children.Add(beforeLabel);
-                Grid.SetColumn(beforeLabel, 0);
-            }
-
-            var latexView = new LatexView
-            {
-                Text = katexFormula,
-                FontSize = (float)TextFontSize * 4,
-                TextColor = TextColor,
-                HighlightColor = Colors.Transparent,
-                ErrorColor = Colors.Red,
-                HorizontalOptions = LayoutOptions.Start,
-                VerticalOptions = LayoutOptions.Center,
-                Margin = new Thickness(-10,-10)
-            };
-            grid.Children.Add(latexView);
-            Grid.SetColumn(latexView, 1);
-
-            if (!string.IsNullOrEmpty(afterText))
-            {
-                var afterLabel = new Label
-                {
-                    LineHeight = LineHeightMultiplier,
-                    Text = afterText,
-                    TextColor = textColor,
-                    FontSize = TextFontSize,
-                    FontFamily = TextFontFace,
-                    VerticalOptions = LayoutOptions.Center
-                };
-                grid.Children.Add(afterLabel);
-                Grid.SetColumn(afterLabel, 2);
-            }
-        }
-        return grid;
-    }
-
-
-    private void AddBulletPointToGrid(Grid grid, int gridRow)
-    {
-        string bulletPointSign = "-";
-
-#if ANDROID
-    bulletPointSign = "\u2022";
-#endif
-#if iOS
-    bulletPointSign = "\u2029";
-#endif
-
-        var bulletPoint = new Label
-        {
-            LineHeight = LineHeightMultiplier,
-            Text = bulletPointSign,
-            FontSize = Math.Ceiling(TextFontSize * 1.1),
-            FontFamily = TextFontFace,
+            Text = formularText,
+            FontSize = (float)TextFontSize * 4,
             TextColor = TextColor,
-            FontAutoScalingEnabled = false,
-            VerticalOptions = LayoutOptions.Start,
-            HorizontalTextAlignment = TextAlignment.Start,
-            VerticalTextAlignment = TextAlignment.Start,
-            HorizontalOptions = LayoutOptions.Start,
-            Margin = (ListIndent != _defaultListIndent) ? ListIndent : _defaultListIndent,
-            Padding = new Thickness(0, 0),
-        };
-
-        grid.Children.Add(bulletPoint);
-        Grid.SetRow(bulletPoint, gridRow);
-        Grid.SetColumn(bulletPoint, 0);
-    }
-
-    private void AddOrderedListItemToGrid(int listItemIndex, Grid grid, int gridRow)
-    {
-        var orderedListItem = new Label
-        {
-            LineHeight = LineHeightMultiplier,
-            Text = $"{listItemIndex}.",
-            FontSize = TextFontSize,
-            FontFamily = TextFontFace,
-            TextColor = TextColor,
-            FontAutoScalingEnabled = false,
-            VerticalOptions = LayoutOptions.Start,
-            HorizontalOptions = LayoutOptions.Start,
-            HorizontalTextAlignment = TextAlignment.Start,
-            VerticalTextAlignment = TextAlignment.Start,
-            Margin = (ListIndent != _defaultListIndent) ? ListIndent : _defaultListIndent,
-            Padding = new Thickness(0),
-            LineBreakMode = LineBreakMode.NoWrap
-        };
-
-        grid.Children.Add(orderedListItem);
-        Grid.SetRow(orderedListItem, gridRow);
-        Grid.SetColumn(orderedListItem, 0);
-    }
-
-    private void AddListItemTextToGrid(string listItemText, Grid grid, int gridRow)
-    {
-        var formattedString = CreateFormattedString(listItemText, TextColor);
-
-        var listItemLabel = new Label
-        {
-            LineHeight = LineHeightMultiplier,
-            FormattedText = formattedString,
-            VerticalOptions = LayoutOptions.Start,
-            HorizontalOptions = LayoutOptions.Fill,
-            Padding = new Thickness(0),
-            Margin = new Thickness(0)
-        };
-
-        grid.Children.Add(listItemLabel);
-        Grid.SetRow(listItemLabel, gridRow);
-        Grid.SetColumn(listItemLabel, 1);
-    }
-
-    private void AddTaskListItemToGrid(string taskText, bool isChecked, Grid grid, int gridRow)
-    {
-        var checkbox = new CheckBox
-        {
-            IsChecked = isChecked,
+            HighlightColor = Colors.Transparent,
+            ErrorColor = Colors.Red,
             HorizontalOptions = LayoutOptions.Start,
             VerticalOptions = LayoutOptions.Center,
-            HeightRequest = 18,
-            WidthRequest = 18,
-            Margin = (ListIndent != _defaultListIndent) ? ListIndent : _defaultListIndent,
+            Margin = new Thickness(-10, -10)
         };
 
-        grid.Children.Add(checkbox);
-        Grid.SetRow(checkbox, gridRow);
-        Grid.SetColumn(checkbox, 0);
+        return latexView;
+    }
+    
+    private View RenderCustomContainer(CustomContainer container)
+    {
 
-        // Add the task list item text
-        var formattedString = CreateFormattedString(taskText, TextColor);
-        var taskLabel = new Label
+        var type = container.TryGetAttributes()?.Classes?.FirstOrDefault() ?? "default";
+
+        var color = type switch
         {
-            LineHeight = LineHeightMultiplier,
-            FormattedText = formattedString,
-            VerticalOptions = LayoutOptions.Center,
-            HorizontalOptions = LayoutOptions.Fill,
-            Padding = new Thickness(0),
-            Margin = new Thickness(0)
+            "info" => Colors.LightBlue,
+            "warning" => Colors.Orange,
+            "danger" => Colors.Red,
+            _ => Colors.LightGray
         };
 
-        grid.Children.Add(taskLabel);
-        Grid.SetRow(taskLabel, gridRow);
-        Grid.SetColumn(taskLabel, 1);
+        var inner = new VerticalStackLayout();
+        foreach (var child in container)
+        {
+            if (RenderBlock(child) is View view)
+                inner.Children.Add(view);
+        }
+
+        return new Border
+        {
+            Stroke = color,
+            StrokeThickness = 2,
+            Padding = new Thickness(10),
+            Content = inner
+        };
     }
 
-    private Grid CreateTable(string[] lines, int startIndex, int endIndex)
+    private View RenderList(ListBlock listBlock, int nestingLevel = 0)
     {
-        var tableGrid = new Grid
+        var stack = new VerticalStackLayout
         {
-            ColumnSpacing = 2,
-            RowSpacing = 2,
-            BackgroundColor = Colors.Transparent
+            Padding = new Thickness(nestingLevel * 20, 0, 0, 0),
+            Spacing = 4
         };
 
-        // Parse header cells and alignment indicators
-        var headerCells = lines[startIndex].Split('|').Select(cell => cell.Trim()).ToArray();
-        var alignmentIndicators = lines[startIndex + 1].Split('|').Select(cell => cell.Trim()).ToArray();
-
-        // Ensure alignmentIndicators has the same length as headerCells
-        if (alignmentIndicators.Length != headerCells.Length)
+        foreach (ListItemBlock item in listBlock)
         {
-            // Handle the case where alignment indicators are missing or incorrect
-            alignmentIndicators = [.. Enumerable.Repeat("", headerCells.Length)];
-        }
+            var isChecklist = item.TryGetAttributes()?.Properties?.FirstOrDefault(p => p.Key == "checked").Value != null;
+            var isChecked = isChecklist && item.GetAttributes().Properties.First(p => p.Key == "checked").Value == "true";
 
-        // Add columns based on the number of header cells
-        for (int i = 0; i < headerCells.Length; i++)
-        {
-            tableGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
-        }
-
-        // Add header row with alignment
-        tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        for (int colIndex = 0; colIndex < headerCells.Length; colIndex++)
-        {
-            var alignment = GetTextAlignment(alignmentIndicators[colIndex]);
-
-            var border = new Border
+            foreach (var subBlock in item)
             {
-                BackgroundColor = TableHeaderBackgroundColor,
-                Padding = new Thickness(5)
-            };
-
-            var formattedString = CreateFormattedString(headerCells[colIndex], TableHeaderTextColor);
-
-            var headerLabel = new Label
-            {
-                LineHeight = LineHeightMultiplier,
-                FormattedText = formattedString,
-                FontAttributes = FontAttributes.Bold,
-                FontSize = TableHeaderFontSize,
-                FontFamily = TableHeaderFontFace,
-                TextColor = TableHeaderTextColor,
-                HorizontalOptions = alignment,
-                VerticalOptions = LayoutOptions.Center,
-            };
-
-            border.Content = headerLabel;
-
-            tableGrid.Children.Add(border);
-
-            Grid.SetColumn(border, colIndex);
-            Grid.SetRow(border, 0);
-        }
-
-        // Add rows for table content
-        int rowIndex = 1;
-        for (int i = startIndex + 2; i <= endIndex; i++)
-        {
-            var rowCells = lines[i].Split('|').Select(cell => cell.Trim()).ToArray();
-            tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            for (int colIndex = 0; colIndex < rowCells.Length; colIndex++)
-            {
-                var alignment = GetTextAlignment(alignmentIndicators[colIndex]);
-                var formattedString = CreateFormattedString(rowCells[colIndex], TableRowTextColor);
-
-                var cellLabel = new Label
+                if (subBlock is ListBlock nestedList)
                 {
-                    LineHeight = LineHeightMultiplier,
-                    FormattedText = formattedString,
-                    FontSize = TableRowFontSize,
-                    FontFamily = TableRowFontFace,
-                    TextColor = TableRowTextColor,
-                    HorizontalOptions = alignment,
-                    VerticalOptions = LayoutOptions.Center,
-                    Padding = new Thickness(5)
-                };
-                tableGrid.Children.Add(cellLabel);
-                Grid.SetColumn(cellLabel, colIndex);
-                Grid.SetRow(cellLabel, rowIndex);
+                    stack.Children.Add(RenderList(nestedList, nestingLevel + 1));
+                }
+                else
+                {
+                    var content = RenderBlock(subBlock);
+
+                    if (content != null)
+                    {
+                        if (isChecklist && content is Label label)
+                        {
+                            var checkbox = new CheckBox { IsChecked = isChecked, IsEnabled = false };
+                            var layout = new HorizontalStackLayout
+                            {
+                                Spacing = 8,
+                                Children = { checkbox, label }
+                            };
+                            stack.Children.Add(layout);
+                        }
+                        else
+                        {
+                            var prefix = listBlock.IsOrdered ? $"{item.Order + 1}." : "•";
+                            var row = new HorizontalStackLayout
+                            {
+                                Spacing = 8,
+                                Children =
+                                {
+                                    new Label
+                                    {
+                                        Text = prefix,
+                                        FontAttributes = FontAttributes.Bold,
+                                        VerticalOptions = LayoutOptions.Start
+                                    },
+                                    content
+                                }
+                            };
+                            stack.Children.Add(row);
+                        }
+                    }
+                }
             }
-            rowIndex++;
         }
 
-        return tableGrid;
+        return stack;
     }
 
-
-    private LayoutOptions GetTextAlignment(string alignmentIndicator)
+    private FormattedString RenderInlines(ContainerInline? inlines)
     {
-        if (alignmentIndicator.StartsWith(":") && alignmentIndicator.EndsWith(":"))
+        var formatted = new FormattedString();
+
+        if (inlines == null) return formatted;
+
+        foreach (var inline in inlines)
         {
-            return LayoutOptions.Center;
-        }
-        else if (alignmentIndicator.StartsWith(":"))
-        {
-            return LayoutOptions.Start;
-        }
-        else if (alignmentIndicator.EndsWith(":"))
-        {
-            return LayoutOptions.End;
+            switch (inline)
+            {
+                case LiteralInline literal:
+                    formatted.Spans.Add(new Span
+                    {
+                        Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
+                        FontFamily = TextFontFace,
+                        FontSize = TextFontSize,
+                        TextColor = TextColor
+                    });
+                    break;
+
+                case EmphasisInline em:
+                    var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
+                    formatted.Spans.Add(new Span
+                    {
+                        Text = text,
+                        TextDecorations = em.DelimiterChar == '~'
+                            ? TextDecorations.Strikethrough
+                            : TextDecorations.None,
+                        FontAttributes = em.DelimiterChar == '*' && em.DelimiterCount == 2
+                            ? FontAttributes.Bold
+                            : em.DelimiterChar == '*' && em.DelimiterCount == 1
+                                ? FontAttributes.Italic
+                                : FontAttributes.None,
+                        FontFamily = TextFontFace,
+                        FontSize = TextFontSize,
+                        TextColor = TextColor
+                    });
+                    break;
+
+
+                case LineBreakInline:
+                    formatted.Spans.Add(new Span { Text = "\n",
+                        FontFamily = TextFontFace,
+                        FontSize = TextFontSize,
+                        TextColor = TextColor
+                    });
+                    break;
+
+                case LinkInline link when !link.IsImage:
+                    var linkText = link.FirstChild?.ToString() ?? link.Url;
+                    var span = new Span
+                    {
+                        Text = linkText,
+                        TextColor = HyperlinkColor,
+                        TextDecorations = TextDecorations.Underline,
+                        FontFamily = TextFontFace,
+                        FontSize = TextFontSize,
+                    };
+
+                    var tap = new TapGestureRecognizer();
+
+                    if (link.Url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tap.Tapped += (_, __) => TriggerEmailClicked(link.Url.Substring("mailto:".Length));
+                    }
+                    else if (EmailRegex.IsMatch(link.Url)) // Detect email addresses
+                    {
+                        var email = EmailRegex.Match(link.Url).Value;
+                        tap.Tapped += (_, __) => TriggerEmailClicked(email);
+
+                    }
+                    else
+                    {
+                        tap.Tapped += (_, __) => TriggerHyperLinkClicked(link.Url);
+                    }
+
+                    span.GestureRecognizers.Add(tap);
+                    formatted.Spans.Add(span);
+                    break;
+                case LinkInline image when image.IsImage:
+                    formatted.Spans.Add(new Span
+                    {
+                        Text = "[Image]",
+                        FontFamily = TextFontFace,
+                        FontSize = TextFontSize,
+                        TextColor = TextColor
+                    });
+                    break;
+                case MathInline math:
+                    formatted.Spans.Add(new Span
+                    {
+                        Text = math.Content.ToString(),
+                        FontAttributes = FontAttributes.Italic,
+                        TextColor = Colors.DarkOliveGreen, // or bindable
+                        FontFamily = TextFontFace,
+                        FontSize = TextFontSize
+                    });
+                    break;
+            }
         }
 
-        // Default alignment if no indicators are found
-        return LayoutOptions.Start;
+        return formatted;
     }
-
-
-    internal void TriggerHyperLinkClicked(string url)
-    {
-        OnHyperLinkClicked?.Invoke(this, new LinkEventArgs { Url = url });
-
-        if (LinkCommand?.CanExecute(url) == true)
-        {
-            LinkCommand.Execute(url);
-        }
-    }
-
-    private void TriggerEmailClicked(string email)
-    {
-        OnEmailClicked?.Invoke(this, new EmailEventArgs { Email = email });
-
-        if (EMailCommand?.CanExecute(email) == true)
-        {
-            EMailCommand.Execute(email);
-        }
-    }
-
-
 
     private async Task<ImageSource> LoadImageAsync(string imageUrl)
     {
@@ -1451,6 +1061,26 @@ public partial class MarkdownView : ContentView
         }
 
         return imageSource ?? ImageSource.FromFile("icon.png");
+    }
+
+    internal void TriggerHyperLinkClicked(string url)
+    {
+        OnHyperLinkClicked?.Invoke(this, new LinkEventArgs { Url = url });
+
+        if (LinkCommand?.CanExecute(url) == true)
+        {
+            LinkCommand.Execute(url);
+        }
+    }
+
+    private void TriggerEmailClicked(string email)
+    {
+        OnEmailClicked?.Invoke(this, new EmailEventArgs { Email = email });
+
+        if (EMailCommand?.CanExecute(email) == true)
+        {
+            EMailCommand.Execute(email);
+        }
     }
 
     ~MarkdownView()

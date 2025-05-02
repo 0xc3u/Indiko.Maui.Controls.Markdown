@@ -1,3 +1,10 @@
+## [1.3.4](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.3...v1.3.4) (2025-05-02)
+
+
+### Bug Fixes
+
+* Improves text wrapping in Markdown view ([cfdc533](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/cfdc533e153afd2fb7f35bc384c7ee75a84be7f1))
+
 ## [1.3.3](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.2...v1.3.3) (2025-04-17)
 
 

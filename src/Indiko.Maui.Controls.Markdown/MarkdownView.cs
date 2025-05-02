@@ -553,10 +553,10 @@ public sealed class MarkdownView : ContentView
         return new Label
         {
             FormattedText = formatted,
-            LineBreakMode = LineBreakModeHeader,
+            LineBreakMode = LineBreakMode.WordWrap,
             HorizontalOptions = LayoutOptions.Start,
             VerticalOptions = LayoutOptions.Center,
-            LineHeight = LineHeightMultiplier
+            LineHeight = LineHeightMultiplier,
         };
     }
 
@@ -651,7 +651,8 @@ public sealed class MarkdownView : ContentView
                 Text = block.Lines.ToString(),
                 FontFamily = CodeBlockFontFace,
                 TextColor = CodeBlockTextColor,
-                FontSize = CodeBlockFontSize
+                FontSize = CodeBlockFontSize,
+                LineBreakMode = LineBreakMode.WordWrap,
             }
         };
     }
@@ -669,7 +670,8 @@ public sealed class MarkdownView : ContentView
                 Text = block.Lines.ToString(),
                 FontFamily = CodeBlockFontFace,
                 TextColor = CodeBlockTextColor,
-                FontSize = CodeBlockFontSize
+                FontSize = CodeBlockFontSize,
+                LineBreakMode = LineBreakMode.WordWrap,
             }
         };
     }
@@ -716,7 +718,8 @@ public sealed class MarkdownView : ContentView
                     FontFamily = row.IsHeader ? TableHeaderFontFace : TableRowFontFace,
                     FontSize = row.IsHeader ? TableHeaderFontSize : TableRowFontSize,
                     Padding = 4,
-                    HorizontalTextAlignment = horizontalTextAlignment
+                    HorizontalTextAlignment = horizontalTextAlignment,
+                    LineBreakMode = row.IsHeader ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap,
                 };
 
 
@@ -838,7 +841,8 @@ public sealed class MarkdownView : ContentView
                                     {
                                         Text = prefix,
                                         FontAttributes = FontAttributes.Bold,
-                                        VerticalOptions = LayoutOptions.Start
+                                        VerticalOptions = LayoutOptions.Start,
+                                        LineBreakMode = LineBreakMode.WordWrap,
                                     },
                                     content
                                 }

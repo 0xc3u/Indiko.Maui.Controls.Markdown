@@ -1,3 +1,10 @@
+## [1.3.5](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.4...v1.3.5) (2025-05-10)
+
+
+### Bug Fixes
+
+* Table and list rendering issues ([f5654a2](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/f5654a2ba790fd1343cdd09e4cd8b1ae4f204dd2))
+
 ## [1.3.4](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.3...v1.3.4) (2025-05-02)
 
 

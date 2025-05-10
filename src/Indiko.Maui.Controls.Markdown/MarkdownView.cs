@@ -682,8 +682,10 @@ public sealed class MarkdownView : ContentView
         {
             ColumnSpacing = 1,
             RowSpacing = 1,
-            BackgroundColor = Colors.Gray
+            BackgroundColor = Colors.Gray,
+            HorizontalOptions = LayoutOptions.Fill
         };
+        grid.HorizontalOptions = LayoutOptions.Fill;
 
 
         for (int i = 0; i < table.ColumnDefinitions.Count; i++)
@@ -722,6 +724,8 @@ public sealed class MarkdownView : ContentView
                     LineBreakMode = row.IsHeader ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap,
                 };
 
+                label.HorizontalOptions = LayoutOptions.Fill;
+                label.VerticalOptions = LayoutOptions.Fill;
 
                 grid.Add(label, colIndex, rowIndex);
             }
@@ -843,6 +847,7 @@ public sealed class MarkdownView : ContentView
                                         FontAttributes = FontAttributes.Bold,
                                         VerticalOptions = LayoutOptions.Start,
                                         LineBreakMode = LineBreakMode.WordWrap,
+                                        HorizontalOptions = LayoutOptions.Fill
                                     },
                                     content
                                 }

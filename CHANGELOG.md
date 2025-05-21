@@ -1,3 +1,10 @@
+## [1.3.6](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.5...v1.3.6) (2025-05-21)
+
+
+### Bug Fixes
+
+* Improves table and list rendering in MarkdownView ([1974a63](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/1974a634db4d72a3c3fc3e3751cde511a9bd7e9b))
+
 ## [1.3.5](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.4...v1.3.5) (2025-05-10)
 
 

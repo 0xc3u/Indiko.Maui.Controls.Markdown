@@ -683,25 +683,23 @@ public sealed class MarkdownView : ContentView
             ColumnSpacing = 1,
             RowSpacing = 1,
             BackgroundColor = Colors.Gray,
-            HorizontalOptions = LayoutOptions.Fill
+            HorizontalOptions = LayoutOptions.Fill, // Fills horizontally
+            WidthRequest = -1 // Allows to stretch if parent permits
         };
-        grid.HorizontalOptions = LayoutOptions.Fill;
 
-
+        // Ensure each column takes equal space
         for (int i = 0; i < table.ColumnDefinitions.Count; i++)
-            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
 
         int rowIndex = 0;
 
         foreach (TableRow row in table)
         {
-            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             for (int colIndex = 0; colIndex < row.Count; colIndex++)
             {
                 var cell = row[colIndex] as TableCell;
-
-
                 var alignment = table.ColumnDefinitions[colIndex].Alignment;
 
                 var horizontalTextAlignment = alignment switch
@@ -722,10 +720,9 @@ public sealed class MarkdownView : ContentView
                     Padding = 4,
                     HorizontalTextAlignment = horizontalTextAlignment,
                     LineBreakMode = row.IsHeader ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap,
+                    HorizontalOptions = LayoutOptions.Fill,
+                    VerticalOptions = LayoutOptions.Fill
                 };
-
-                label.HorizontalOptions = LayoutOptions.Fill;
-                label.VerticalOptions = LayoutOptions.Fill;
 
                 grid.Add(label, colIndex, rowIndex);
             }
@@ -735,6 +732,8 @@ public sealed class MarkdownView : ContentView
 
         return grid;
     }
+
+
 
     private View RenderFormula(MathBlock mathBlock)
     {
@@ -835,24 +834,39 @@ public sealed class MarkdownView : ContentView
                         }
                         else
                         {
-                            var prefix = listBlock.IsOrdered ? $"{item.Order + 1}." : "•";
-                            var row = new HorizontalStackLayout
+                            var prefix = listBlock.IsOrdered ? $"{item.Order}." : "•";
+                            var rowGrid = new Grid
                             {
-                                Spacing = 8,
-                                Children =
-                                {
-                                    new Label
-                                    {
-                                        Text = prefix,
-                                        FontAttributes = FontAttributes.Bold,
-                                        VerticalOptions = LayoutOptions.Start,
-                                        LineBreakMode = LineBreakMode.WordWrap,
-                                        HorizontalOptions = LayoutOptions.Fill
-                                    },
-                                    content
-                                }
+                                ColumnDefinitions =
+                            {
+                                new ColumnDefinition { Width = GridLength.Auto },
+                                new ColumnDefinition { Width = GridLength.Star }
+                            },
+                                ColumnSpacing = 8
                             };
-                            stack.Children.Add(row);
+
+                            var prefixLabel = new Label
+                            {
+                                Text = prefix,
+                                FontAttributes = FontAttributes.Bold,
+                                VerticalOptions = LayoutOptions.Start,
+                                HorizontalOptions = LayoutOptions.Start
+                            };
+
+                            if (content is View contentView)
+                            {
+                                contentView.HorizontalOptions = LayoutOptions.Fill;
+                            }
+
+                            Grid.SetColumn(prefixLabel, 0);
+                            Grid.SetRow(prefixLabel, 0);
+                            rowGrid.Children.Add(prefixLabel);
+
+                            Grid.SetColumn(content, 1);
+                            Grid.SetRow(content, 0);
+                            rowGrid.Children.Add(content);
+
+                            stack.Children.Add(rowGrid);
                         }
                     }
                 }
@@ -861,6 +875,7 @@ public sealed class MarkdownView : ContentView
 
         return stack;
     }
+
 
     private FormattedString RenderInlines(ContainerInline? inlines)
     {

@@ -1,3 +1,10 @@
+## [1.3.7](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.6...v1.3.7) (2025-06-03)
+
+
+### Bug Fixes
+
+* Updates package versions ([ad4544c](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/ad4544cde570282be0d94fbf566b7fa356d9cce4))
+
 ## [1.3.6](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.5...v1.3.6) (2025-05-21)
 
 

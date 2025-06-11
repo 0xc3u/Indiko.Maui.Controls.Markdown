@@ -20,7 +20,7 @@ namespace Indiko.Maui.Controls.Markdown;
 public sealed class MarkdownView : ContentView
 {
     private static readonly Regex EmailRegex = new Regex(@"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", RegexOptions.Compiled);
-    
+
     public static readonly BindableProperty MarkdownTextProperty =
         BindableProperty.Create(nameof(MarkdownText), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
@@ -156,7 +156,6 @@ public sealed class MarkdownView : ContentView
 
     /***** Table Row Styling **/
 
-
     public static readonly BindableProperty TableRowBackgroundColorProperty =
  BindableProperty.Create(nameof(TableRowBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
 
@@ -193,7 +192,6 @@ public sealed class MarkdownView : ContentView
         get => (double)GetValue(TableRowFontSizeProperty);
         set => SetValue(TableRowFontSizeProperty, value);
     }
-
 
     /* ****** Text Styling ******** */
 
@@ -381,7 +379,6 @@ public sealed class MarkdownView : ContentView
         set => SetValue(ImageAspectProperty, value);
     }
 
-
     [Obsolete("This is no longer needed and will be removed in future versions.")]
     public static readonly BindableProperty ListIndentProperty =
     BindableProperty.Create(nameof(ListIndent), typeof(Thickness), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
@@ -412,470 +409,602 @@ public sealed class MarkdownView : ContentView
         set => SetValue(LineHeightMultiplierProperty, value);
     }
 
-
     private static void OnMarkdownTextChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is MarkdownView view && newValue is string text)
-            view.RenderMarkdown(text);
+        {
+            try
+            {
+                view.RenderMarkdown(text);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error rendering markdown: {ex.Message}");
+            }
+        }
     }
 
     private void RenderMarkdown(string markdown)
     {
-        var pipeline = new MarkdownPipelineBuilder()
-            .UseAdvancedExtensions()
-            .UseAlertBlocks()
-            .UseAbbreviations()
-            .UseEmojiAndSmiley()
-            .UseGridTables()
-            .UsePipeTables()
-            .UseAutoIdentifiers()
-            .UseEmphasisExtras()
-            .UseDefinitionLists()
-            .UseFootnotes()
-            .UseListExtras()
-            .UseCustomContainers()
-            .UseCitations()
-            .UseMediaLinks()
-            .UseTaskLists()
-            .UseEmphasisExtras()
-            .UseAutoLinks()
-            .UseFooters()
-            .UseMathematics()
-            .Build();
-
-        MarkdownDocument document = Markdig.Markdown.Parse(markdown, pipeline);
-
-        var layout = new VerticalStackLayout { 
-            Margin = 0,
-            Padding =0,
-            Spacing = (8 * ParagraphSpacing)
-        };
-
-        foreach (var block in document)
+        try
         {
-            if (RenderBlock(block) is View view)
-                layout.Children.Add(view);
-        }
+            var pipeline = new MarkdownPipelineBuilder()
+                .UseAdvancedExtensions()
+                .UseAlertBlocks()
+                .UseAbbreviations()
+                .UseEmojiAndSmiley()
+                .UseGridTables()
+                .UsePipeTables()
+                .UseAutoIdentifiers()
+                .UseEmphasisExtras()
+                .UseDefinitionLists()
+                .UseFootnotes()
+                .UseListExtras()
+                .UseCustomContainers()
+                .UseCitations()
+                .UseMediaLinks()
+                .UseTaskLists()
+                .UseEmphasisExtras()
+                .UseAutoLinks()
+                .UseFooters()
+                .UseMathematics()
+                .Build();
 
-        Content = layout;
+            MarkdownDocument document = Markdig.Markdown.Parse(markdown, pipeline);
+
+            var layout = new VerticalStackLayout
+            {
+                Margin = 0,
+                Padding = 0,
+                Spacing = (8 * ParagraphSpacing)
+            };
+
+            foreach (var block in document)
+            {
+                try
+                {
+                    if (RenderBlock(block) is View view)
+                        layout.Children.Add(view);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error rendering block: {ex.Message}");
+                }
+            }
+
+            Content = layout;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in RenderMarkdown: {ex.Message}");
+            Content = new Label { Text = "Error rendering markdown content." };
+        }
     }
 
     private View? RenderBlock(Block block)
     {
-        return block switch
+        try
         {
-            ParagraphBlock p => RenderParagraph(p),
-            HeadingBlock h => RenderHeading(h),
-            ListBlock l => RenderList(l),
-            QuoteBlock q => RenderQuote(q),
-            ThematicBreakBlock => new BoxView { HeightRequest = 1, BackgroundColor = LineColor },
-            Table table => RenderTable(table),
-            CustomContainer cc => RenderCustomContainer(cc),
-            MathBlock m => RenderFormula(m),
-            CodeBlock c => c is FencedCodeBlock fenced ? RenderCode(fenced) : RenderCodeBlock(c),
-            BlankLineBlock => null,
-            _ => null
-        };
+            return block switch
+            {
+                ParagraphBlock p => RenderParagraph(p),
+                HeadingBlock h => RenderHeading(h),
+                ListBlock l => RenderList(l),
+                QuoteBlock q => RenderQuote(q),
+                ThematicBreakBlock => new BoxView { HeightRequest = 1, BackgroundColor = LineColor },
+                Table table => RenderTable(table),
+                CustomContainer cc => RenderCustomContainer(cc),
+                MathBlock m => RenderFormula(m),
+                CodeBlock c => c is FencedCodeBlock fenced ? RenderCode(fenced) : RenderCodeBlock(c),
+                BlankLineBlock => null,
+                _ => null
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering block: {ex.Message}");
+            return null;
+        }
     }
-
 
     private View RenderParagraph(ParagraphBlock block)
     {
-        if (block.Inline?.FirstChild is LinkInline link && link.IsImage)
+        try
         {
-
-            var image = new Image
+            if (block.Inline?.FirstChild is LinkInline link && link.IsImage)
             {
-                Aspect = ImageAspect,
-                HorizontalOptions = LayoutOptions.Fill,
-                VerticalOptions = LayoutOptions.Fill,
-                Margin = new Thickness(0),
-            };
-
-            LoadImageAsync(link.Url).ContinueWith(task =>
-            {
-                if (task.Status == TaskStatus.RanToCompletion)
+                var image = new Image
                 {
-                    var imageSource = task.Result;
-                    MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
-                }
-            });
+                    Aspect = ImageAspect,
+                    HorizontalOptions = LayoutOptions.Fill,
+                    VerticalOptions = LayoutOptions.Fill,
+                    Margin = new Thickness(0),
+                };
 
-            return image;
+                LoadImageAsync(link.Url).ContinueWith(task =>
+                {
+                    if (task.Status == TaskStatus.RanToCompletion)
+                    {
+                        var imageSource = task.Result;
+                        MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
+                    }
+                    else if (task.Exception != null)
+                    {
+                        Console.WriteLine($"Error loading image: {task.Exception.InnerException?.Message}");
+                    }
+                });
 
+                return image;
+            }
+
+            return new Label
+            {
+                FormattedText = RenderInlines(block.Inline),
+                LineBreakMode = LineBreakMode.WordWrap,
+            };
         }
-
-        return new Label
+        catch (Exception ex)
         {
-            FormattedText = RenderInlines(block.Inline),
-            LineBreakMode = LineBreakMode.WordWrap,
-        };
+            Console.WriteLine($"Error rendering paragraph: {ex.Message}");
+            return new Label { Text = "[Error rendering paragraph]" };
+        }
     }
 
     private View RenderHeading(HeadingBlock block)
     {
-        var formatted = new FormattedString();
-
-        if (block.Inline != null)
+        try
         {
-            foreach (var inline in block.Inline)
+            var formatted = new FormattedString();
+
+            if (block.Inline != null)
             {
-                if (inline is LiteralInline literal)
+                foreach (var inline in block.Inline)
                 {
-                    formatted.Spans.Add(new Span
+                    if (inline is LiteralInline literal)
                     {
-                        Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
-                        FontSize = GetFontsizeForBlockLevel(block.Level),
-                        FontAttributes = FontAttributes.Bold,
-                        TextColor = GetTextColorForBlockLevel(block.Level),
-                        FontFamily = TextFontFace
-                    });
-                }
-                else if (inline is EmphasisInline em)
-                {
-                    var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
-                    formatted.Spans.Add(new Span
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
+                            FontSize = GetFontsizeForBlockLevel(block.Level),
+                            FontAttributes = FontAttributes.Bold,
+                            TextColor = GetTextColorForBlockLevel(block.Level),
+                            FontFamily = TextFontFace
+                        });
+                    }
+                    else if (inline is EmphasisInline em)
                     {
-                        Text = text,
-                        FontSize = GetFontsizeForBlockLevel(block.Level),
-                        FontAttributes = em.DelimiterCount == 2 ? FontAttributes.Bold : FontAttributes.Italic,
-                        TextColor = GetTextColorForBlockLevel(block.Level),
-                        FontFamily = TextFontFace
-                    });
-                }
-                else if (inline is LineBreakInline)
-                {
-                    formatted.Spans.Add(new Span { Text = "\n" });
+                        var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = text,
+                            FontSize = GetFontsizeForBlockLevel(block.Level),
+                            FontAttributes = em.DelimiterCount == 2 ? FontAttributes.Bold : FontAttributes.Italic,
+                            TextColor = GetTextColorForBlockLevel(block.Level),
+                            FontFamily = TextFontFace
+                        });
+                    }
+                    else if (inline is LineBreakInline)
+                    {
+                        formatted.Spans.Add(new Span { Text = "\n" });
+                    }
                 }
             }
+
+            return new Label
+            {
+                FormattedText = formatted,
+                LineBreakMode = LineBreakMode.WordWrap,
+                HorizontalOptions = LayoutOptions.Start,
+                VerticalOptions = LayoutOptions.Center,
+                LineHeight = LineHeightMultiplier,
+            };
         }
-
-        return new Label
+        catch (Exception ex)
         {
-            FormattedText = formatted,
-            LineBreakMode = LineBreakMode.WordWrap,
-            HorizontalOptions = LayoutOptions.Start,
-            VerticalOptions = LayoutOptions.Center,
-            LineHeight = LineHeightMultiplier,
-        };
+            Console.WriteLine($"Error rendering heading: {ex.Message}");
+            return new Label { Text = "[Error rendering heading]" };
+        }
     }
-
 
     private Color GetTextColorForBlockLevel(int blockLevel)
     {
-        if(blockLevel == 1)
-            return H1Color;
-        else if (blockLevel == 2)
-            return H2Color;
-        else if (blockLevel == 3)
-            return H3Color;
-        else
-            return H3Color;
+        try
+        {
+            if (blockLevel == 1)
+                return H1Color;
+            else if (blockLevel == 2)
+                return H2Color;
+            else if (blockLevel == 3)
+                return H3Color;
+            else
+                return H3Color;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting text color for block level: {ex.Message}");
+            return Colors.Black;
+        }
     }
 
     private double GetFontsizeForBlockLevel(int blockLevel)
     {
-        if (blockLevel == 1)
-            return H1FontSize;
-        else if (blockLevel == 2)
-            return H2FontSize;
-        else if (blockLevel == 3)
-            return H3FontSize;
-        else
-            return H3FontSize;
+        try
+        {
+            if (blockLevel == 1)
+                return H1FontSize;
+            else if (blockLevel == 2)
+                return H2FontSize;
+            else if (blockLevel == 3)
+                return H3FontSize;
+            else
+                return H3FontSize;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting font size for block level: {ex.Message}");
+            return 12d;
+        }
     }
 
     private View RenderQuote(QuoteBlock block)
     {
-        var quoteContent = new VerticalStackLayout()
+        try
         {
-            Margin = 10
-        };
-        foreach (var subBlock in block)
-        {
-            if (RenderBlock(subBlock) is View view)
-                quoteContent.Children.Add(view);
-        }
-
-        var box = new Border
-        {
-            Margin = new Thickness(0),
-            BackgroundColor = BlockQuoteBorderColor,
-            Stroke = new SolidColorBrush(BlockQuoteBorderColor),
-            StrokeShape = new RoundRectangle() { CornerRadius = new CornerRadius(4, 0, 4, 0) },
-            HorizontalOptions = LayoutOptions.Fill,
-            VerticalOptions = LayoutOptions.Fill
-        };
-
-        var blockQuoteGrid = new Grid
-        {
-            RowSpacing = 0,
-            ColumnSpacing = 0,
-            ColumnDefinitions =
+            var quoteContent = new VerticalStackLayout()
             {
-                new ColumnDefinition { Width = 5 },
-                new ColumnDefinition { Width = GridLength.Star }
+                Margin = 10
+            };
+            foreach (var subBlock in block)
+            {
+                if (RenderBlock(subBlock) is View view)
+                    quoteContent.Children.Add(view);
             }
-        };
 
-        blockQuoteGrid.Children.Add(box);
-        Grid.SetRow(box, 0);
-        Grid.SetColumn(box, 0);
+            var box = new Border
+            {
+                Margin = new Thickness(0),
+                BackgroundColor = BlockQuoteBorderColor,
+                Stroke = new SolidColorBrush(BlockQuoteBorderColor),
+                StrokeShape = new RoundRectangle() { CornerRadius = new CornerRadius(4, 0, 4, 0) },
+                HorizontalOptions = LayoutOptions.Fill,
+                VerticalOptions = LayoutOptions.Fill
+            };
 
-        blockQuoteGrid.Children.Add(quoteContent);
-        Grid.SetRow(quoteContent, 0);
-        Grid.SetColumn(quoteContent, 1);
+            var blockQuoteGrid = new Grid
+            {
+                RowSpacing = 0,
+                ColumnSpacing = 0,
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = 5 },
+                    new ColumnDefinition { Width = GridLength.Star }
+                }
+            };
 
-        var blockquote = new Border
+            blockQuoteGrid.Children.Add(box);
+            Grid.SetRow(box, 0);
+            Grid.SetColumn(box, 0);
+
+            blockQuoteGrid.Children.Add(quoteContent);
+            Grid.SetRow(quoteContent, 0);
+            Grid.SetColumn(quoteContent, 1);
+
+            var blockquote = new Border
+            {
+                Padding = new Thickness(0),
+                Stroke = new SolidColorBrush(BlockQuoteBorderColor),
+                StrokeShape = new RoundRectangle().WithCornerRadius(4),
+                BackgroundColor = BlockQuoteBackgroundColor,
+                Content = blockQuoteGrid
+            };
+
+            return blockquote;
+        }
+        catch (Exception ex)
         {
-            Padding = new Thickness(0),
-            Stroke = new SolidColorBrush(BlockQuoteBorderColor),
-            StrokeShape = new RoundRectangle().WithCornerRadius(4),
-            BackgroundColor = BlockQuoteBackgroundColor,
-            Content = blockQuoteGrid
-        };
-
-        return blockquote;
+            Console.WriteLine($"Error rendering quote: {ex.Message}");
+            return new Label { Text = "[Error rendering quote]" };
+        }
     }
 
     private View RenderCode(FencedCodeBlock block)
     {
-        return new Border
+        try
         {
-            BackgroundColor = CodeBlockBackgroundColor,
-            Stroke = new SolidColorBrush(CodeBlockBorderColor),
-            Padding = 8,
-            StrokeShape = new RoundRectangle().WithCornerRadius(4),
-            Content = new Label
+            return new Border
             {
-                Text = block.Lines.ToString(),
-                FontFamily = CodeBlockFontFace,
-                TextColor = CodeBlockTextColor,
-                FontSize = CodeBlockFontSize,
-                LineBreakMode = LineBreakMode.WordWrap,
-            }
-        };
+                BackgroundColor = CodeBlockBackgroundColor,
+                Stroke = new SolidColorBrush(CodeBlockBorderColor),
+                Padding = 8,
+                StrokeShape = new RoundRectangle().WithCornerRadius(4),
+                Content = new Label
+                {
+                    Text = block.Lines.ToString(),
+                    FontFamily = CodeBlockFontFace,
+                    TextColor = CodeBlockTextColor,
+                    FontSize = CodeBlockFontSize,
+                    LineBreakMode = LineBreakMode.WordWrap,
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering code block: {ex.Message}");
+            return new Label { Text = "[Error rendering code block]" };
+        }
     }
 
     private View RenderCodeBlock(CodeBlock block)
     {
-        return new Border
+        try
         {
-            BackgroundColor = CodeBlockBackgroundColor,
-            Stroke = new SolidColorBrush(CodeBlockBorderColor),
-            Padding = 8,
-            StrokeShape = new RoundRectangle().WithCornerRadius(4),
-            Content = new Label
+            return new Border
             {
-                Text = block.Lines.ToString(),
-                FontFamily = CodeBlockFontFace,
-                TextColor = CodeBlockTextColor,
-                FontSize = CodeBlockFontSize,
-                LineBreakMode = LineBreakMode.WordWrap,
-            }
-        };
+                BackgroundColor = CodeBlockBackgroundColor,
+                Stroke = new SolidColorBrush(CodeBlockBorderColor),
+                Padding = 8,
+                StrokeShape = new RoundRectangle().WithCornerRadius(4),
+                Content = new Label
+                {
+                    Text = block.Lines.ToString(),
+                    FontFamily = CodeBlockFontFace,
+                    TextColor = CodeBlockTextColor,
+                    FontSize = CodeBlockFontSize,
+                    LineBreakMode = LineBreakMode.WordWrap,
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering code block: {ex.Message}");
+            return new Label { Text = "[Error rendering code block]" };
+        }
     }
 
     private View RenderTable(Table table)
     {
-        var grid = new Grid
+        try
         {
-            ColumnSpacing = 1,
-            RowSpacing = 1,
-            BackgroundColor = Colors.Gray,
-            HorizontalOptions = LayoutOptions.Fill, // Fills horizontally
-            WidthRequest = -1 // Allows to stretch if parent permits
-        };
-
-        // Ensure each column takes equal space
-        for (int i = 0; i < table.ColumnDefinitions.Count; i++)
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
-
-        int rowIndex = 0;
-
-        foreach (TableRow row in table)
-        {
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            for (int colIndex = 0; colIndex < row.Count; colIndex++)
+            var grid = new Grid
             {
-                var cell = row[colIndex] as TableCell;
-                var alignment = table.ColumnDefinitions[colIndex].Alignment;
+                ColumnSpacing = 1,
+                RowSpacing = 1,
+                BackgroundColor = Colors.Gray,
+                HorizontalOptions = LayoutOptions.Fill,
+                WidthRequest = -1
+            };
 
-                var horizontalTextAlignment = alignment switch
+            for (int i = 0; i < table.ColumnDefinitions.Count; i++)
+            {
+                bool hasContent = false;
+                foreach (TableRow row in table)
                 {
-                    TableColumnAlign.Center => TextAlignment.Center,
-                    TableColumnAlign.Right => TextAlignment.End,
-                    _ => TextAlignment.Start
-                };
-
-                var label = new Label
+                    if (row.Count > i && row[i] is TableCell cell && cell.Count > 0)
+                    {
+                        hasContent = true;
+                        break;
+                    }
+                }
+                if (hasContent)
                 {
-                    FormattedText = RenderInlines((cell?.FirstOrDefault() as ParagraphBlock)?.Inline),
-                    BackgroundColor = row.IsHeader ? TableHeaderBackgroundColor : TableRowBackgroundColor,
-                    FontAttributes = row.IsHeader ? FontAttributes.Bold : FontAttributes.None,
-                    TextColor = row.IsHeader ? TableHeaderTextColor : TableRowTextColor,
-                    FontFamily = row.IsHeader ? TableHeaderFontFace : TableRowFontFace,
-                    FontSize = row.IsHeader ? TableHeaderFontSize : TableRowFontSize,
-                    Padding = 4,
-                    HorizontalTextAlignment = horizontalTextAlignment,
-                    LineBreakMode = row.IsHeader ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap,
-                    HorizontalOptions = LayoutOptions.Fill,
-                    VerticalOptions = LayoutOptions.Fill
-                };
-
-                grid.Add(label, colIndex, rowIndex);
+                    grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+                }
             }
 
-            rowIndex++;
+            int rowIndex = 0;
+
+            foreach (TableRow row in table)
+            {
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+                for (int colIndex = 0; colIndex < row.Count; colIndex++)
+                {
+                    var cell = row[colIndex] as TableCell;
+                    if (cell == null || cell.Count == 0)
+                        continue;
+
+                    var alignment = table.ColumnDefinitions[colIndex].Alignment;
+
+                    var horizontalTextAlignment = alignment switch
+                    {
+                        TableColumnAlign.Center => TextAlignment.Center,
+                        TableColumnAlign.Right => TextAlignment.End,
+                        _ => TextAlignment.Start
+                    };
+
+                    var label = new Label
+                    {
+                        FormattedText = RenderInlines((cell.FirstOrDefault() as ParagraphBlock)?.Inline),
+                        BackgroundColor = row.IsHeader ? TableHeaderBackgroundColor : TableRowBackgroundColor,
+                        FontAttributes = row.IsHeader ? FontAttributes.Bold : FontAttributes.None,
+                        TextColor = row.IsHeader ? TableHeaderTextColor : TableRowTextColor,
+                        FontFamily = row.IsHeader ? TableHeaderFontFace : TableRowFontFace,
+                        FontSize = row.IsHeader ? TableHeaderFontSize : TableRowFontSize,
+                        Padding = 4,
+                        HorizontalTextAlignment = horizontalTextAlignment,
+                        LineBreakMode = row.IsHeader ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap,
+                        HorizontalOptions = LayoutOptions.Fill,
+                        VerticalOptions = LayoutOptions.Fill
+                    };
+
+                    grid.Add(label, colIndex, rowIndex);
+                }
+
+                rowIndex++;
+            }
+
+            return grid;
         }
-
-        return grid;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering table: {ex.Message}");
+            return new Label { Text = "[Error rendering table]" };
+        }
     }
-
-
 
     private View RenderFormula(MathBlock mathBlock)
     {
-        string formularText  = mathBlock.Lines.ToString();
+        try
+        {
+            string formularText = mathBlock.Lines.ToString();
 
-        var grid = new Grid
-        {
-            ColumnDefinitions =
-        {
-            new ColumnDefinition { Width = GridLength.Auto },
-            new ColumnDefinition { Width = GridLength.Auto },
-            new ColumnDefinition { Width = GridLength.Auto }
-        },
-            RowDefinitions =
-        {
-            new RowDefinition { Height = GridLength.Auto }
+            var grid = new Grid
+            {
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Auto },
+                    new ColumnDefinition { Width = GridLength.Auto },
+                    new ColumnDefinition { Width = GridLength.Auto }
+                },
+                RowDefinitions =
+                {
+                    new RowDefinition { Height = GridLength.Auto }
+                }
+            };
+
+            var latexView = new LatexView
+            {
+                Text = formularText,
+                FontSize = (float)TextFontSize * 4,
+                TextColor = TextColor,
+                HighlightColor = Colors.Transparent,
+                ErrorColor = Colors.Red,
+                HorizontalOptions = LayoutOptions.Start,
+                VerticalOptions = LayoutOptions.Center,
+                Margin = new Thickness(-10, -10)
+            };
+
+            return latexView;
         }
-        };
-
-        var latexView = new LatexView
+        catch (Exception ex)
         {
-            Text = formularText,
-            FontSize = (float)TextFontSize * 4,
-            TextColor = TextColor,
-            HighlightColor = Colors.Transparent,
-            ErrorColor = Colors.Red,
-            HorizontalOptions = LayoutOptions.Start,
-            VerticalOptions = LayoutOptions.Center,
-            Margin = new Thickness(-10, -10)
-        };
-
-        return latexView;
+            Console.WriteLine($"Error rendering formula: {ex.Message}");
+            return new Label { Text = "[Error rendering formula]" };
+        }
     }
-    
+
     private View RenderCustomContainer(CustomContainer container)
     {
-
-        var type = container.TryGetAttributes()?.Classes?.FirstOrDefault() ?? "default";
-
-        var color = type switch
+        try
         {
-            "info" => Colors.LightBlue,
-            "warning" => Colors.Orange,
-            "danger" => Colors.Red,
-            _ => Colors.LightGray
-        };
+            var type = container.TryGetAttributes()?.Classes?.FirstOrDefault() ?? "default";
 
-        var inner = new VerticalStackLayout();
-        foreach (var child in container)
-        {
-            if (RenderBlock(child) is View view)
-                inner.Children.Add(view);
+            var color = type switch
+            {
+                "info" => Colors.LightBlue,
+                "warning" => Colors.Orange,
+                "danger" => Colors.Red,
+                _ => Colors.LightGray
+            };
+
+            var inner = new VerticalStackLayout();
+            foreach (var child in container)
+            {
+                if (RenderBlock(child) is View view)
+                    inner.Children.Add(view);
+            }
+
+            return new Border
+            {
+                Stroke = color,
+                StrokeThickness = 2,
+                Padding = new Thickness(10),
+                Content = inner
+            };
         }
-
-        return new Border
+        catch (Exception ex)
         {
-            Stroke = color,
-            StrokeThickness = 2,
-            Padding = new Thickness(10),
-            Content = inner
-        };
+            Console.WriteLine($"Error rendering custom container: {ex.Message}");
+            return new Label { Text = "[Error rendering custom container]" };
+        }
     }
 
     private View RenderList(ListBlock listBlock, int nestingLevel = 0)
     {
-        var stack = new VerticalStackLayout
+        try
         {
-            Padding = new Thickness(nestingLevel * 20, 0, 0, 0),
-            Spacing = 4
-        };
-
-        foreach (ListItemBlock item in listBlock)
-        {
-            var isChecklist = item.TryGetAttributes()?.Properties?.FirstOrDefault(p => p.Key == "checked").Value != null;
-            var isChecked = isChecklist && item.GetAttributes().Properties.First(p => p.Key == "checked").Value == "true";
-
-            foreach (var subBlock in item)
+            var stack = new VerticalStackLayout
             {
-                if (subBlock is ListBlock nestedList)
-                {
-                    stack.Children.Add(RenderList(nestedList, nestingLevel + 1));
-                }
-                else
-                {
-                    var content = RenderBlock(subBlock);
+                Padding = new Thickness(nestingLevel * 20, 0, 0, 0),
+                Spacing = 4
+            };
 
-                    if (content != null)
+            foreach (ListItemBlock item in listBlock)
+            {
+                var isChecklist = item.TryGetAttributes()?.Properties?.FirstOrDefault(p => p.Key == "checked").Value != null;
+                var isChecked = isChecklist && item.GetAttributes().Properties.First(p => p.Key == "checked").Value == "true";
+
+                foreach (var subBlock in item)
+                {
+                    if (subBlock is ListBlock nestedList)
                     {
-                        if (isChecklist && content is Label label)
-                        {
-                            var checkbox = new CheckBox { IsChecked = isChecked, IsEnabled = false };
-                            var layout = new HorizontalStackLayout
-                            {
-                                Spacing = 8,
-                                Children = { checkbox, label }
-                            };
-                            stack.Children.Add(layout);
-                        }
-                        else
-                        {
-                            var prefix = listBlock.IsOrdered ? $"{item.Order}." : "•";
-                            var rowGrid = new Grid
-                            {
-                                ColumnDefinitions =
-                            {
-                                new ColumnDefinition { Width = GridLength.Auto },
-                                new ColumnDefinition { Width = GridLength.Star }
-                            },
-                                ColumnSpacing = 8
-                            };
+                        stack.Children.Add(RenderList(nestedList, nestingLevel + 1));
+                    }
+                    else
+                    {
+                        var content = RenderBlock(subBlock);
 
-                            var prefixLabel = new Label
+                        if (content != null)
+                        {
+                            if (isChecklist && content is Label label)
                             {
-                                Text = prefix,
-                                FontAttributes = FontAttributes.Bold,
-                                VerticalOptions = LayoutOptions.Start,
-                                HorizontalOptions = LayoutOptions.Start
-                            };
-
-                            if (content is View contentView)
-                            {
-                                contentView.HorizontalOptions = LayoutOptions.Fill;
+                                var checkbox = new CheckBox { IsChecked = isChecked, IsEnabled = false };
+                                var layout = new HorizontalStackLayout
+                                {
+                                    Spacing = 8,
+                                    Children = { checkbox, label }
+                                };
+                                stack.Children.Add(layout);
                             }
+                            else
+                            {
+                                var prefix = listBlock.IsOrdered ? $"{item.Order}." : "•";
+                                var rowGrid = new Grid
+                                {
+                                    ColumnDefinitions =
+                                    {
+                                        new ColumnDefinition { Width = GridLength.Auto },
+                                        new ColumnDefinition { Width = GridLength.Star }
+                                    },
+                                    ColumnSpacing = 8
+                                };
 
-                            Grid.SetColumn(prefixLabel, 0);
-                            Grid.SetRow(prefixLabel, 0);
-                            rowGrid.Children.Add(prefixLabel);
+                                var prefixLabel = new Label
+                                {
+                                    Text = prefix,
+                                    FontAttributes = FontAttributes.Bold,
+                                    VerticalOptions = LayoutOptions.Start,
+                                    HorizontalOptions = LayoutOptions.Start
+                                };
 
-                            Grid.SetColumn(content, 1);
-                            Grid.SetRow(content, 0);
-                            rowGrid.Children.Add(content);
+                                if (content is View contentView)
+                                {
+                                    contentView.HorizontalOptions = LayoutOptions.Fill;
+                                }
 
-                            stack.Children.Add(rowGrid);
+                                Grid.SetColumn(prefixLabel, 0);
+                                Grid.SetRow(prefixLabel, 0);
+                                rowGrid.Children.Add(prefixLabel);
+
+                                Grid.SetColumn(content, 1);
+                                Grid.SetRow(content, 0);
+                                rowGrid.Children.Add(content);
+
+                                stack.Children.Add(rowGrid);
+                            }
                         }
                     }
                 }
             }
+
+            return stack;
         }
-
-        return stack;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering list: {ex.Message}");
+            return new Label { Text = "[Error rendering list]" };
+        }
     }
-
 
     private FormattedString RenderInlines(ContainerInline? inlines)
     {
@@ -885,96 +1014,103 @@ public sealed class MarkdownView : ContentView
 
         foreach (var inline in inlines)
         {
-            switch (inline)
+            try
             {
-                case LiteralInline literal:
-                    formatted.Spans.Add(new Span
-                    {
-                        Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
-                        FontFamily = TextFontFace,
-                        FontSize = TextFontSize,
-                        TextColor = TextColor
-                    });
-                    break;
+                switch (inline)
+                {
+                    case LiteralInline literal:
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
+                            FontFamily = TextFontFace,
+                            FontSize = TextFontSize,
+                            TextColor = TextColor
+                        });
+                        break;
 
-                case EmphasisInline em:
-                    var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
-                    formatted.Spans.Add(new Span
-                    {
-                        Text = text,
-                        TextDecorations = em.DelimiterChar == '~'
-                            ? TextDecorations.Strikethrough
-                            : TextDecorations.None,
-                        FontAttributes = em.DelimiterChar == '*' && em.DelimiterCount == 2
-                            ? FontAttributes.Bold
-                            : em.DelimiterChar == '*' && em.DelimiterCount == 1
-                                ? FontAttributes.Italic
-                                : FontAttributes.None,
-                        FontFamily = TextFontFace,
-                        FontSize = TextFontSize,
-                        TextColor = TextColor
-                    });
-                    break;
+                    case EmphasisInline em:
+                        var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = text,
+                            TextDecorations = em.DelimiterChar == '~'
+                                ? TextDecorations.Strikethrough
+                                : TextDecorations.None,
+                            FontAttributes = em.DelimiterChar == '*' && em.DelimiterCount == 2
+                                ? FontAttributes.Bold
+                                : em.DelimiterChar == '*' && em.DelimiterCount == 1
+                                    ? FontAttributes.Italic
+                                    : FontAttributes.None,
+                            FontFamily = TextFontFace,
+                            FontSize = TextFontSize,
+                            TextColor = TextColor
+                        });
+                        break;
 
+                    case LineBreakInline:
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = "\n",
+                            FontFamily = TextFontFace,
+                            FontSize = TextFontSize,
+                            TextColor = TextColor
+                        });
+                        break;
 
-                case LineBreakInline:
-                    formatted.Spans.Add(new Span { Text = "\n",
-                        FontFamily = TextFontFace,
-                        FontSize = TextFontSize,
-                        TextColor = TextColor
-                    });
-                    break;
+                    case LinkInline link when !link.IsImage:
+                        var linkText = link.FirstChild?.ToString() ?? link.Url;
+                        var span = new Span
+                        {
+                            Text = linkText,
+                            TextColor = HyperlinkColor,
+                            TextDecorations = TextDecorations.Underline,
+                            FontFamily = TextFontFace,
+                            FontSize = TextFontSize,
+                        };
 
-                case LinkInline link when !link.IsImage:
-                    var linkText = link.FirstChild?.ToString() ?? link.Url;
-                    var span = new Span
-                    {
-                        Text = linkText,
-                        TextColor = HyperlinkColor,
-                        TextDecorations = TextDecorations.Underline,
-                        FontFamily = TextFontFace,
-                        FontSize = TextFontSize,
-                    };
+                        var tap = new TapGestureRecognizer();
 
-                    var tap = new TapGestureRecognizer();
+                        if (link.Url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            tap.Tapped += (_, __) => TriggerEmailClicked(link.Url.Substring("mailto:".Length));
+                        }
+                        else if (EmailRegex.IsMatch(link.Url))
+                        {
+                            var email = EmailRegex.Match(link.Url).Value;
+                            tap.Tapped += (_, __) => TriggerEmailClicked(email);
+                        }
+                        else
+                        {
+                            tap.Tapped += (_, __) => TriggerHyperLinkClicked(link.Url);
+                        }
 
-                    if (link.Url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
-                    {
-                        tap.Tapped += (_, __) => TriggerEmailClicked(link.Url.Substring("mailto:".Length));
-                    }
-                    else if (EmailRegex.IsMatch(link.Url)) // Detect email addresses
-                    {
-                        var email = EmailRegex.Match(link.Url).Value;
-                        tap.Tapped += (_, __) => TriggerEmailClicked(email);
-
-                    }
-                    else
-                    {
-                        tap.Tapped += (_, __) => TriggerHyperLinkClicked(link.Url);
-                    }
-
-                    span.GestureRecognizers.Add(tap);
-                    formatted.Spans.Add(span);
-                    break;
-                case LinkInline image when image.IsImage:
-                    formatted.Spans.Add(new Span
-                    {
-                        Text = "[Image]",
-                        FontFamily = TextFontFace,
-                        FontSize = TextFontSize,
-                        TextColor = TextColor
-                    });
-                    break;
-                case MathInline math:
-                    formatted.Spans.Add(new Span
-                    {
-                        Text = math.Content.ToString(),
-                        FontAttributes = FontAttributes.Italic,
-                        TextColor = Colors.DarkOliveGreen, // or bindable
-                        FontFamily = TextFontFace,
-                        FontSize = TextFontSize
-                    });
-                    break;
+                        span.GestureRecognizers.Add(tap);
+                        formatted.Spans.Add(span);
+                        break;
+                    case LinkInline image when image.IsImage:
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = "[Image]",
+                            FontFamily = TextFontFace,
+                            FontSize = TextFontSize,
+                            TextColor = TextColor
+                        });
+                        break;
+                    case MathInline math:
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = math.Content.ToString(),
+                            FontAttributes = FontAttributes.Italic,
+                            TextColor = Colors.DarkOliveGreen,
+                            FontFamily = TextFontFace,
+                            FontSize = TextFontSize
+                        });
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error rendering inline: {ex.Message}");
             }
         }
 
@@ -1081,7 +1217,7 @@ public sealed class MarkdownView : ContentView
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to load image: {ex.Message}");
-            throw;
+            imageSource = ImageSource.FromFile("icon.png");
         }
 
         return imageSource ?? ImageSource.FromFile("icon.png");
@@ -1089,27 +1225,48 @@ public sealed class MarkdownView : ContentView
 
     internal void TriggerHyperLinkClicked(string url)
     {
-        OnHyperLinkClicked?.Invoke(this, new LinkEventArgs { Url = url });
-
-        if (LinkCommand?.CanExecute(url) == true)
+        try
         {
-            LinkCommand.Execute(url);
+            OnHyperLinkClicked?.Invoke(this, new LinkEventArgs { Url = url });
+
+            if (LinkCommand?.CanExecute(url) == true)
+            {
+                LinkCommand.Execute(url);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error triggering hyperlink clicked: {ex.Message}");
         }
     }
 
     private void TriggerEmailClicked(string email)
     {
-        OnEmailClicked?.Invoke(this, new EmailEventArgs { Email = email });
-
-        if (EMailCommand?.CanExecute(email) == true)
+        try
         {
-            EMailCommand.Execute(email);
+            OnEmailClicked?.Invoke(this, new EmailEventArgs { Email = email });
+
+            if (EMailCommand?.CanExecute(email) == true)
+            {
+                EMailCommand.Execute(email);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error triggering email clicked: {ex.Message}");
         }
     }
 
     ~MarkdownView()
     {
-        _imageCache.Clear();
-        _imageCache = null;
+        try
+        {
+            _imageCache.Clear();
+            _imageCache = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in destructor: {ex.Message}");
+        }
     }
 }

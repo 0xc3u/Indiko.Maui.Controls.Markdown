@@ -1,3 +1,10 @@
+## [1.3.8](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.7...v1.3.8) (2025-06-11)
+
+
+### Bug Fixes
+
+* [#38](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/issues/38) Improves markdown rendering and error handling ([71de69f](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/71de69ff3cddf23e0d86860459545fcfad3ed75a))
+
 ## [1.3.7](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.6...v1.3.7) (2025-06-03)
 
 

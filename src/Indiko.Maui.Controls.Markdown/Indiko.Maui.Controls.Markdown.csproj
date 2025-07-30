@@ -9,9 +9,9 @@
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">31.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
@@ -39,11 +39,11 @@
 
 	<ItemGroup>
 	  <PackageReference Include="Markdig" Version="0.41.3" />
-	  <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.80" />
-	  <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.80" />
+	  <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.90" />
+	  <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.90" />
 	  <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.0" />
 	  <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
-	  <PackageReference Include="Svg.Skia" Version="3.0.3" />
+	  <PackageReference Include="Svg.Skia" Version="3.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>

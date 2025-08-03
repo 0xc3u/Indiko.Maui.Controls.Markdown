@@ -611,12 +611,21 @@ public sealed class MarkdownView : ContentView
                     VerticalOptions = LayoutOptions.Center,
                 };
 
+                var img = new Image
+                {
+                    Aspect = ImageAspect, // fallback aspect if none provided in attributes
+                    HorizontalOptions = LayoutOptions.Start,
+                    VerticalOptions = LayoutOptions.Center
+                };
+
                 var attrs = link.TryGetAttributes();
                 if (attrs != null)
                 {
                     string widthValue = null;
                     string heightValue = null;
-                    if (attrs?.Properties != null)
+                    string aspectValue = null;
+
+                    if (attrs.Properties != null)
                     {
                         foreach (var prop in attrs.Properties)
                         {
@@ -625,34 +634,48 @@ public sealed class MarkdownView : ContentView
                                 widthValue = prop.Value;
                             }
                             else if (prop.Key.Equals("height", StringComparison.OrdinalIgnoreCase))
+                            {
                                 heightValue = prop.Value;
+                            }
+                            else if (prop.Key.Equals("aspect", StringComparison.OrdinalIgnoreCase))
+                            {
+                                aspectValue = prop.Value;
+                            }
                         }
                     }
 
+                    // If no width was defined, use fallback based on device width
                     if (string.IsNullOrEmpty(widthValue))
                     {
                         widthValue = ((DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 20).ToString(); // 20 for padding
                     }
 
-                    if (widthValue != null && double.TryParse(widthValue, out var w))
+                    if (double.TryParse(widthValue, out var w))
                     {
                         img.WidthRequest = w;
                         img.MinimumWidthRequest = w;
                         img.MaximumWidthRequest = w;
                     }
-                        
-                    if (heightValue != null && double.TryParse(heightValue, out var h))
+
+                    if (double.TryParse(heightValue, out var h))
                     {
                         img.HeightRequest = h;
                         img.MinimumHeightRequest = h;
                         img.MaximumHeightRequest = h;
                     }
+
+                    if (!string.IsNullOrEmpty(aspectValue) &&
+                        Enum.TryParse<Aspect>(aspectValue, ignoreCase: true, out var parsedAspect))
+                    {
+                        img.Aspect = parsedAspect;
+                    }
                 }
                 else
                 {
-                    double maxWidth = DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density - 20; // 20 for padding
+                    // No attributes found, fallback to dynamic width
+                    double maxWidth = DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density - 20;
                     img.MinimumWidthRequest = maxWidth;
-                    img.MinimumWidthRequest = maxWidth;
+                    img.MaximumWidthRequest = maxWidth;
                 }
 
                 // Load the image asynchronously

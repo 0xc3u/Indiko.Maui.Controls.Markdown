@@ -1,3 +1,11 @@
+## [1.3.12](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.11...v1.3.12) (2025-08-03)
+
+
+### Bug Fixes
+
+* Adds image aspect ratio support ([ad23e47](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/ad23e4753c367be4d2bccaa66128245e0c27cc03))
+* Removes unused Image declaration ([b9ea85c](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/b9ea85cde8701b8a21b09c9b20f7168c727ee0d3))
+
 ## [1.3.11](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.10...v1.3.11) (2025-08-03)
 
 

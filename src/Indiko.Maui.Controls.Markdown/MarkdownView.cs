@@ -958,7 +958,7 @@ public sealed class MarkdownView : ContentView
                             }
                             else
                             {
-                                var prefix = listBlock.IsOrdered ? $"{item.Order}." : "•";
+                                var prefix = listBlock.IsOrdered ? $"{item.Order}." : "ï¿½";
                                 var rowGrid = new Grid
                                 {
                                     ColumnDefinitions =
@@ -1123,7 +1123,32 @@ public sealed class MarkdownView : ContentView
 
         try
         {
-            if (System.Buffers.Text.Base64.IsValid(imageUrl))
+            // Handle data URLs (e.g., data:image/png;base64,iVBORw0...)
+            if (imageUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                var base64StartIndex = imageUrl.IndexOf("base64,");
+                if (base64StartIndex != -1)
+                {
+                    var base64Data = imageUrl.Substring(base64StartIndex + "base64,".Length);
+                    if (System.Buffers.Text.Base64.IsValid(base64Data))
+                    {
+                        byte[] imageBytes = Convert.FromBase64String(base64Data);
+                        imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Invalid base64 data in data URL: {imageUrl}");
+                        imageSource = ImageSource.FromFile("icon.png");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Data URL missing base64 prefix: {imageUrl}");
+                    imageSource = ImageSource.FromFile("icon.png");
+                }
+            }
+            // Handle legacy case where just the base64 string is passed (without data: prefix)
+            else if (System.Buffers.Text.Base64.IsValid(imageUrl))
             {
                 byte[] imageBytes = Convert.FromBase64String(imageUrl);
                 imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));

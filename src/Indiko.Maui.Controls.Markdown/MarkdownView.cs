@@ -611,13 +611,6 @@ public sealed class MarkdownView : ContentView
                     VerticalOptions = LayoutOptions.Center,
                 };
 
-                var img = new Image
-                {
-                    Aspect = ImageAspect, // fallback aspect if none provided in attributes
-                    HorizontalOptions = LayoutOptions.Start,
-                    VerticalOptions = LayoutOptions.Center
-                };
-
                 var attrs = link.TryGetAttributes();
                 if (attrs != null)
                 {

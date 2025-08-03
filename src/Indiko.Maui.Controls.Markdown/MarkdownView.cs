@@ -507,48 +507,195 @@ public sealed class MarkdownView : ContentView
         }
     }
 
+    //private View RenderParagraph(ParagraphBlock block)
+    //{
+    //    try
+    //    {
+    //        if (block.Inline?.FirstChild is LinkInline link && link.IsImage)
+    //        {
+    //            var image = new Image
+    //            {
+    //                Aspect = ImageAspect,
+    //                HorizontalOptions = LayoutOptions.Fill,
+    //                VerticalOptions = LayoutOptions.Fill,
+    //                Margin = new Thickness(0),
+    //            };
+
+    //            LoadImageAsync(link.Url).ContinueWith(task =>
+    //            {
+    //                if (task.Status == TaskStatus.RanToCompletion)
+    //                {
+    //                    var imageSource = task.Result;
+    //                    MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
+    //                }
+    //                else if (task.Exception != null)
+    //                {
+    //                    Console.WriteLine($"Error loading image: {task.Exception.InnerException?.Message}");
+    //                }
+    //            });
+
+    //            return image;
+    //        }
+
+    //        return new Label
+    //        {
+    //            FormattedText = RenderInlines(block.Inline),
+    //            LineBreakMode = LineBreakMode.WordWrap,
+    //        };
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Console.WriteLine($"Error rendering paragraph: {ex.Message}");
+    //        return new Label { Text = "[Error rendering paragraph]" };
+    //    }
+    //}
+
     private View RenderParagraph(ParagraphBlock block)
     {
-        try
+        if (block.Inline == null)
+            return new Label { LineBreakMode = LineBreakMode.WordWrap };
+
+        // Does this paragraph contain any images?
+        bool containsImage = block.Inline.Any(i => i is LinkInline li && li.IsImage);
+        if (!containsImage)
         {
-            if (block.Inline?.FirstChild is LinkInline link && link.IsImage)
-            {
-                var image = new Image
-                {
-                    Aspect = ImageAspect,
-                    HorizontalOptions = LayoutOptions.Fill,
-                    VerticalOptions = LayoutOptions.Fill,
-                    Margin = new Thickness(0),
-                };
-
-                LoadImageAsync(link.Url).ContinueWith(task =>
-                {
-                    if (task.Status == TaskStatus.RanToCompletion)
-                    {
-                        var imageSource = task.Result;
-                        MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
-                    }
-                    else if (task.Exception != null)
-                    {
-                        Console.WriteLine($"Error loading image: {task.Exception.InnerException?.Message}");
-                    }
-                });
-
-                return image;
-            }
-
+            // Only text – return a single label
             return new Label
             {
                 FormattedText = RenderInlines(block.Inline),
-                LineBreakMode = LineBreakMode.WordWrap,
+                LineBreakMode = LineBreakMode.WordWrap
             };
         }
-        catch (Exception ex)
+
+        // Build a one-row grid with a column per segment
+        var grid = new Grid { ColumnSpacing = 0, RowSpacing = 0 };
+        int columnIndex = 0;
+
+        var textBuffer = new StringBuilder();
+
+        void flushText()
         {
-            Console.WriteLine($"Error rendering paragraph: {ex.Message}");
-            return new Label { Text = "[Error rendering paragraph]" };
+            if (textBuffer.Length == 0) return;
+
+            // Create a column for the buffered text
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var label = new Label
+            {
+                Text = textBuffer.ToString(),
+                FontFamily = TextFontFace,
+                FontSize = TextFontSize,
+                TextColor = TextColor,
+                LineBreakMode = LineBreakMode.WordWrap
+            };
+            // Place the label in the current column
+            grid.Children.Add(label);
+            Grid.SetColumn(label, columnIndex);
+            Grid.SetRow(label, 0);
+            columnIndex++;
+
+            textBuffer.Clear();
         }
+
+        foreach (var inline in block.Inline)
+        {
+            // If this inline is an image, add the image and flush preceding text
+            if (inline is LinkInline link && link.IsImage)
+            {
+                flushText();
+
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+                var img = new Image
+                {
+                    Aspect = ImageAspect,
+                    HorizontalOptions = LayoutOptions.Start,
+                    VerticalOptions = LayoutOptions.Center,
+                };
+
+                var attrs = link.TryGetAttributes();
+                if (attrs != null)
+                {
+                    string widthValue = null;
+                    string heightValue = null;
+                    if (attrs?.Properties != null)
+                    {
+                        foreach (var prop in attrs.Properties)
+                        {
+                            if (prop.Key.Equals("width", StringComparison.OrdinalIgnoreCase))
+                            {
+                                widthValue = prop.Value;
+                            }
+                            else if (prop.Key.Equals("height", StringComparison.OrdinalIgnoreCase))
+                                heightValue = prop.Value;
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(widthValue))
+                    {
+                        widthValue = ((DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 20).ToString(); // 20 for padding
+                    }
+
+                    if (widthValue != null && double.TryParse(widthValue, out var w))
+                    {
+                        img.WidthRequest = w;
+                        img.MinimumWidthRequest = w;
+                        img.MaximumWidthRequest = w;
+                    }
+                        
+                    if (heightValue != null && double.TryParse(heightValue, out var h))
+                    {
+                        img.HeightRequest = h;
+                        img.MinimumHeightRequest = h;
+                        img.MaximumHeightRequest = h;
+                    }
+                }
+                else
+                {
+                    double maxWidth = DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density - 20; // 20 for padding
+                    img.MinimumWidthRequest = maxWidth;
+                    img.MinimumWidthRequest = maxWidth;
+                }
+
+                // Load the image asynchronously
+                LoadImageAsync(link.Url).ContinueWith(t =>
+                {
+                    if (t.Status == TaskStatus.RanToCompletion)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() => img.Source = t.Result);
+                    }
+                });
+
+                grid.Children.Add(img);
+                Grid.SetColumn(img, columnIndex);
+                Grid.SetRow(img, 0);
+                columnIndex++;
+            }
+            else if (inline is LiteralInline literal)
+            {
+                textBuffer.Append(literal.Content.Text.AsSpan(literal.Content.Start, literal.Content.Length));
+            }
+            else if (inline is EmphasisInline em)
+            {
+                foreach (var sub in em)
+                {
+                    if (sub is LiteralInline l)
+                        textBuffer.Append(l.Content.Text.AsSpan(l.Content.Start, l.Content.Length));
+                }
+            }
+            else if (inline is LineBreakInline)
+            {
+                // Preserve line breaks in the buffer
+                textBuffer.AppendLine();
+            }
+        }
+
+        // Flush any text after the last image
+        flushText();
+
+        return grid;
     }
+
+
+
 
     private View RenderHeading(HeadingBlock block)
     {
@@ -1126,20 +1273,16 @@ public sealed class MarkdownView : ContentView
             // Handle data URLs (e.g., data:image/png;base64,iVBORw0...)
             if (imageUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
             {
-                var base64StartIndex = imageUrl.IndexOf("base64,");
-                if (base64StartIndex != -1)
+
+                int idx = imageUrl.IndexOf("base64,", StringComparison.OrdinalIgnoreCase);
+                if (idx >= 0)
                 {
-                    var base64Data = imageUrl.Substring(base64StartIndex + "base64,".Length);
-                    if (System.Buffers.Text.Base64.IsValid(base64Data))
-                    {
-                        byte[] imageBytes = Convert.FromBase64String(base64Data);
-                        imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Invalid base64 data in data URL: {imageUrl}");
-                        imageSource = ImageSource.FromFile("icon.png");
-                    }
+                    // extract and clean the base64 portion
+                    string base64Data = imageUrl[(idx + "base64,".Length)..]
+                                               .Replace("\r", "")
+                                               .Replace("\n", "");
+                    byte[] bytes = Convert.FromBase64String(base64Data);
+                    return ImageSource.FromStream(() => new MemoryStream(bytes));
                 }
                 else
                 {

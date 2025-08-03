@@ -45,7 +45,6 @@
                           LineColor="{StaticResource Gray300}"
                           LinkCommand="{Binding LinkReceivedCommand}"
                           EMailCommand="{Binding EMailReceivedCommand}"
-                          ListIndent="10,0,10,0"
                           ParagraphSpacing="1.3"
                           OnHyperLinkClicked="MarkdownView_HyperLinkClicked"
                           OnEmailClicked="MarkdownView_OnEmailClicked">

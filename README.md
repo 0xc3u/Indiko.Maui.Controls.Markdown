@@ -159,11 +159,17 @@ The following is a list of all customizable bindable properties:
     ---
     ```
 
-- **Images**: The control supports image URLs, local files, and base64 encoded images.
+- **Images**: The control supports image URLs, local files, and base64‑encoded images.  
+  You can also specify optional `width` and/or `height` attributes using the
+  curly‑brace syntax supported by Markdig’s Generic Attributes extension.
+
     ```markdown
-    ![Alt text](http://example.com/image.jpg) // Image URL
-    ![Alt text](image.png) // Local file
-    ![Alt text](data:image/png;base64,...) // Base64 encoded string
+    ![Alt text](http://example.com/image.jpg)          // image URL
+    ![Alt text](image.png)                             // local file
+    ![Alt text](data:image/png;base64,...)             // base64 string
+    ![Alt text](image.png){ width=150 height=75 }      // specify both width and height (pixels)
+    ![Alt text](image.png){ width=200 }                // specify width only
+    ![Alt text](image.png){ height=50 }                // specify height only
     ```
 
 - **Hyperlinks**: Create hyperlinks using the following format:

@@ -1,3 +1,10 @@
+## [1.3.13](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.12...v1.3.13) (2025-09-11)
+
+
+### Bug Fixes
+
+* replace Unicode replacement character with proper bullet for unordered lists ([4a9025e](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/4a9025e12e3b3c0ab0dacd448e8deb5cdda1ce23))
+
 ## [1.3.12](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.11...v1.3.12) (2025-08-03)
 
 

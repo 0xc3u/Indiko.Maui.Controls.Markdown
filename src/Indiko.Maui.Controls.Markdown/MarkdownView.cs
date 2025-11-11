@@ -481,7 +481,7 @@ public sealed class MarkdownView : ContentView
         }
     }
 
-    private View? RenderBlock(Block block)
+    private View RenderBlock(Block block)
     {
         try
         {
@@ -1169,7 +1169,7 @@ public sealed class MarkdownView : ContentView
         }
     }
 
-    private FormattedString RenderInlines(ContainerInline? inlines)
+    private FormattedString RenderInlines(ContainerInline inlines)
     {
         var formatted = new FormattedString();
 
@@ -1323,7 +1323,7 @@ public sealed class MarkdownView : ContentView
                 {
                     try
                     {
-                        if (imageUrl.ToLowerInvariant().EndsWith(".svg"))
+                        if (imageUrl.EndsWith(".svg", StringComparison.InvariantCultureIgnoreCase))
                         {
                             var httpClient = new HttpClient();
 

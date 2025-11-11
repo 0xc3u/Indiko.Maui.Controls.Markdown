@@ -38,12 +38,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Markdig" Version="0.41.3" />
-	  <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.90" />
-	  <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.90" />
-	  <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.0" />
+	  <PackageReference Include="Markdig" Version="0.43.0" />
+	  <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
+	  <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.120" />
+	  <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
 	  <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
-	  <PackageReference Include="Svg.Skia" Version="3.0.4" />
+	  <PackageReference Include="Svg.Skia" Version="3.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>

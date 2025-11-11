@@ -61,9 +61,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.90" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.90" />
-		<PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.0" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.120" />
+		<PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
 	</ItemGroup>
 
 	<ItemGroup>

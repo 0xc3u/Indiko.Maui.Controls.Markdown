@@ -1,3 +1,10 @@
+## [1.3.16](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.15...v1.3.16) (2025-11-17)
+
+
+### Bug Fixes
+
+* introduced now properties for default image size ([55ea588](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/55ea58820ca11cfd3324f0cf10a00f27aec298ae))
+
 ## [1.3.15](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.14...v1.3.15) (2025-11-17)
 
 

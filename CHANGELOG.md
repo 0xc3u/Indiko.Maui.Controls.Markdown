@@ -1,3 +1,10 @@
+## [1.3.15](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.14...v1.3.15) (2025-11-17)
+
+
+### Bug Fixes
+
+* horizontal / vertical image options and spacing issue ([a34be4a](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/a34be4ad6091c7907cab09fcbee90ad7fb2a953d))
+
 ## [1.3.14](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.13...v1.3.14) (2025-11-11)
 
 

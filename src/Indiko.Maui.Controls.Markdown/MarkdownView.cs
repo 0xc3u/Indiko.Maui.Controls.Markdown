@@ -379,6 +379,26 @@ public sealed class MarkdownView : ContentView
         set => SetValue(ImageAspectProperty, value);
     }
 
+    public static readonly BindableProperty DefaultImageWidthProperty =
+       BindableProperty.Create(nameof(DefaultImageWidth), typeof(double), typeof(MarkdownView), defaultValue: 200d, propertyChanged: OnMarkdownTextChanged);
+
+    [TypeConverter(typeof(FontSizeConverter))]
+    public double DefaultImageWidth
+    {
+        get => (double)GetValue(DefaultImageWidthProperty);
+        set => SetValue(DefaultImageWidthProperty, value);
+    }
+
+    public static readonly BindableProperty DefaultImageHeightProperty =
+       BindableProperty.Create(nameof(DefaultImageHeight), typeof(double), typeof(MarkdownView), defaultValue: 200d, propertyChanged: OnMarkdownTextChanged);
+
+    [TypeConverter(typeof(FontSizeConverter))]
+    public double DefaultImageHeight
+    {
+        get => (double)GetValue(DefaultImageHeightProperty);
+        set => SetValue(DefaultImageHeightProperty, value);
+    }
+
     [Obsolete("This is no longer needed and will be removed in future versions.")]
     public static readonly BindableProperty ListIndentProperty =
     BindableProperty.Create(nameof(ListIndent), typeof(Thickness), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
@@ -576,6 +596,7 @@ public sealed class MarkdownView : ContentView
                 bool hasExplicitSize = false;
                 bool hasCustomHorizontal = false;
                 bool hasCustomVertical = false;
+                bool hasCustomAspect = false;
                 
                 if (attrs != null && attrs.Properties != null)
                 {
@@ -626,6 +647,7 @@ public sealed class MarkdownView : ContentView
                         Enum.TryParse<Aspect>(aspectValue, ignoreCase: true, out var parsedAspect))
                     {
                         img.Aspect = parsedAspect;
+                        hasCustomAspect = true;
                     }
 
                     // Parse horizontal positioning
@@ -651,9 +673,17 @@ public sealed class MarkdownView : ContentView
                     }
                 }
 
+                if (hasCustomAspect && !hasExplicitSize)
+                {
+                    // Use configurable default sizes when only aspect is specified
+                    // This allows AspectFill and other aspects to work correctly
+                    img.MinimumWidthRequest = DefaultImageWidth;
+                    img.MinimumHeightRequest = DefaultImageHeight;
+                }
+
                 // For inline images without explicit size and without custom horizontal positioning,
                 // let them size naturally at the start
-                if (!hasExplicitSize && !hasCustomHorizontal)
+                if (!hasExplicitSize && !hasCustomHorizontal && !hasCustomAspect)
                 {
                     img.HorizontalOptions = LayoutOptions.Start;
                 }
@@ -667,8 +697,7 @@ public sealed class MarkdownView : ContentView
                     }
                     else if (t.IsFaulted)
                     {
-                        Console.WriteLine($"Error loading image {link.Url}: {t.Exception?.GetBaseException().Message}")
-;
+                        Console.WriteLine($"Error loading image {link.Url}: {t.Exception?.GetBaseException().Message}");
                     }
                 });
 

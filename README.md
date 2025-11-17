@@ -70,6 +70,8 @@ The following is a list of all customizable bindable properties:
 
 ### Image
 - **`ImageAspect`**: The aspect ratio for images (default: `AspectFit`).
+- **`DefaultImageWidth`**: The default width for images when only aspect is specified without explicit dimensions (default: `200`).
+- **`DefaultImageHeight`**: The default height for images when only aspect is specified without explicit dimensions (default: `200`).
 
 ### Hyperlinks
 - **`HyperlinkColor`**: The color for hyperlinks (default: `BlueViolet`).

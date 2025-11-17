@@ -55,6 +55,7 @@
 	  <None Remove="Resources\Fonts\CamingoCode-BoldItalic.ttf" />
 	  <None Remove="Resources\Fonts\CamingoCode-Italic.ttf" />
 	  <None Remove="Resources\Fonts\CamingoCode-Regular.ttf" />
+	  <None Remove="Resources\Images\clipboard.png" />
 	  <None Remove="Resources\Images\dev.png" />
 	  <None Remove="Resources\Images\dotnet_bot.svg" />
 	</ItemGroup>
@@ -71,6 +72,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiImage Include="Resources\Images\clipboard.png" />
 	  <MauiImage Include="Resources\Images\dev.png" />
 	  <MauiImage Include="Resources\Images\dotnet_bot.svg" />
 	</ItemGroup>

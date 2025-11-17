@@ -430,6 +430,7 @@ public sealed class MarkdownView : ContentView
         {
             var pipeline = new MarkdownPipelineBuilder()
                 .UseAdvancedExtensions()
+                .UseGenericAttributes()  // Explicitly enable generic attributes
                 .UseAlertBlocks()
                 .UseAbbreviations()
                 .UseEmojiAndSmiley()
@@ -507,49 +508,6 @@ public sealed class MarkdownView : ContentView
         }
     }
 
-    //private View RenderParagraph(ParagraphBlock block)
-    //{
-    //    try
-    //    {
-    //        if (block.Inline?.FirstChild is LinkInline link && link.IsImage)
-    //        {
-    //            var image = new Image
-    //            {
-    //                Aspect = ImageAspect,
-    //                HorizontalOptions = LayoutOptions.Fill,
-    //                VerticalOptions = LayoutOptions.Fill,
-    //                Margin = new Thickness(0),
-    //            };
-
-    //            LoadImageAsync(link.Url).ContinueWith(task =>
-    //            {
-    //                if (task.Status == TaskStatus.RanToCompletion)
-    //                {
-    //                    var imageSource = task.Result;
-    //                    MainThread.BeginInvokeOnMainThread(() => image.Source = imageSource);
-    //                }
-    //                else if (task.Exception != null)
-    //                {
-    //                    Console.WriteLine($"Error loading image: {task.Exception.InnerException?.Message}");
-    //                }
-    //            });
-
-    //            return image;
-    //        }
-
-    //        return new Label
-    //        {
-    //            FormattedText = RenderInlines(block.Inline),
-    //            LineBreakMode = LineBreakMode.WordWrap,
-    //        };
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        Console.WriteLine($"Error rendering paragraph: {ex.Message}");
-    //        return new Label { Text = "[Error rendering paragraph]" };
-    //    }
-    //}
-
     private View RenderParagraph(ParagraphBlock block)
     {
         if (block.Inline == null)
@@ -557,6 +515,7 @@ public sealed class MarkdownView : ContentView
 
         // Does this paragraph contain any images?
         bool containsImage = block.Inline.Any(i => i is LinkInline li && li.IsImage);
+        
         if (!containsImage)
         {
             // Only text – return a single label
@@ -585,7 +544,8 @@ public sealed class MarkdownView : ContentView
                 FontFamily = TextFontFace,
                 FontSize = TextFontSize,
                 TextColor = TextColor,
-                LineBreakMode = LineBreakMode.WordWrap
+                LineBreakMode = LineBreakMode.WordWrap,
+                VerticalOptions = LayoutOptions.Center
             };
             // Place the label in the current column
             grid.Children.Add(label);
@@ -603,72 +563,99 @@ public sealed class MarkdownView : ContentView
             {
                 flushText();
 
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+                // Use Auto width for inline images to prevent expansion
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 var img = new Image
                 {
-                    Aspect = ImageAspect,
+                    Aspect = ImageAspect,  // Set default aspect from bindable property
                     HorizontalOptions = LayoutOptions.Start,
                     VerticalOptions = LayoutOptions.Center,
                 };
 
                 var attrs = link.TryGetAttributes();
-                if (attrs != null)
+                bool hasExplicitSize = false;
+                bool hasCustomHorizontal = false;
+                bool hasCustomVertical = false;
+                
+                if (attrs != null && attrs.Properties != null)
                 {
                     string widthValue = null;
                     string heightValue = null;
                     string aspectValue = null;
+                    string horizontalValue = null;
+                    string verticalValue = null;
 
-                    if (attrs.Properties != null)
+                    foreach (var prop in attrs.Properties)
                     {
-                        foreach (var prop in attrs.Properties)
+                        if (prop.Key.Equals("width", StringComparison.OrdinalIgnoreCase))
                         {
-                            if (prop.Key.Equals("width", StringComparison.OrdinalIgnoreCase))
-                            {
-                                widthValue = prop.Value;
-                            }
-                            else if (prop.Key.Equals("height", StringComparison.OrdinalIgnoreCase))
-                            {
-                                heightValue = prop.Value;
-                            }
-                            else if (prop.Key.Equals("aspect", StringComparison.OrdinalIgnoreCase))
-                            {
-                                aspectValue = prop.Value;
-                            }
+                            widthValue = prop.Value;
                         }
-                    }
-
-                    // If no width was defined, use fallback based on device width
-                    if (string.IsNullOrEmpty(widthValue))
-                    {
-                        widthValue = ((DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density) - 20).ToString(); // 20 for padding
+                        else if (prop.Key.Equals("height", StringComparison.OrdinalIgnoreCase))
+                        {
+                            heightValue = prop.Value;
+                        }
+                        else if (prop.Key.Equals("aspect", StringComparison.OrdinalIgnoreCase))
+                        {
+                            aspectValue = prop.Value;
+                        }
+                        else if (prop.Key.Equals("horizontal", StringComparison.OrdinalIgnoreCase))
+                        {
+                            horizontalValue = prop.Value;
+                        }
+                        else if (prop.Key.Equals("vertical", StringComparison.OrdinalIgnoreCase))
+                        {
+                            verticalValue = prop.Value;
+                        }
                     }
 
                     if (double.TryParse(widthValue, out var w))
                     {
                         img.WidthRequest = w;
-                        img.MinimumWidthRequest = w;
-                        img.MaximumWidthRequest = w;
+                        hasExplicitSize = true;
                     }
 
                     if (double.TryParse(heightValue, out var h))
                     {
                         img.HeightRequest = h;
-                        img.MinimumHeightRequest = h;
-                        img.MaximumHeightRequest = h;
+                        hasExplicitSize = true;
                     }
 
+                    // Override default aspect if specified
                     if (!string.IsNullOrEmpty(aspectValue) &&
                         Enum.TryParse<Aspect>(aspectValue, ignoreCase: true, out var parsedAspect))
                     {
                         img.Aspect = parsedAspect;
                     }
+
+                    // Parse horizontal positioning
+                    if (!string.IsNullOrEmpty(horizontalValue))
+                    {
+                        var parsedHorizontal = ParseLayoutOptions(horizontalValue);
+                        if (parsedHorizontal.HasValue)
+                        {
+                            img.HorizontalOptions = parsedHorizontal.Value;
+                            hasCustomHorizontal = true;
+                        }
+                    }
+
+                    // Parse vertical positioning
+                    if (!string.IsNullOrEmpty(verticalValue))
+                    {
+                        var parsedVertical = ParseLayoutOptions(verticalValue);
+                        if (parsedVertical.HasValue)
+                        {
+                            img.VerticalOptions = parsedVertical.Value;
+                            hasCustomVertical = true;
+                        }
+                    }
                 }
-                else
+
+                // For inline images without explicit size and without custom horizontal positioning,
+                // let them size naturally at the start
+                if (!hasExplicitSize && !hasCustomHorizontal)
                 {
-                    // No attributes found, fallback to dynamic width
-                    double maxWidth = DeviceDisplay.MainDisplayInfo.Width / DeviceDisplay.MainDisplayInfo.Density - 20;
-                    img.MinimumWidthRequest = maxWidth;
-                    img.MaximumWidthRequest = maxWidth;
+                    img.HorizontalOptions = LayoutOptions.Start;
                 }
 
                 // Load the image asynchronously
@@ -677,6 +664,11 @@ public sealed class MarkdownView : ContentView
                     if (t.Status == TaskStatus.RanToCompletion)
                     {
                         MainThread.BeginInvokeOnMainThread(() => img.Source = t.Result);
+                    }
+                    else if (t.IsFaulted)
+                    {
+                        Console.WriteLine($"Error loading image {link.Url}: {t.Exception?.GetBaseException().Message}")
+;
                     }
                 });
 
@@ -709,9 +701,6 @@ public sealed class MarkdownView : ContentView
 
         return grid;
     }
-
-
-
 
     private View RenderHeading(HeadingBlock block)
     {
@@ -874,6 +863,20 @@ public sealed class MarkdownView : ContentView
     {
         try
         {
+            string codeText = string.Empty;
+            if (block?.Lines != null)
+            {
+                try
+                {
+                    codeText = block.Lines.ToString() ?? string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error converting code block lines to string: {ex.Message}");
+                    codeText = "[Error rendering code content]";
+                }
+            }
+
             return new Border
             {
                 BackgroundColor = CodeBlockBackgroundColor,
@@ -882,7 +885,7 @@ public sealed class MarkdownView : ContentView
                 StrokeShape = new RoundRectangle().WithCornerRadius(4),
                 Content = new Label
                 {
-                    Text = block.Lines.ToString(),
+                    Text = codeText,
                     FontFamily = CodeBlockFontFace,
                     TextColor = CodeBlockTextColor,
                     FontSize = CodeBlockFontSize,
@@ -901,6 +904,20 @@ public sealed class MarkdownView : ContentView
     {
         try
         {
+            string codeText = string.Empty;
+            if (block?.Lines != null)
+            {
+                try
+                {
+                    codeText = block.Lines.ToString() ?? string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error converting code block lines to string: {ex.Message}");
+                    codeText = "[Error rendering code content]";
+                }
+            }
+
             return new Border
             {
                 BackgroundColor = CodeBlockBackgroundColor,
@@ -909,7 +926,7 @@ public sealed class MarkdownView : ContentView
                 StrokeShape = new RoundRectangle().WithCornerRadius(4),
                 Content = new Label
                 {
-                    Text = block.Lines.ToString(),
+                    Text = codeText,
                     FontFamily = CodeBlockFontFace,
                     TextColor = CodeBlockTextColor,
                     FontSize = CodeBlockFontSize,
@@ -1009,21 +1026,19 @@ public sealed class MarkdownView : ContentView
     {
         try
         {
-            string formularText = mathBlock.Lines.ToString();
-
-            var grid = new Grid
+            string formularText = string.Empty;
+            if (mathBlock?.Lines != null)
             {
-                ColumnDefinitions =
+                try
                 {
-                    new ColumnDefinition { Width = GridLength.Auto },
-                    new ColumnDefinition { Width = GridLength.Auto },
-                    new ColumnDefinition { Width = GridLength.Auto }
-                },
-                RowDefinitions =
-                {
-                    new RowDefinition { Height = GridLength.Auto }
+                    formularText = mathBlock.Lines.ToString() ?? string.Empty;
                 }
-            };
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error converting math block lines to string: {ex.Message}");
+                    formularText = "[Error rendering formula]";
+                }
+            }
 
             var latexView = new LatexView
             {
@@ -1405,6 +1420,25 @@ public sealed class MarkdownView : ContentView
         }
 
         return imageSource ?? ImageSource.FromFile("icon.png");
+    }
+
+    private static LayoutOptions? ParseLayoutOptions(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "start" => LayoutOptions.Start,
+            "center" => LayoutOptions.Center,
+            "end" => LayoutOptions.End,
+            "fill" => LayoutOptions.Fill,
+            "fillandexpand" => LayoutOptions.FillAndExpand,
+            "startandexpand" => LayoutOptions.StartAndExpand,
+            "centerandexpand" => LayoutOptions.CenterAndExpand,
+            "endandexpand" => LayoutOptions.EndAndExpand,
+            _ => null
+        };
     }
 
     internal void TriggerHyperLinkClicked(string url)

@@ -1,61 +1,54 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<TargetFrameworks>net9.0;net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
-		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
-		<UseMaui>true</UseMaui>
-		<SingleProject>true</SingleProject>
-		<ImplicitUsings>enable</ImplicitUsings>
-
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">31.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
-		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
-
-		<!-- NuGet -->
-		<Authors>INDIKO</Authors>
-		<Copyright>Copyright © INDIKO and contributors</Copyright>
-		<IsPackable>True</IsPackable>
-		<PackageProjectUrl>https://github.com/0xc3u/Indiko.Maui.Controls.Markdown</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/0xc3u/Indiko.Maui.Controls.Markdown</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
-		<PackageTags>dotnet-maui;maui;ui;markdown;control;</PackageTags>
-		<IncludeSymbols>True</IncludeSymbols>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Title>INDIKO .NET MAUI Markdown View</Title>
-		<Description>The `MarkdownView` component is a versatile and customizable Markdown renderer designed for MAUI.NET applications. It allows developers to display Markdown-formatted text within their MAUI.NET applications, providing a rich text experience.</Description>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-		<DebugType>portable</DebugType>
-		<PackageIcon>icon.png</PackageIcon>
-		<Platforms>AnyCPU;x64</Platforms>
-	</PropertyGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="Markdig" Version="0.43.0" />
-	  <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
-	  <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.120" />
-	  <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
-	  <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
-	  <PackageReference Include="Svg.Skia" Version="3.2.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="..\Indiko.Maui.Controls.Markdown\icon.png" Pack="true" PackagePath="" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Platforms\Android\" />
-	  <Folder Include="Platforms\iOS\" />
-	  <Folder Include="Platforms\MacCatalyst\" />
-	  <Folder Include="Platforms\Tizen\" />
-	  <Folder Include="Platforms\Windows\" />
-	</ItemGroup>
-
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
+    <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
+    <!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">31.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+    <!-- NuGet -->
+    <Authors>INDIKO</Authors>
+    <Copyright>Copyright © INDIKO and contributors</Copyright>
+    <IsPackable>True</IsPackable>
+    <PackageProjectUrl>https://github.com/0xc3u/Indiko.Maui.Controls.Markdown</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/0xc3u/Indiko.Maui.Controls.Markdown</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>dotnet-maui;maui;ui;markdown;control;</PackageTags>
+    <IncludeSymbols>True</IncludeSymbols>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Title>INDIKO .NET MAUI Markdown View</Title>
+    <Description>The `MarkdownView` component is a versatile and customizable Markdown renderer designed for MAUI.NET applications. It allows developers to display Markdown-formatted text within their MAUI.NET applications, providing a rich text experience.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <DebugType>portable</DebugType>
+    <PackageIcon>icon.png</PackageIcon>
+    <Platforms>AnyCPU;x64</Platforms>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="0.43.0" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.120" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
+    <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
+    <PackageReference Include="Svg.Skia" Version="3.2.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Indiko.Maui.Controls.Markdown\icon.png" Pack="true" PackagePath="" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Platforms\Android\" />
+    <Folder Include="Platforms\iOS\" />
+    <Folder Include="Platforms\MacCatalyst\" />
+    <Folder Include="Platforms\Tizen\" />
+    <Folder Include="Platforms\Windows\" />
+  </ItemGroup>
 </Project>

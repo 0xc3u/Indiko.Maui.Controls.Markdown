@@ -1,3 +1,10 @@
+## [1.3.18](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.17...v1.3.18) (2025-12-08)
+
+
+### Bug Fixes
+
+* removed emoji support of markdig ([d3ad951](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/d3ad951739dddc6e3ae030b64aa41f52935e18f6))
+
 ## [1.3.17](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.16...v1.3.17) (2025-11-28)
 
 

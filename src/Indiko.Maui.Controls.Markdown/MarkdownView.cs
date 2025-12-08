@@ -453,7 +453,6 @@ public sealed class MarkdownView : ContentView
                 .UseGenericAttributes()  // Explicitly enable generic attributes
                 .UseAlertBlocks()
                 .UseAbbreviations()
-                .UseEmojiAndSmiley()
                 .UseGridTables()
                 .UsePipeTables()
                 .UseAutoIdentifiers()

@@ -36,14 +36,6 @@
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Remove="Resources\Images\DALL·E 2024-02-15 14.37.12 - A serene and emotional mountain landscape during the golden hour, with the sun casting a soft, warm glow over the peaks. The scene is peaceful and awe.webp\**" />
-    <Compile Remove="Resources\Images\DALL·E 2024-02-15 14.37.12 - A serene and emotional mountain landscape during the golden hour, with the sun casting a soft, warm glow over the peaks. The scene is peaceful and awe.webp\**" />
-    <EmbeddedResource Remove="Resources\Images\DALL·E 2024-02-15 14.37.12 - A serene and emotional mountain landscape during the golden hour, with the sun casting a soft, warm glow over the peaks. The scene is peaceful and awe.webp\**" />
-    <MauiCss Remove="Resources\Images\DALL·E 2024-02-15 14.37.12 - A serene and emotional mountain landscape during the golden hour, with the sun casting a soft, warm glow over the peaks. The scene is peaceful and awe.webp\**" />
-    <MauiXaml Remove="Resources\Images\DALL·E 2024-02-15 14.37.12 - A serene and emotional mountain landscape during the golden hour, with the sun casting a soft, warm glow over the peaks. The scene is peaceful and awe.webp\**" />
-    <None Remove="Resources\Images\DALL·E 2024-02-15 14.37.12 - A serene and emotional mountain landscape during the golden hour, with the sun casting a soft, warm glow over the peaks. The scene is peaceful and awe.webp\**" />
-  </ItemGroup>
-  <ItemGroup>
     <None Remove="Resources\Fonts\CamingoCode-Bold.ttf" />
     <None Remove="Resources\Fonts\CamingoCode-BoldItalic.ttf" />
     <None Remove="Resources\Fonts\CamingoCode-Italic.ttf" />

@@ -5,7 +5,7 @@
              xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
              x:Class="Indiko.Maui.Controls.Markdown.Sample.MainPage"
 			 x:DataType="vm:MainPageViewModel"
-             BackgroundColor="White"
+             BackgroundColor="{AppThemeBinding Light=White, Dark=Black}"
              Title="Indiko.Maui.Controls.Markdown.Sample">
 
     <ScrollView>
@@ -14,8 +14,9 @@
             <Label Text="Markdown View" FontSize="Header" TextColor="{StaticResource Primary}"></Label>
             
             <idk:MarkdownView MarkdownText="{Binding MarkdownText}" 
+                          SwitchThemeAuto="True"
                           H1FontSize="22"
-                          H1Color="{StaticResource Blue100Accent}" 
+                          H1Color="{StaticResource Blue100Accent}"
                           H2FontSize="20"
                           H2Color="{StaticResource Blue200Accent}"
                           H3FontSize="18"
@@ -32,14 +33,14 @@
                           TextFontFace="OpenSans"
                           TextFontSize="14"
                           TextColor="{StaticResource Black}"
-                          TableHeaderBackgroundColor="{StaticResource Gray100}"
+                          TableHeaderBackgroundColor="{StaticResource Gray200}"
                           TableHeaderFontFace="OpenSans"
                           TableHeaderFontSize="14"
                           TableHeaderTextColor="{StaticResource Gray900}"
                           TableRowFontFace="OpenSans"
                           TableRowFontSize="12"
                           TableRowTextColor="{StaticResource Gray600}"
-                          TableRowBackgroundColor="{StaticResource White}"
+                          TableRowBackgroundColor="{StaticResource Gray100}"
                           ImageAspect="Fill"
                           HyperlinkColor="{StaticResource Yellow100Accent}"
                           LineColor="{StaticResource Gray300}"
@@ -49,6 +50,8 @@
                           OnHyperLinkClicked="MarkdownView_HyperLinkClicked"
                           OnEmailClicked="MarkdownView_OnEmailClicked">
             </idk:MarkdownView>
+
+            <Button Text="Change Theme" Command="{Binding ThemeChangedCommand}"/>
 
         </VerticalStackLayout>
     </ScrollView>

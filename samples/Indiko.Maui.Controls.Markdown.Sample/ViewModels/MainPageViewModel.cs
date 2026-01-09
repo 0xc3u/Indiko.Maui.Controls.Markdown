@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Indiko.Maui.Controls.Markdown.Sample.ViewModels;
 public partial class MainPageViewModel : BaseViewModel
 {
-    [RelayCommand]
+	[RelayCommand]
     private void OnLinkReceived(object link)
     {
         Console.WriteLine(string.Concat("LINK RECEIVED = '",link, "'"));
@@ -14,6 +14,16 @@ public partial class MainPageViewModel : BaseViewModel
     private void OnEMailReceived(object email)
     {
         Console.WriteLine(string.Concat("E-MAIL RECEIVED = '", email, "'"));
+    }
+
+    [RelayCommand]
+    private void OnThemeChanged()
+    {
+        Console.WriteLine("Request change theme");
+        AppTheme appTheme = App.Current.UserAppTheme;
+        if (appTheme == AppTheme.Unspecified)
+            appTheme = Application.Current.PlatformAppTheme;
+        Application.Current.UserAppTheme = appTheme == AppTheme.Light ? AppTheme.Dark : AppTheme.Light;
     }
 
     [ObservableProperty]
@@ -133,7 +143,7 @@ $$
 $$
 
 ### Lokal SVG Image
-![Lokal SVG ](dotnet_bot){aspect=AspectFill}
+![Lokal SVG](dotnet_bot){aspect=AspectFill}
 
 ### Web Source SVG Image
 ![Web Source SVG](https://www.svgrepo.com/show/530402/honor.svg){aspect=AspectFill}

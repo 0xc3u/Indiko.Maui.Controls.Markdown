@@ -65,10 +65,10 @@ public sealed class MarkdownView : ContentView
 		get => (bool)GetValue(SwitchThemeAutoProperty);
 		set => SetValue(SwitchThemeAutoProperty, value);
 	}
-
+    
 	public static readonly BindableProperty H1ColorProperty =
         BindableProperty.Create(nameof(H1Color), typeof(Color), typeof(MarkdownView), H1ColorLightProperty, propertyChanged: OnMarkdownTextChanged);
-
+    
     public Color H1Color
     {
         get => (Color)GetValue(H1ColorProperty);
@@ -217,7 +217,7 @@ public sealed class MarkdownView : ContentView
 	}
 
 	public static readonly BindableProperty TableHeaderBackgroundColorProperty =
-     BindableProperty.Create(nameof(TableHeaderBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGrey, propertyChanged: OnMarkdownTextChanged);
+     BindableProperty.Create(nameof(TableHeaderBackgroundColor), typeof(Color), typeof(MarkdownView), TableHeaderBackgroundColorLightProperty, propertyChanged: OnMarkdownTextChanged);
 
     public Color TableHeaderBackgroundColor
     {
@@ -225,7 +225,25 @@ public sealed class MarkdownView : ContentView
         set => SetValue(TableHeaderBackgroundColorProperty, value);
     }
 
-    public static readonly BindableProperty TableHeaderFontFaceProperty =
+	public static readonly BindableProperty TableHeaderBackgroundColorLightProperty =
+	 BindableProperty.Create(nameof(TableHeaderBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.LightGrey, propertyChanged: OnMarkdownTextChanged);
+
+	public Color TableHeaderBackgroundColorLight
+	{
+		get => (Color)GetValue(TableHeaderBackgroundColorLightProperty);
+		set => SetValue(TableHeaderBackgroundColorLightProperty, value);
+	}
+
+	public static readonly BindableProperty TableHeaderBackgroundColorDarkProperty =
+	 BindableProperty.Create(nameof(TableHeaderBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.LightGrey, propertyChanged: OnMarkdownTextChanged);
+
+	public Color TableHeaderBackgroundColorDark
+	{
+		get => (Color)GetValue(TableHeaderBackgroundColorDarkProperty);
+		set => SetValue(TableHeaderBackgroundColorDarkProperty, value);
+	}
+
+	public static readonly BindableProperty TableHeaderFontFaceProperty =
         BindableProperty.Create(nameof(TableHeaderFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
     public string TableHeaderFontFace
@@ -237,7 +255,7 @@ public sealed class MarkdownView : ContentView
     /***** Table Row Styling **/
 
     public static readonly BindableProperty TableRowBackgroundColorProperty =
-        BindableProperty.Create(nameof(TableRowBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+        BindableProperty.Create(nameof(TableRowBackgroundColor), typeof(Color), typeof(MarkdownView), TableRowBackgroundColorLightProperty, propertyChanged: OnMarkdownTextChanged);
 
     public Color TableRowBackgroundColor
     {
@@ -245,7 +263,25 @@ public sealed class MarkdownView : ContentView
         set => SetValue(TableRowBackgroundColorProperty, value);
     }
 
-    public static readonly BindableProperty TableRowFontFaceProperty =
+	public static readonly BindableProperty TableRowBackgroundColorLightProperty =
+		BindableProperty.Create(nameof(TableRowBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+
+	public Color TableRowBackgroundColorLight
+	{
+		get => (Color)GetValue(TableRowBackgroundColorLightProperty);
+		set => SetValue(TableRowBackgroundColorLightProperty, value);
+	}
+
+	public static readonly BindableProperty TableRowBackgroundColorDarkProperty =
+		BindableProperty.Create(nameof(TableRowBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.DarkGray, propertyChanged: OnMarkdownTextChanged);
+
+	public Color TableRowBackgroundColorDark
+	{
+		get => (Color)GetValue(TableRowBackgroundColorDarkProperty);
+		set => SetValue(TableRowBackgroundColorDarkProperty, value);
+	}
+
+	public static readonly BindableProperty TableRowFontFaceProperty =
        BindableProperty.Create(nameof(TableRowFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
     public string TableRowFontFace
@@ -294,7 +330,7 @@ public sealed class MarkdownView : ContentView
     /* ****** Text Styling ******** */
 
     public static readonly BindableProperty TextColorProperty =
-       BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
+       BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(MarkdownView), TextColorLightProperty, propertyChanged: OnMarkdownTextChanged);
 
     public Color TextColor
     {
@@ -302,7 +338,25 @@ public sealed class MarkdownView : ContentView
         set => SetValue(TextColorProperty, value);
     }
 
-    public static readonly BindableProperty TextFontSizeProperty =
+	public static readonly BindableProperty TextColorLightProperty =
+	   BindableProperty.Create(nameof(TextColorLight), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
+
+	public Color TextColorLight
+	{
+		get => (Color)GetValue(TextColorLightProperty);
+		set => SetValue(TextColorLightProperty, value);
+	}
+
+	public static readonly BindableProperty TextColorDarkProperty =
+	   BindableProperty.Create(nameof(TextColorDark), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+
+	public Color TextColorDark
+	{
+		get => (Color)GetValue(TextColorDarkProperty);
+		set => SetValue(TextColorDarkProperty, value);
+	}
+
+	public static readonly BindableProperty TextFontSizeProperty =
        BindableProperty.Create(nameof(TextFontSize), typeof(double), typeof(MarkdownView), defaultValue: 12d, propertyChanged: OnMarkdownTextChanged);
 
     [TypeConverter(typeof(FontSizeConverter))]
@@ -334,7 +388,7 @@ public sealed class MarkdownView : ContentView
 
     /* ****** Code Block Styling ******** */
     public static readonly BindableProperty CodeBlockBackgroundColorProperty =
-       BindableProperty.Create(nameof(CodeBlockBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
+       BindableProperty.Create(nameof(CodeBlockBackgroundColor), typeof(Color), typeof(MarkdownView), CodeBlockBackgroundColorLightProperty, propertyChanged: OnMarkdownTextChanged);
 
     public Color CodeBlockBackgroundColor
     {
@@ -342,7 +396,25 @@ public sealed class MarkdownView : ContentView
         set => SetValue(CodeBlockBackgroundColorProperty, value);
     }
 
-    public static readonly BindableProperty CodeBlockBorderColorProperty =
+	public static readonly BindableProperty CodeBlockBackgroundColorLightProperty =
+	   BindableProperty.Create(nameof(CodeBlockBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+
+	public Color CodeBlockBackgroundColorLight
+	{
+		get => (Color)GetValue(CodeBlockBackgroundColorLightProperty);
+		set => SetValue(CodeBlockBackgroundColorLightProperty, value);
+	}
+
+	public static readonly BindableProperty CodeBlockBackgroundColorDarkProperty =
+	   BindableProperty.Create(nameof(CodeBlockBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+
+	public Color CodeBlockBackgroundColorDark
+	{
+		get => (Color)GetValue(CodeBlockBackgroundColorDarkProperty);
+		set => SetValue(CodeBlockBackgroundColorDarkProperty, value);
+	}
+
+	public static readonly BindableProperty CodeBlockBorderColorProperty =
        BindableProperty.Create(nameof(CodeBlockBorderColor), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
 
     public Color CodeBlockBorderColor
@@ -400,7 +472,7 @@ public sealed class MarkdownView : ContentView
     /* ****** BlockQuote Block Styling ******** */
 
     public static readonly BindableProperty BlockQuoteBackgroundColorProperty =
-     BindableProperty.Create(nameof(BlockQuoteBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
+     BindableProperty.Create(nameof(BlockQuoteBackgroundColor), typeof(Color), typeof(MarkdownView), BlockQuoteBackgroundColorLightProperty, propertyChanged: OnMarkdownTextChanged);
 
     public Color BlockQuoteBackgroundColor
     {
@@ -408,7 +480,25 @@ public sealed class MarkdownView : ContentView
         set => SetValue(BlockQuoteBackgroundColorProperty, value);
     }
 
-    public static readonly BindableProperty BlockQuoteBorderColorProperty =
+	public static readonly BindableProperty BlockQuoteBackgroundColorLightProperty =
+	 BindableProperty.Create(nameof(BlockQuoteBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
+
+	public Color BlockQuoteBackgroundColorLight
+	{
+		get => (Color)GetValue(BlockQuoteBackgroundColorLightProperty);
+		set => SetValue(BlockQuoteBackgroundColorLightProperty, value);
+	}
+
+	public static readonly BindableProperty BlockQuoteBackgroundColorDarkProperty =
+	 BindableProperty.Create(nameof(BlockQuoteBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
+
+	public Color BlockQuoteBackgroundColorDark
+	{
+		get => (Color)GetValue(BlockQuoteBackgroundColorDarkProperty);
+		set => SetValue(BlockQuoteBackgroundColorDarkProperty, value);
+	}
+
+	public static readonly BindableProperty BlockQuoteBorderColorProperty =
       BindableProperty.Create(nameof(BlockQuoteBorderColor), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
 
     public Color BlockQuoteBorderColor
@@ -1202,44 +1292,46 @@ public sealed class MarkdownView : ContentView
         }
     }
 
-    private View RenderFormula(MathBlock mathBlock)
-    {
-        try
-        {
-            string formularText = string.Empty;
-            if (mathBlock?.Lines != null)
-            {
-                try
-                {
-                    formularText = mathBlock.Lines.ToString() ?? string.Empty;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error converting math block lines to string: {ex.Message}");
-                    formularText = "[Error rendering formula]";
-                }
-            }
+	private View RenderFormula(MathBlock mathBlock)
+	{
+		try
+		{
+			string formularText = string.Empty;
+			if (mathBlock?.Lines != null)
+			{
+				try
+				{
+					formularText = mathBlock.Lines.ToString() ?? string.Empty;
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"Error converting math block lines to string: {ex.Message}");
+					formularText = "[Error rendering formula]";
+				}
+			}
 
-            var latexView = new LatexView
-            {
-                Text = formularText,
-                FontSize = (float)TextFontSize * 4,
-                TextColor = TextColor,
-                HighlightColor = Colors.Transparent,
-                ErrorColor = Colors.Red,
-                HorizontalOptions = LayoutOptions.Start,
-                VerticalOptions = LayoutOptions.Center,
-                Margin = new Thickness(-10, -10)
-            };
+			var latexView = new LatexView
+			{
+				Text = formularText,
+				FontSize = (float)TextFontSize * 4,
+				HighlightColor = Colors.Transparent,
+				ErrorColor = Colors.Red,
+				HorizontalOptions = LayoutOptions.Start,
+				VerticalOptions = LayoutOptions.Center,
+				Margin = new Thickness(-10, -10)
+			};
 
-            return latexView;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error rendering formula: {ex.Message}");
-            return new Label { Text = "[Error rendering formula]" };
-        }
-    }
+			// Add binding for TextColor
+			latexView.SetBinding(LatexView.TextColorProperty, new Binding(nameof(TextColor), source: this));
+
+			return latexView;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error rendering formula: {ex.Message}");
+			return new Label { Text = "[Error rendering formula]" };
+		}
+	}
 
     private View RenderCustomContainer(CustomContainer container)
     {
@@ -1510,7 +1602,7 @@ public sealed class MarkdownView : ContentView
             else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
             {
 
-                if (imageUrl != null && _imageCache.TryGetValue(imageUrl, out ImageSource value))
+				if (imageUrl != null && _imageCache.TryGetValue(imageUrl, out ImageSource value))
                 {
                     return value;
                 }
@@ -1656,22 +1748,28 @@ public sealed class MarkdownView : ContentView
     }
 
     // AppTheme
-	private static Color GetThemeAwareColor(Color lightColor, Color darkColor)
+	private static Color GetThemeColor(AppTheme appTheme, Color lightColor, Color darkColor)
 	{
-		return Application.Current?.RequestedTheme == AppTheme.Dark ? darkColor : lightColor;
+		return appTheme == AppTheme.Dark ? darkColor : lightColor;
 	}
 
     public void ChangeTheme(AppTheme appTheme)
     {
 		// Update color with new AppTheme
-		TextColor = GetThemeAwareColor(Colors.Black, Colors.White);
-		H1Color = GetThemeAwareColor(H1ColorLight, H1ColorDark);
-		H2Color = GetThemeAwareColor(H2ColorLight, H2ColorDark);
-		H3Color = GetThemeAwareColor(H3ColorLight, H3ColorDark);
-        TableHeaderTextColor = GetThemeAwareColor(TableHeaderTextColorLight, TableHeaderTextColorDark);
-		TableRowTextColor = GetThemeAwareColor(TableRowTextColorLight, TableRowTextColorDark);
+		TextColor = GetThemeColor(appTheme, TextColorLight, TextColorDark);
+		H1Color = GetThemeColor(appTheme, H1ColorLight, H1ColorDark);
+		H2Color = GetThemeColor (appTheme, H2ColorLight, H2ColorDark);
+		H3Color = GetThemeColor(appTheme, H3ColorLight, H3ColorDark);
+        TableHeaderTextColor = GetThemeColor(appTheme, TableHeaderTextColorLight, TableHeaderTextColorDark);
+        TableHeaderBackgroundColor = GetThemeColor(appTheme, TableHeaderBackgroundColorLight, TableHeaderBackgroundColorDark);
+		TableRowTextColor = GetThemeColor(appTheme, TableRowTextColorLight, TableRowTextColorDark);
+        TableRowBackgroundColor = GetThemeColor(appTheme, TableRowBackgroundColorLight, TableRowBackgroundColorDark);
+        BlockQuoteTextColor = GetThemeColor(appTheme, BlockQuoteTextColorLight, BlockQuoteTextColorDark);
+		BlockQuoteBackgroundColor = GetThemeColor(appTheme, BlockQuoteBackgroundColorLight, BlockQuoteBackgroundColorDark);
+		CodeBlockTextColor = GetThemeColor(appTheme, CodeBlockTextColorLight, CodeBlockTextColorDark);
+		CodeBlockBackgroundColor = GetThemeColor(appTheme, CodeBlockBackgroundColorLight, CodeBlockBackgroundColorDark);
 
-		// Ri-renderizza il markdown
+		// Re-render markdown
 		if (!string.IsNullOrEmpty(MarkdownText))
 		{
 			RenderMarkdown(MarkdownText);
@@ -1709,16 +1807,10 @@ public sealed class MarkdownView : ContentView
             {
                 Console.WriteLine($"Error setting SwitchThemeAuto: {ex.Message}");
             }
-        }
-    }
-
-	public MarkdownView()
-    {
-		if (Application.Current != null)
-		{
-			Application.Current.RequestedThemeChanged += OnAppThemeChanged;
 		}
 	}
+
+
 
 	~MarkdownView()
 	{

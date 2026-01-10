@@ -1,3 +1,15 @@
+# [1.4.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.18...v1.4.0) (2026-01-10)
+
+
+### Bug Fixes
+
+* resolve issue with dark mode text colors and update sample ([93fa2c9](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/93fa2c99bd80fdfcbe14f5e368d990a550a6f5ba))
+
+
+### Features
+
+* added dark mode support for some backgrounds and text and update sample app ([68f695c](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/68f695c96d60a4b4546ab3fd9a7649abb1013dd3))
+
 ## [1.3.18](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.17...v1.3.18) (2025-12-08)
 
 

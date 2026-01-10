@@ -73,52 +73,52 @@ public sealed class LatexView : SKCanvasView
         SizeChanged -= (s, e) => UpdateSize();
     }
 
-    private void UpdateSize()
-    {
-        if (!string.IsNullOrEmpty(Text))
-        {
-            var painter = new CSharpMath.SkiaSharp.MathPainter
-            {
-                LaTeX = Text,
-                FontSize = FontSize,
-                AntiAlias = true,
-                DisplayErrorInline = true,
-                TextColor = TextColor.ToSKColor(),
-                ErrorColor = ErrorColor.ToSKColor(),
-                HighlightColor = HighlightColor.ToSKColor(),
-                PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill
-            };
+	private void UpdateSize()
+	{
+		if (!string.IsNullOrEmpty(Text))
+		{
+			var painter = new CSharpMath.SkiaSharp.MathPainter
+			{
+				LaTeX = Text,
+				FontSize = FontSize,
+				AntiAlias = true,
+				DisplayErrorInline = true,
+				TextColor = TextColor?.ToSKColor() ?? SKColors.Black,  // Aggiungi controllo null
+				ErrorColor = ErrorColor?.ToSKColor() ?? SKColors.Red,
+				HighlightColor = HighlightColor?.ToSKColor() ?? SKColors.Transparent,
+				PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill
+			};
 
-            var measuredBounds = painter.Measure();
-            WidthRequest = (measuredBounds.Width * 0.5);
-            HeightRequest = (measuredBounds.Height * 0.5);
-        }
-    }
+			var measuredBounds = painter.Measure();
+			WidthRequest = (measuredBounds.Width * 0.5);
+			HeightRequest = (measuredBounds.Height * 0.5);
+		}
+	}
 
-    private void OnPainting(object sender, SKPaintSurfaceEventArgs e)
-    {
-        SKImageInfo info = e.Info;
-        SKSurface surface = e.Surface;
-        SKCanvas canvas = surface.Canvas;
+	private void OnPainting(object sender, SKPaintSurfaceEventArgs e)
+	{
+		SKImageInfo info = e.Info;
+		SKSurface surface = e.Surface;
+		SKCanvas canvas = surface.Canvas;
 
-        canvas.Clear();
+		canvas.Clear();
 
-        if (string.IsNullOrEmpty(Text))
-        {
-            return;
-        }
+		if (string.IsNullOrEmpty(Text))
+		{
+			return;
+		}
 
-        CSharpMath.SkiaSharp.MathPainter painter = new()
-        {
-            LaTeX = Text,
-            FontSize = FontSize,
-            AntiAlias = true,
-            DisplayErrorInline = true,
-            TextColor = TextColor.ToSKColor(),
-            ErrorColor = ErrorColor.ToSKColor(),
-            HighlightColor = HighlightColor.ToSKColor(),
-            PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill
-        };
-        painter.Draw(canvas);
-    }
+		CSharpMath.SkiaSharp.MathPainter painter = new()
+		{
+			LaTeX = Text,
+			FontSize = FontSize,
+			AntiAlias = true,
+			DisplayErrorInline = true,
+			TextColor = TextColor?.ToSKColor() ?? SKColors.Black,  // Aggiungi controllo null
+			ErrorColor = ErrorColor?.ToSKColor() ?? SKColors.Red,
+			HighlightColor = HighlightColor?.ToSKColor() ?? SKColors.Transparent,
+			PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill
+		};
+		painter.Draw(canvas);
+	}
 }

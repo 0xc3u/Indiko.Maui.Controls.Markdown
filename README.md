@@ -11,9 +11,9 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 
 ## ⚠️ Breaking Changes
 
-### Version 1.4.0 and above
+### Version 1.5.0 and above
 
-Version 1.4.0 introduces a new **Theming System** that changes how styling is applied to the MarkdownView. If you are upgrading from a version prior to 1.4.0, please note the following changes:
+Version 1.5.0 introduces a new **Theming System** that changes how styling is applied to the MarkdownView. If you are upgrading from a version prior to 1.4.0, please note the following changes:
 
 #### New Theme Property
 - A new `Theme` property has been added that accepts a `MarkdownTheme` object
@@ -26,7 +26,7 @@ Version 1.4.0 introduces a new **Theming System** that changes how styling is ap
 
 #### Migration Guide
 
-**Before (< 1.4.0):**
+**Before (< 1.5.0):**
 ```xml
 <idk:MarkdownView 
     H1Color="Blue"
@@ -34,7 +34,7 @@ Version 1.4.0 introduces a new **Theming System** that changes how styling is ap
     TextFontFace="Arial" />
 ```
 
-**After (>= 1.4.0) - Using Theme (Recommended):**
+**After (>= 1.5.0) - Using Theme (Recommended):**
 ```xml
 <idk:MarkdownView 
     Theme="{Binding CurrentTheme}"
@@ -46,7 +46,7 @@ Version 1.4.0 introduces a new **Theming System** that changes how styling is ap
 CurrentTheme = MarkdownThemeDefaults.GitHub;
 ```
 
-**After (>= 1.4.0) - Using Individual Properties (Still Supported):**
+**After (>= 1.5.0) - Using Individual Properties (Still Supported):**
 ```xml
 <idk:MarkdownView 
     H1Color="Blue"

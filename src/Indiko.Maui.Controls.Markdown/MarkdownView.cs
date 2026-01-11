@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Xml;
+using Indiko.Maui.Controls.Markdown.Theming;
 using Markdig;
 using Markdig.Extensions.CustomContainers;
 using Markdig.Extensions.Mathematics;
@@ -32,6 +33,193 @@ public sealed class MarkdownView : ContentView
 
     private readonly Thickness _defaultListIndent = new(10, 0, 10, 0);
     private Dictionary<string, ImageSource> _imageCache = [];
+    private bool _isApplyingTheme;
+
+    /* **************** Theme Support ***********************/
+
+    public static readonly BindableProperty ThemeProperty =
+        BindableProperty.Create(nameof(Theme), typeof(MarkdownTheme), typeof(MarkdownView), 
+            propertyChanged: OnThemeChanged);
+
+    /// <summary>
+    /// Gets or sets the theme for the MarkdownView. When set, the theme's palette and typography
+    /// settings will be applied to the control. Individual property settings will be overridden
+    /// by the theme unless Theme is set to null.
+    /// </summary>
+    public MarkdownTheme Theme
+    {
+        get => (MarkdownTheme)GetValue(ThemeProperty);
+        set => SetValue(ThemeProperty, value);
+    }
+
+    public static readonly BindableProperty UseAppThemeProperty =
+        BindableProperty.Create(nameof(UseAppTheme), typeof(bool), typeof(MarkdownView), false, 
+            propertyChanged: OnUseAppThemeChanged);
+
+    /// <summary>
+    /// When true, automatically switches between light and dark palettes based on the system theme.
+    /// Requires a Theme with both Palette (light) and PaletteDark to be set.
+    /// </summary>
+    public bool UseAppTheme
+    {
+        get => (bool)GetValue(UseAppThemeProperty);
+        set => SetValue(UseAppThemeProperty, value);
+    }
+
+    private static void OnThemeChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is MarkdownView view)
+        {
+            // Unsubscribe from old theme's property changes
+            if (oldValue is MarkdownTheme oldTheme)
+            {
+                oldTheme.PropertyChanged -= view.OnThemePropertyChanged;
+            }
+
+            // Subscribe to new theme's property changes
+            if (newValue is MarkdownTheme newTheme)
+            {
+                newTheme.PropertyChanged += view.OnThemePropertyChanged;
+                view.ApplyTheme();
+            }
+        }
+    }
+
+    private static void OnUseAppThemeChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is MarkdownView view && newValue is bool useAppTheme)
+        {
+            try
+            {
+                if (Application.Current == null)
+                    return;
+
+                // Always unsubscribe first to avoid duplicate subscriptions
+                Application.Current.RequestedThemeChanged -= view.OnSystemThemeChanged;
+
+                if (useAppTheme)
+                {
+                    Application.Current.RequestedThemeChanged += view.OnSystemThemeChanged;
+                    view.ApplyTheme();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error setting UseAppTheme: {ex.Message}");
+            }
+        }
+    }
+
+    private void OnThemePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        ApplyTheme();
+    }
+
+    private void OnSystemThemeChanged(object? sender, AppThemeChangedEventArgs e)
+    {
+        ApplyTheme();
+    }
+
+    /// <summary>
+    /// Applies the current theme to all styling properties.
+    /// </summary>
+    public void ApplyTheme()
+    {
+        if (Theme == null)
+            return;
+
+        _isApplyingTheme = true;
+        try
+        {
+            // Determine which palette to use based on UseAppTheme and current system theme
+            var currentAppTheme = UseAppTheme && Application.Current != null
+                ? Application.Current.RequestedTheme
+                : AppTheme.Light;
+
+            var palette = Theme.GetPalette(currentAppTheme);
+            var typography = Theme.Typography;
+
+            // Apply palette colors
+            TextColor = palette.TextPrimary;
+            H1Color = palette.H1Color;
+            H2Color = palette.H2Color;
+            H3Color = palette.H3Color;
+            H4Color = palette.H4Color;
+            H5Color = palette.H5Color;
+            H6Color = palette.H6Color;
+            HyperlinkColor = palette.HyperlinkColor;
+            LineColor = palette.DividerColor;
+
+            // Code block
+            CodeBlockBackgroundColor = palette.CodeBlockBackground;
+            CodeBlockBorderColor = palette.CodeBlockBorder;
+            CodeBlockTextColor = palette.CodeBlockText;
+
+            // Block quote
+            BlockQuoteBackgroundColor = palette.BlockQuoteBackground;
+            BlockQuoteBorderColor = palette.BlockQuoteBorder;
+            BlockQuoteTextColor = palette.BlockQuoteText;
+
+            // Table
+            TableHeaderBackgroundColor = palette.TableHeaderBackground;
+            TableHeaderTextColor = palette.TableHeaderText;
+            TableRowBackgroundColor = palette.TableRowBackground;
+            TableRowTextColor = palette.TableRowText;
+
+            // Apply typography settings
+            TextFontFace = typography.DefaultFontFamily;
+            TextFontSize = typography.BodyFontSize;
+            
+            // Heading font sizes
+            H1FontSize = typography.H1FontSize;
+            H2FontSize = typography.H2FontSize;
+            H3FontSize = typography.H3FontSize;
+            H4FontSize = typography.H4FontSize;
+            H5FontSize = typography.H5FontSize;
+            H6FontSize = typography.H6FontSize;
+            
+            // Heading font families
+            H1FontFamily = typography.H1FontFamily ?? typography.HeadingFontFamily ?? typography.DefaultFontFamily;
+            H2FontFamily = typography.H2FontFamily ?? typography.HeadingFontFamily ?? typography.DefaultFontFamily;
+            H3FontFamily = typography.H3FontFamily ?? typography.HeadingFontFamily ?? typography.DefaultFontFamily;
+            H4FontFamily = typography.H4FontFamily ?? typography.HeadingFontFamily ?? typography.DefaultFontFamily;
+            H5FontFamily = typography.H5FontFamily ?? typography.HeadingFontFamily ?? typography.DefaultFontFamily;
+            H6FontFamily = typography.H6FontFamily ?? typography.HeadingFontFamily ?? typography.DefaultFontFamily;
+            
+            // Heading font attributes
+            H1FontAttributes = typography.H1FontAttributes;
+            H2FontAttributes = typography.H2FontAttributes;
+            H3FontAttributes = typography.H3FontAttributes;
+            H4FontAttributes = typography.H4FontAttributes;
+            H5FontAttributes = typography.H5FontAttributes;
+            H6FontAttributes = typography.H6FontAttributes;
+            
+            CodeBlockFontSize = typography.CodeFontSize;
+            CodeBlockFontFace = typography.CodeFontFamily;
+            BlockQuoteFontFace = typography.BlockQuoteFontFamily;
+            TableHeaderFontSize = typography.TableHeaderFontSize;
+            TableRowFontSize = typography.TableRowFontSize;
+            LineHeightMultiplier = typography.LineHeight;
+            ParagraphSpacing = typography.ParagraphSpacing;
+            LineBreakModeText = typography.TextLineBreakMode;
+            LineBreakModeHeader = typography.HeadingLineBreakMode;
+
+            // Image settings from theme
+            ImageAspect = Theme.ImageAspect;
+            DefaultImageWidth = Theme.DefaultImageWidth;
+            DefaultImageHeight = Theme.DefaultImageHeight;
+        }
+        finally
+        {
+            _isApplyingTheme = false;
+        }
+
+        // Re-render markdown after theme is applied
+        if (!string.IsNullOrEmpty(MarkdownText))
+        {
+            RenderMarkdown(MarkdownText);
+        }
+    }
 
     public delegate void HyperLinkClicked(object sender, LinkEventArgs e);
     public event HyperLinkClicked OnHyperLinkClicked;
@@ -57,43 +245,34 @@ public sealed class MarkdownView : ContentView
         set => SetValue(LineBreakModeHeaderProperty, value);
     }
 
-	public static readonly BindableProperty SwitchThemeAutoProperty =
-		BindableProperty.Create(nameof(SwitchThemeAuto), typeof(bool), typeof(MarkdownView), true, propertyChanged: OnSwitchThemeAutoChanged);
+    public static readonly BindableProperty H1ColorProperty =
+        BindableProperty.Create(nameof(H1Color), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
 
-	public bool SwitchThemeAuto
-	{
-		get => (bool)GetValue(SwitchThemeAutoProperty);
-		set => SetValue(SwitchThemeAutoProperty, value);
-	}
-    
-	public static readonly BindableProperty H1ColorProperty =
-        BindableProperty.Create(nameof(H1Color), typeof(Color), typeof(MarkdownView), H1ColorLightProperty, propertyChanged: OnMarkdownTextChanged);
-    
     public Color H1Color
     {
         get => (Color)GetValue(H1ColorProperty);
         set => SetValue(H1ColorProperty, value);
     }
 
-	public static readonly BindableProperty H1ColorLightProperty =
-		BindableProperty.Create(nameof(H1ColorLight), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
+    public static readonly BindableProperty H1ColorLightProperty =
+        BindableProperty.Create(nameof(H1ColorLight), typeof(Color), typeof(MarkdownView), Colors.Black);
 
-	public Color H1ColorLight
-	{
-		get => (Color)GetValue(H1ColorLightProperty);
-		set => SetValue(H1ColorLightProperty, value);
-	}
+    public Color H1ColorLight
+    {
+        get => (Color)GetValue(H1ColorLightProperty);
+        set => SetValue(H1ColorLightProperty, value);
+    }
 
-	public static readonly BindableProperty H1ColorDarkProperty =
-		BindableProperty.Create(nameof(H1ColorDark), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+    public static readonly BindableProperty H1ColorDarkProperty =
+        BindableProperty.Create(nameof(H1ColorDark), typeof(Color), typeof(MarkdownView), Colors.White);
 
-	public Color H1ColorDark
-	{
-		get => (Color)GetValue(H1ColorDarkProperty);
-		set => SetValue(H1ColorDarkProperty, value);
-	}
+    public Color H1ColorDark
+    {
+        get => (Color)GetValue(H1ColorDarkProperty);
+        set => SetValue(H1ColorDarkProperty, value);
+    }
 
-	public static readonly BindableProperty H1FontSizeProperty =
+    public static readonly BindableProperty H1FontSizeProperty =
       BindableProperty.Create(nameof(H1FontSize), typeof(double), typeof(MarkdownView), defaultValue: 24d, propertyChanged: OnMarkdownTextChanged);
 
     [TypeConverter(typeof(FontSizeConverter))]
@@ -103,8 +282,26 @@ public sealed class MarkdownView : ContentView
         set => SetValue(H1FontSizeProperty, value);
     }
 
+    public static readonly BindableProperty H1FontFamilyProperty =
+        BindableProperty.Create(nameof(H1FontFamily), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string H1FontFamily
+    {
+        get => (string)GetValue(H1FontFamilyProperty);
+        set => SetValue(H1FontFamilyProperty, value);
+    }
+
+    public static readonly BindableProperty H1FontAttributesProperty =
+        BindableProperty.Create(nameof(H1FontAttributes), typeof(FontAttributes), typeof(MarkdownView), FontAttributes.Bold, propertyChanged: OnMarkdownTextChanged);
+
+    public FontAttributes H1FontAttributes
+    {
+        get => (FontAttributes)GetValue(H1FontAttributesProperty);
+        set => SetValue(H1FontAttributesProperty, value);
+    }
+
     public static readonly BindableProperty H2ColorProperty =
-        BindableProperty.Create(nameof(H2Color), typeof(Color), typeof(MarkdownView), H2ColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+        BindableProperty.Create(nameof(H2Color), typeof(Color), typeof(MarkdownView), Colors.DarkGray, propertyChanged: OnMarkdownTextChanged);
 
     public Color H2Color
     {
@@ -112,25 +309,25 @@ public sealed class MarkdownView : ContentView
         set => SetValue(H2ColorProperty, value);
     }
 
-	public static readonly BindableProperty H2ColorLightProperty =
-		BindableProperty.Create(nameof(H2ColorLight), typeof(Color), typeof(MarkdownView), Colors.DarkGray, propertyChanged: OnMarkdownTextChanged);
+    public static readonly BindableProperty H2ColorLightProperty =
+        BindableProperty.Create(nameof(H2ColorLight), typeof(Color), typeof(MarkdownView), Colors.DarkGray);
 
-	public Color H2ColorLight
-	{
-		get => (Color)GetValue(H2ColorLightProperty);
-		set => SetValue(H2ColorLightProperty, value);
-	}
+    public Color H2ColorLight
+    {
+        get => (Color)GetValue(H2ColorLightProperty);
+        set => SetValue(H2ColorLightProperty, value);
+    }
 
-	public static readonly BindableProperty H2ColorDarkProperty =
-		BindableProperty.Create(nameof(H2ColorDark), typeof(Color), typeof(MarkdownView), Colors.DarkGray, propertyChanged: OnMarkdownTextChanged);
+    public static readonly BindableProperty H2ColorDarkProperty =
+        BindableProperty.Create(nameof(H2ColorDark), typeof(Color), typeof(MarkdownView), Colors.DarkGray);
 
-	public Color H2ColorDark
-	{
-		get => (Color)GetValue(H2ColorDarkProperty);
-		set => SetValue(H2ColorDarkProperty, value);
-	}
+    public Color H2ColorDark
+    {
+        get => (Color)GetValue(H2ColorDarkProperty);
+        set => SetValue(H2ColorDarkProperty, value);
+    }
 
-	public static readonly BindableProperty H2FontSizeProperty =
+    public static readonly BindableProperty H2FontSizeProperty =
      BindableProperty.Create(nameof(H2FontSize), typeof(double), typeof(MarkdownView), defaultValue: 20d, propertyChanged: OnMarkdownTextChanged);
 
     [TypeConverter(typeof(FontSizeConverter))]
@@ -140,8 +337,27 @@ public sealed class MarkdownView : ContentView
         set => SetValue(H2FontSizeProperty, value);
     }
 
+    public static readonly BindableProperty H2FontFamilyProperty =
+        BindableProperty.Create(nameof(H2FontFamily), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string H2FontFamily
+    {
+        get => (string)GetValue(H2FontFamilyProperty);
+        set => SetValue(H2FontFamilyProperty, value);
+    }
+
+    public static readonly BindableProperty H2FontAttributesProperty =
+        BindableProperty.Create(nameof(H2FontAttributes), typeof(FontAttributes), typeof(MarkdownView), FontAttributes.Bold, propertyChanged: OnMarkdownTextChanged);
+
+    public FontAttributes H2FontAttributes
+    {
+        get => (FontAttributes)GetValue(H2FontAttributesProperty);
+        set => SetValue(H2FontAttributesProperty, value);
+    }
+
+    // H3Color property
     public static readonly BindableProperty H3ColorProperty =
-        BindableProperty.Create(nameof(H3Color), typeof(Color), typeof(MarkdownView), H3ColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+        BindableProperty.Create(nameof(H3Color), typeof(Color), typeof(MarkdownView), Colors.Gray, propertyChanged: OnMarkdownTextChanged);
 
     public Color H3Color
     {
@@ -149,25 +365,25 @@ public sealed class MarkdownView : ContentView
         set => SetValue(H3ColorProperty, value);
     }
 
-	public static readonly BindableProperty H3ColorLightProperty =
-		BindableProperty.Create(nameof(H3ColorLight), typeof(Color), typeof(MarkdownView), Colors.Gray, propertyChanged: OnMarkdownTextChanged);
+    public static readonly BindableProperty H3ColorLightProperty =
+        BindableProperty.Create(nameof(H3ColorLight), typeof(Color), typeof(MarkdownView), Colors.Gray);
 
-	public Color H3ColorLight
-	{
-		get => (Color)GetValue(H3ColorLightProperty);
-		set => SetValue(H3ColorLightProperty, value);
-	}
+    public Color H3ColorLight
+    {
+        get => (Color)GetValue(H3ColorLightProperty);
+        set => SetValue(H3ColorLightProperty, value);
+    }
 
-	public static readonly BindableProperty H3ColorDarkProperty =
-	BindableProperty.Create(nameof(H3ColorDark), typeof(Color), typeof(MarkdownView), Colors.Gray, propertyChanged: OnMarkdownTextChanged);
+    public static readonly BindableProperty H3ColorDarkProperty =
+        BindableProperty.Create(nameof(H3ColorDark), typeof(Color), typeof(MarkdownView), Colors.Gray);
 
-	public Color H3ColorDark
-	{
-		get => (Color)GetValue(H3ColorDarkProperty);
-		set => SetValue(H3ColorDarkProperty, value);
-	}
+    public Color H3ColorDark
+    {
+        get => (Color)GetValue(H3ColorDarkProperty);
+        set => SetValue(H3ColorDarkProperty, value);
+    }
 
-	public static readonly BindableProperty H3FontSizeProperty =
+    public static readonly BindableProperty H3FontSizeProperty =
      BindableProperty.Create(nameof(H3FontSize), typeof(double), typeof(MarkdownView), defaultValue: 18d, propertyChanged: OnMarkdownTextChanged);
 
     [TypeConverter(typeof(FontSizeConverter))]
@@ -175,6 +391,141 @@ public sealed class MarkdownView : ContentView
     {
         get => (double)GetValue(H3FontSizeProperty);
         set => SetValue(H3FontSizeProperty, value);
+    }
+
+    public static readonly BindableProperty H3FontFamilyProperty =
+        BindableProperty.Create(nameof(H3FontFamily), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string H3FontFamily
+    {
+        get => (string)GetValue(H3FontFamilyProperty);
+        set => SetValue(H3FontFamilyProperty, value);
+    }
+
+    public static readonly BindableProperty H3FontAttributesProperty =
+        BindableProperty.Create(nameof(H3FontAttributes), typeof(FontAttributes), typeof(MarkdownView), FontAttributes.Bold, propertyChanged: OnMarkdownTextChanged);
+
+    public FontAttributes H3FontAttributes
+    {
+        get => (FontAttributes)GetValue(H3FontAttributesProperty);
+        set => SetValue(H3FontAttributesProperty, value);
+    }
+
+    /* **** H4 Settings **** */
+
+    public static readonly BindableProperty H4ColorProperty =
+        BindableProperty.Create(nameof(H4Color), typeof(Color), typeof(MarkdownView), Colors.DimGray, propertyChanged: OnMarkdownTextChanged);
+
+    public Color H4Color
+    {
+        get => (Color)GetValue(H4ColorProperty);
+        set => SetValue(H4ColorProperty, value);
+    }
+
+    public static readonly BindableProperty H4FontSizeProperty =
+     BindableProperty.Create(nameof(H4FontSize), typeof(double), typeof(MarkdownView), defaultValue: 16d, propertyChanged: OnMarkdownTextChanged);
+
+    [TypeConverter(typeof(FontSizeConverter))]
+    public double H4FontSize
+    {
+        get => (double)GetValue(H4FontSizeProperty);
+        set => SetValue(H4FontSizeProperty, value);
+    }
+
+    public static readonly BindableProperty H4FontFamilyProperty =
+        BindableProperty.Create(nameof(H4FontFamily), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string H4FontFamily
+    {
+        get => (string)GetValue(H4FontFamilyProperty);
+        set => SetValue(H4FontFamilyProperty, value);
+    }
+
+    public static readonly BindableProperty H4FontAttributesProperty =
+        BindableProperty.Create(nameof(H4FontAttributes), typeof(FontAttributes), typeof(MarkdownView), FontAttributes.Bold, propertyChanged: OnMarkdownTextChanged);
+
+    public FontAttributes H4FontAttributes
+    {
+        get => (FontAttributes)GetValue(H4FontAttributesProperty);
+        set => SetValue(H4FontAttributesProperty, value);
+    }
+
+    /* **** H5 Settings **** */
+
+    public static readonly BindableProperty H5ColorProperty =
+        BindableProperty.Create(nameof(H5Color), typeof(Color), typeof(MarkdownView), Colors.DimGray, propertyChanged: OnMarkdownTextChanged);
+
+    public Color H5Color
+    {
+        get => (Color)GetValue(H5ColorProperty);
+        set => SetValue(H5ColorProperty, value);
+    }
+
+    public static readonly BindableProperty H5FontSizeProperty =
+     BindableProperty.Create(nameof(H5FontSize), typeof(double), typeof(MarkdownView), defaultValue: 14d, propertyChanged: OnMarkdownTextChanged);
+
+    [TypeConverter(typeof(FontSizeConverter))]
+    public double H5FontSize
+    {
+        get => (double)GetValue(H5FontSizeProperty);
+        set => SetValue(H5FontSizeProperty, value);
+    }
+
+    public static readonly BindableProperty H5FontFamilyProperty =
+        BindableProperty.Create(nameof(H5FontFamily), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string H5FontFamily
+    {
+        get => (string)GetValue(H5FontFamilyProperty);
+        set => SetValue(H5FontFamilyProperty, value);
+    }
+
+    public static readonly BindableProperty H5FontAttributesProperty =
+        BindableProperty.Create(nameof(H5FontAttributes), typeof(FontAttributes), typeof(MarkdownView), FontAttributes.Bold, propertyChanged: OnMarkdownTextChanged);
+
+    public FontAttributes H5FontAttributes
+    {
+        get => (FontAttributes)GetValue(H5FontAttributesProperty);
+        set => SetValue(H5FontAttributesProperty, value);
+    }
+
+    /* **** H6 Settings **** */
+
+    public static readonly BindableProperty H6ColorProperty =
+        BindableProperty.Create(nameof(H6Color), typeof(Color), typeof(MarkdownView), Colors.DimGray, propertyChanged: OnMarkdownTextChanged);
+
+    public Color H6Color
+    {
+        get => (Color)GetValue(H6ColorProperty);
+        set => SetValue(H6ColorProperty, value);
+    }
+
+    public static readonly BindableProperty H6FontSizeProperty =
+     BindableProperty.Create(nameof(H6FontSize), typeof(double), typeof(MarkdownView), defaultValue: 12d, propertyChanged: OnMarkdownTextChanged);
+
+    [TypeConverter(typeof(FontSizeConverter))]
+    public double H6FontSize
+    {
+        get => (double)GetValue(H6FontSizeProperty);
+        set => SetValue(H6FontSizeProperty, value);
+    }
+
+    public static readonly BindableProperty H6FontFamilyProperty =
+        BindableProperty.Create(nameof(H6FontFamily), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
+
+    public string H6FontFamily
+    {
+        get => (string)GetValue(H6FontFamilyProperty);
+        set => SetValue(H6FontFamilyProperty, value);
+    }
+
+    public static readonly BindableProperty H6FontAttributesProperty =
+        BindableProperty.Create(nameof(H6FontAttributes), typeof(FontAttributes), typeof(MarkdownView), FontAttributes.Bold, propertyChanged: OnMarkdownTextChanged);
+
+    public FontAttributes H6FontAttributes
+    {
+        get => (FontAttributes)GetValue(H6FontAttributesProperty);
+        set => SetValue(H6FontAttributesProperty, value);
     }
 
     /* **** Table Header Style ***/
@@ -190,7 +541,7 @@ public sealed class MarkdownView : ContentView
     }
 
     public static readonly BindableProperty TableHeaderTextColorProperty =
-      BindableProperty.Create(nameof(TableHeaderTextColor), typeof(Color), typeof(MarkdownView), TableHeaderTextColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+      BindableProperty.Create(nameof(TableHeaderTextColor), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
 
     public Color TableHeaderTextColor
     {
@@ -198,26 +549,8 @@ public sealed class MarkdownView : ContentView
         set => SetValue(TableHeaderTextColorProperty, value);
     }
 
-	public static readonly BindableProperty TableHeaderTextColorLightProperty =
-	  BindableProperty.Create(nameof(TableHeaderTextColorLight), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
-
-	public Color TableHeaderTextColorLight
-	{
-		get => (Color)GetValue(TableHeaderTextColorLightProperty);
-		set => SetValue(TableHeaderTextColorLightProperty, value);
-	}
-
-	public static readonly BindableProperty TableHeaderTextColorDarkProperty =
-	  BindableProperty.Create(nameof(TableHeaderTextColorDark), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
-
-	public Color TableHeaderTextColorDark
-	{
-		get => (Color)GetValue(TableHeaderTextColorDarkProperty);
-		set => SetValue(TableHeaderTextColorDarkProperty, value);
-	}
-
-	public static readonly BindableProperty TableHeaderBackgroundColorProperty =
-     BindableProperty.Create(nameof(TableHeaderBackgroundColor), typeof(Color), typeof(MarkdownView), TableHeaderBackgroundColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+    public static readonly BindableProperty TableHeaderBackgroundColorProperty =
+     BindableProperty.Create(nameof(TableHeaderBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGrey, propertyChanged: OnMarkdownTextChanged);
 
     public Color TableHeaderBackgroundColor
     {
@@ -225,25 +558,7 @@ public sealed class MarkdownView : ContentView
         set => SetValue(TableHeaderBackgroundColorProperty, value);
     }
 
-	public static readonly BindableProperty TableHeaderBackgroundColorLightProperty =
-	 BindableProperty.Create(nameof(TableHeaderBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.LightGrey, propertyChanged: OnMarkdownTextChanged);
-
-	public Color TableHeaderBackgroundColorLight
-	{
-		get => (Color)GetValue(TableHeaderBackgroundColorLightProperty);
-		set => SetValue(TableHeaderBackgroundColorLightProperty, value);
-	}
-
-	public static readonly BindableProperty TableHeaderBackgroundColorDarkProperty =
-	 BindableProperty.Create(nameof(TableHeaderBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.LightGrey, propertyChanged: OnMarkdownTextChanged);
-
-	public Color TableHeaderBackgroundColorDark
-	{
-		get => (Color)GetValue(TableHeaderBackgroundColorDarkProperty);
-		set => SetValue(TableHeaderBackgroundColorDarkProperty, value);
-	}
-
-	public static readonly BindableProperty TableHeaderFontFaceProperty =
+    public static readonly BindableProperty TableHeaderFontFaceProperty =
         BindableProperty.Create(nameof(TableHeaderFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
     public string TableHeaderFontFace
@@ -255,7 +570,7 @@ public sealed class MarkdownView : ContentView
     /***** Table Row Styling **/
 
     public static readonly BindableProperty TableRowBackgroundColorProperty =
-        BindableProperty.Create(nameof(TableRowBackgroundColor), typeof(Color), typeof(MarkdownView), TableRowBackgroundColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+ BindableProperty.Create(nameof(TableRowBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
 
     public Color TableRowBackgroundColor
     {
@@ -263,25 +578,7 @@ public sealed class MarkdownView : ContentView
         set => SetValue(TableRowBackgroundColorProperty, value);
     }
 
-	public static readonly BindableProperty TableRowBackgroundColorLightProperty =
-		BindableProperty.Create(nameof(TableRowBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
-
-	public Color TableRowBackgroundColorLight
-	{
-		get => (Color)GetValue(TableRowBackgroundColorLightProperty);
-		set => SetValue(TableRowBackgroundColorLightProperty, value);
-	}
-
-	public static readonly BindableProperty TableRowBackgroundColorDarkProperty =
-		BindableProperty.Create(nameof(TableRowBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.DarkGray, propertyChanged: OnMarkdownTextChanged);
-
-	public Color TableRowBackgroundColorDark
-	{
-		get => (Color)GetValue(TableRowBackgroundColorDarkProperty);
-		set => SetValue(TableRowBackgroundColorDarkProperty, value);
-	}
-
-	public static readonly BindableProperty TableRowFontFaceProperty =
+    public static readonly BindableProperty TableRowFontFaceProperty =
        BindableProperty.Create(nameof(TableRowFontFace), typeof(string), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
 
     public string TableRowFontFace
@@ -291,7 +588,7 @@ public sealed class MarkdownView : ContentView
     }
 
     public static readonly BindableProperty TableRowTextColorProperty =
-       BindableProperty.Create(nameof(TableRowTextColor), typeof(Color), typeof(MarkdownView), TableRowTextColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+     BindableProperty.Create(nameof(TableRowTextColor), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
 
     public Color TableRowTextColor
     {
@@ -299,25 +596,7 @@ public sealed class MarkdownView : ContentView
         set => SetValue(TableRowTextColorProperty, value);
     }
 
-	public static readonly BindableProperty TableRowTextColorLightProperty =
-	   BindableProperty.Create(nameof(TableRowTextColorLight), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
-
-	public Color TableRowTextColorLight
-	{
-		get => (Color)GetValue(TableRowTextColorLightProperty);
-		set => SetValue(TableRowTextColorLightProperty, value);
-	}
-
-	public static readonly BindableProperty TableRowTextColorDarkProperty =
-	   BindableProperty.Create(nameof(TableRowTextColorDark), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
-
-	public Color TableRowTextColorDark
-	{
-		get => (Color)GetValue(TableRowTextColorDarkProperty);
-		set => SetValue(TableRowTextColorDarkProperty, value);
-	}
-
-	public static readonly BindableProperty TableRowFontSizeProperty =
+    public static readonly BindableProperty TableRowFontSizeProperty =
        BindableProperty.Create(nameof(TableRowFontSize), typeof(double), typeof(MarkdownView), defaultValue: 12d, propertyChanged: OnMarkdownTextChanged);
 
     [TypeConverter(typeof(FontSizeConverter))]
@@ -330,7 +609,7 @@ public sealed class MarkdownView : ContentView
     /* ****** Text Styling ******** */
 
     public static readonly BindableProperty TextColorProperty =
-       BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(MarkdownView), TextColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+       BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
 
     public Color TextColor
     {
@@ -339,7 +618,7 @@ public sealed class MarkdownView : ContentView
     }
 
 	public static readonly BindableProperty TextColorLightProperty =
-	   BindableProperty.Create(nameof(TextColorLight), typeof(Color), typeof(MarkdownView), Colors.Black, propertyChanged: OnMarkdownTextChanged);
+	   BindableProperty.Create(nameof(TextColorLight), typeof(Color), typeof(MarkdownView), Colors.Black);
 
 	public Color TextColorLight
 	{
@@ -348,15 +627,15 @@ public sealed class MarkdownView : ContentView
 	}
 
 	public static readonly BindableProperty TextColorDarkProperty =
-	   BindableProperty.Create(nameof(TextColorDark), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+	   BindableProperty.Create(nameof(TextColorDark), typeof(Color), typeof(MarkdownView), Colors.White);
 
 	public Color TextColorDark
 	{
 		get => (Color)GetValue(TextColorDarkProperty);
 		set => SetValue(TextColorDarkProperty, value);
-	}
+    }
 
-	public static readonly BindableProperty TextFontSizeProperty =
+    public static readonly BindableProperty TextFontSizeProperty =
        BindableProperty.Create(nameof(TextFontSize), typeof(double), typeof(MarkdownView), defaultValue: 12d, propertyChanged: OnMarkdownTextChanged);
 
     [TypeConverter(typeof(FontSizeConverter))]
@@ -388,7 +667,7 @@ public sealed class MarkdownView : ContentView
 
     /* ****** Code Block Styling ******** */
     public static readonly BindableProperty CodeBlockBackgroundColorProperty =
-       BindableProperty.Create(nameof(CodeBlockBackgroundColor), typeof(Color), typeof(MarkdownView), CodeBlockBackgroundColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+       BindableProperty.Create(nameof(CodeBlockBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
 
     public Color CodeBlockBackgroundColor
     {
@@ -397,7 +676,7 @@ public sealed class MarkdownView : ContentView
     }
 
 	public static readonly BindableProperty CodeBlockBackgroundColorLightProperty =
-	   BindableProperty.Create(nameof(CodeBlockBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+	   BindableProperty.Create(nameof(CodeBlockBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.White);
 
 	public Color CodeBlockBackgroundColorLight
 	{
@@ -406,7 +685,7 @@ public sealed class MarkdownView : ContentView
 	}
 
 	public static readonly BindableProperty CodeBlockBackgroundColorDarkProperty =
-	   BindableProperty.Create(nameof(CodeBlockBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.White, propertyChanged: OnMarkdownTextChanged);
+	   BindableProperty.Create(nameof(CodeBlockBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.White);
 
 	public Color CodeBlockBackgroundColorDark
 	{
@@ -424,7 +703,7 @@ public sealed class MarkdownView : ContentView
     }
 
     public static readonly BindableProperty CodeBlockTextColorProperty =
-       BindableProperty.Create(nameof(CodeBlockTextColor), typeof(Color), typeof(MarkdownView), CodeBlockTextColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+       BindableProperty.Create(nameof(CodeBlockTextColor), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
 
     public Color CodeBlockTextColor
     {
@@ -433,7 +712,7 @@ public sealed class MarkdownView : ContentView
     }
 
 	public static readonly BindableProperty CodeBlockTextColorLightProperty =
-	   BindableProperty.Create(nameof(CodeBlockTextColorLight), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
+	   BindableProperty.Create(nameof(CodeBlockTextColorLight), typeof(Color), typeof(MarkdownView), Colors.BlueViolet);
 
 	public Color CodeBlockTextColorLight
 	{
@@ -442,7 +721,7 @@ public sealed class MarkdownView : ContentView
 	}
 
 	public static readonly BindableProperty CodeBlockTextColorDarkProperty =
-	   BindableProperty.Create(nameof(CodeBlockTextColorDark), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
+	   BindableProperty.Create(nameof(CodeBlockTextColorDark), typeof(Color), typeof(MarkdownView), Colors.BlueViolet);
 
 	public Color CodeBlockTextColorDark
 	{
@@ -450,7 +729,7 @@ public sealed class MarkdownView : ContentView
 		set => SetValue(CodeBlockTextColorDarkProperty, value);
 	}
 
-	public static readonly BindableProperty CodeBlockFontSizeProperty =
+    public static readonly BindableProperty CodeBlockFontSizeProperty =
        BindableProperty.Create(nameof(CodeBlockFontSize), typeof(double), typeof(MarkdownView), defaultValue: 12d, propertyChanged: OnMarkdownTextChanged);
 
     [TypeConverter(typeof(FontSizeConverter))]
@@ -472,7 +751,7 @@ public sealed class MarkdownView : ContentView
     /* ****** BlockQuote Block Styling ******** */
 
     public static readonly BindableProperty BlockQuoteBackgroundColorProperty =
-     BindableProperty.Create(nameof(BlockQuoteBackgroundColor), typeof(Color), typeof(MarkdownView), BlockQuoteBackgroundColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+     BindableProperty.Create(nameof(BlockQuoteBackgroundColor), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
 
     public Color BlockQuoteBackgroundColor
     {
@@ -481,7 +760,7 @@ public sealed class MarkdownView : ContentView
     }
 
 	public static readonly BindableProperty BlockQuoteBackgroundColorLightProperty =
-	 BindableProperty.Create(nameof(BlockQuoteBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
+	 BindableProperty.Create(nameof(BlockQuoteBackgroundColorLight), typeof(Color), typeof(MarkdownView), Colors.LightGray);
 
 	public Color BlockQuoteBackgroundColorLight
 	{
@@ -490,7 +769,7 @@ public sealed class MarkdownView : ContentView
 	}
 
 	public static readonly BindableProperty BlockQuoteBackgroundColorDarkProperty =
-	 BindableProperty.Create(nameof(BlockQuoteBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.LightGray, propertyChanged: OnMarkdownTextChanged);
+	 BindableProperty.Create(nameof(BlockQuoteBackgroundColorDark), typeof(Color), typeof(MarkdownView), Colors.LightGray);
 
 	public Color BlockQuoteBackgroundColorDark
 	{
@@ -508,7 +787,7 @@ public sealed class MarkdownView : ContentView
     }
 
     public static readonly BindableProperty BlockQuoteTextColorProperty =
-      BindableProperty.Create(nameof(BlockQuoteTextColor), typeof(Color), typeof(MarkdownView), BlockQuoteTextColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+      BindableProperty.Create(nameof(BlockQuoteTextColor), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
 
     public Color BlockQuoteTextColor
     {
@@ -517,7 +796,7 @@ public sealed class MarkdownView : ContentView
     }
 
 	public static readonly BindableProperty BlockQuoteTextColorLightProperty =
-	 BindableProperty.Create(nameof(BlockQuoteTextColorLight), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
+	 BindableProperty.Create(nameof(BlockQuoteTextColorLight), typeof(Color), typeof(MarkdownView), Colors.BlueViolet);
 
 	public Color BlockQuoteTextColorLight
 	{
@@ -526,7 +805,7 @@ public sealed class MarkdownView : ContentView
 	}
 
 	public static readonly BindableProperty BlockQuoteTextColorDarkProperty =
-	 BindableProperty.Create(nameof(BlockQuoteTextColorDark), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
+	 BindableProperty.Create(nameof(BlockQuoteTextColorDark), typeof(Color), typeof(MarkdownView), Colors.BlueViolet);
 
 	public Color BlockQuoteTextColorDark
 	{
@@ -555,7 +834,7 @@ public sealed class MarkdownView : ContentView
     }
 
 	public static readonly BindableProperty HyperlinkColorLightProperty =
-	 BindableProperty.Create(nameof(HyperlinkColorLight), typeof(Color), typeof(MarkdownView), HyperlinkColorLightProperty, propertyChanged: OnMarkdownTextChanged);
+	 BindableProperty.Create(nameof(HyperlinkColorLight), typeof(Color), typeof(MarkdownView), Colors.BlueViolet);
 
 	public Color HyperlinkColorLight
 	{
@@ -564,7 +843,7 @@ public sealed class MarkdownView : ContentView
 	}
 
 	public static readonly BindableProperty HyperlinkColorDarkProperty =
-	 BindableProperty.Create(nameof(HyperlinkColorDark), typeof(Color), typeof(MarkdownView), Colors.BlueViolet, propertyChanged: OnMarkdownTextChanged);
+	 BindableProperty.Create(nameof(HyperlinkColorDark), typeof(Color), typeof(MarkdownView), Colors.BlueViolet);
 
 	public Color HyperlinkColorDark
 	{
@@ -572,7 +851,7 @@ public sealed class MarkdownView : ContentView
 		set => SetValue(HyperlinkColorDarkProperty, value);
 	}
 
-	public static readonly BindableProperty LinkCommandProperty =
+    public static readonly BindableProperty LinkCommandProperty =
     BindableProperty.Create(nameof(LinkCommand), typeof(ICommand), typeof(MarkdownView));
 
     public ICommand LinkCommand
@@ -686,31 +965,67 @@ public sealed class MarkdownView : ContentView
         }
     }
 
+    private static void OnStylePropertyChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is MarkdownView view && !view._isApplyingTheme && !string.IsNullOrEmpty(view.MarkdownText))
+        {
+            try
+            {
+                view.RenderMarkdown(view.MarkdownText);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error rendering markdown: {ex.Message}");
+            }
+        }
+    }
+
     private void RenderMarkdown(string markdown)
     {
+        // Skip rendering during batch theme updates
+        if (_isApplyingTheme)
+            return;
+
         try
         {
             var pipeline = new MarkdownPipelineBuilder()
+                // Attributes - must come first to allow other extensions to use them
+                .UseGenericAttributes()
+                .UseAutoIdentifiers()
                 .UseAdvancedExtensions()
-                .UseGenericAttributes()  // Explicitly enable generic attributes
+
+                // Block-level extensions
                 .UseAlertBlocks()
                 .UseAbbreviations()
-                .UseGridTables()
-                .UsePipeTables()
-                .UseAutoIdentifiers()
-                .UseEmphasisExtras()
                 .UseDefinitionLists()
                 .UseFootnotes()
-                .UseListExtras()
+                .UseFooters()
                 .UseCustomContainers()
                 .UseCitations()
-                .UseMediaLinks()
-                .UseTaskLists()
-                .UseEmphasisExtras()
-                .UseAutoLinks()
-                .UseFooters()
                 .UseMathematics()
+
+                // Table extensions
+                .UseGridTables()
+                .UsePipeTables()
+
+                // List extensions
+                .UseListExtras()
+                .UseTaskLists()
+
+                // Code and media
+                .UseMediaLinks()
+
+                // Inline-level extensions - order matters here
+                .UseAutoLinks()
+                .UseEmphasisExtras()
+
+                // Emoji must come after emphasis to avoid * being interpreted as emoji
+                .UseEmojiAndSmiley(enableSmileys: false)
+
+                // Encoding
+                .UseNonAsciiNoEscape()
                 .Build();
+
 
             MarkdownDocument document = Markdig.Markdown.Parse(markdown, pipeline);
 
@@ -776,7 +1091,7 @@ public sealed class MarkdownView : ContentView
 
         // Does this paragraph contain any images?
         bool containsImage = block.Inline.Any(i => i is LinkInline li && li.IsImage);
-        
+
         if (!containsImage)
         {
             // Only text – return a single label
@@ -838,7 +1153,7 @@ public sealed class MarkdownView : ContentView
                 bool hasCustomHorizontal = false;
                 bool hasCustomVertical = false;
                 bool hasCustomAspect = false;
-                
+
                 if (attrs != null && attrs.Properties != null)
                 {
                     string widthValue = null;
@@ -977,6 +1292,8 @@ public sealed class MarkdownView : ContentView
         try
         {
             var formatted = new FormattedString();
+            var headingFontFamily = GetFontFamilyForBlockLevel(block.Level);
+            var headingFontAttributes = GetFontAttributesForBlockLevel(block.Level);
 
             if (block.Inline != null)
             {
@@ -988,21 +1305,25 @@ public sealed class MarkdownView : ContentView
                         {
                             Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
                             FontSize = GetFontsizeForBlockLevel(block.Level),
-                            FontAttributes = FontAttributes.Bold,
+                            FontAttributes = headingFontAttributes,
                             TextColor = GetTextColorForBlockLevel(block.Level),
-                            FontFamily = TextFontFace
+                            FontFamily = headingFontFamily
                         });
                     }
                     else if (inline is EmphasisInline em)
                     {
                         var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
+                        // Combine heading font attributes with emphasis attributes
+                        var emphasisAttributes = em.DelimiterCount == 2 ? FontAttributes.Bold : FontAttributes.Italic;
+                        var combinedAttributes = headingFontAttributes | emphasisAttributes;
+                        
                         formatted.Spans.Add(new Span
                         {
                             Text = text,
                             FontSize = GetFontsizeForBlockLevel(block.Level),
-                            FontAttributes = em.DelimiterCount == 2 ? FontAttributes.Bold : FontAttributes.Italic,
+                            FontAttributes = combinedAttributes,
                             TextColor = GetTextColorForBlockLevel(block.Level),
-                            FontFamily = TextFontFace
+                            FontFamily = headingFontFamily
                         });
                     }
                     else if (inline is LineBreakInline)
@@ -1015,7 +1336,7 @@ public sealed class MarkdownView : ContentView
             return new Label
             {
                 FormattedText = formatted,
-                LineBreakMode = LineBreakMode.WordWrap,
+                LineBreakMode = LineBreakModeHeader,
                 HorizontalOptions = LayoutOptions.Start,
                 VerticalOptions = LayoutOptions.Center,
                 LineHeight = LineHeightMultiplier,
@@ -1032,14 +1353,16 @@ public sealed class MarkdownView : ContentView
     {
         try
         {
-            if (blockLevel == 1)
-                return H1Color;
-            else if (blockLevel == 2)
-                return H2Color;
-            else if (blockLevel == 3)
-                return H3Color;
-            else
-                return H3Color;
+            return blockLevel switch
+            {
+                1 => H1Color,
+                2 => H2Color,
+                3 => H3Color,
+                4 => H4Color,
+                5 => H5Color,
+                6 => H6Color,
+                _ => H6Color
+            };
         }
         catch (Exception ex)
         {
@@ -1052,19 +1375,68 @@ public sealed class MarkdownView : ContentView
     {
         try
         {
-            if (blockLevel == 1)
-                return H1FontSize;
-            else if (blockLevel == 2)
-                return H2FontSize;
-            else if (blockLevel == 3)
-                return H3FontSize;
-            else
-                return H3FontSize;
+            return blockLevel switch
+            {
+                1 => H1FontSize,
+                2 => H2FontSize,
+                3 => H3FontSize,
+                4 => H4FontSize,
+                5 => H5FontSize,
+                6 => H6FontSize,
+                _ => H6FontSize
+            };
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error getting font size for block level: {ex.Message}");
             return 12d;
+        }
+    }
+
+    private string GetFontFamilyForBlockLevel(int blockLevel)
+    {
+        try
+        {
+            var fontFamily = blockLevel switch
+            {
+                1 => H1FontFamily,
+                2 => H2FontFamily,
+                3 => H3FontFamily,
+                4 => H4FontFamily,
+                5 => H5FontFamily,
+                6 => H6FontFamily,
+                _ => H6FontFamily
+            };
+            
+            // Fall back to TextFontFace if no specific font family is set
+            return fontFamily ?? TextFontFace;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting font family for block level: {ex.Message}");
+            return null;
+        }
+    }
+
+    private FontAttributes GetFontAttributesForBlockLevel(int blockLevel)
+    {
+        try
+        {
+            return blockLevel switch
+            {
+                1 => H1FontAttributes,
+                2 => H2FontAttributes,
+                3 => H3FontAttributes,
+                4 => H4FontAttributes,
+                5 => H5FontAttributes,
+                6 => H6FontAttributes,
+                _ => FontAttributes.Bold
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting font attributes for block level: {ex.Message}");
+            return FontAttributes.Bold;
         }
     }
 
@@ -1747,85 +2119,28 @@ public sealed class MarkdownView : ContentView
         }
     }
 
-    // AppTheme
-	private static Color GetThemeColor(AppTheme appTheme, Color lightColor, Color darkColor)
-	{
-		return appTheme == AppTheme.Dark ? darkColor : lightColor;
-	}
-
-    public void ChangeTheme(AppTheme appTheme)
+    ~MarkdownView()
     {
-		// Update color with new AppTheme
-		TextColor = GetThemeColor(appTheme, TextColorLight, TextColorDark);
-		H1Color = GetThemeColor(appTheme, H1ColorLight, H1ColorDark);
-		H2Color = GetThemeColor (appTheme, H2ColorLight, H2ColorDark);
-		H3Color = GetThemeColor(appTheme, H3ColorLight, H3ColorDark);
-        TableHeaderTextColor = GetThemeColor(appTheme, TableHeaderTextColorLight, TableHeaderTextColorDark);
-        TableHeaderBackgroundColor = GetThemeColor(appTheme, TableHeaderBackgroundColorLight, TableHeaderBackgroundColorDark);
-		TableRowTextColor = GetThemeColor(appTheme, TableRowTextColorLight, TableRowTextColorDark);
-        TableRowBackgroundColor = GetThemeColor(appTheme, TableRowBackgroundColorLight, TableRowBackgroundColorDark);
-        BlockQuoteTextColor = GetThemeColor(appTheme, BlockQuoteTextColorLight, BlockQuoteTextColorDark);
-		BlockQuoteBackgroundColor = GetThemeColor(appTheme, BlockQuoteBackgroundColorLight, BlockQuoteBackgroundColorDark);
-		CodeBlockTextColor = GetThemeColor(appTheme, CodeBlockTextColorLight, CodeBlockTextColorDark);
-		CodeBlockBackgroundColor = GetThemeColor(appTheme, CodeBlockBackgroundColorLight, CodeBlockBackgroundColorDark);
-
-		// Re-render markdown
-		if (!string.IsNullOrEmpty(MarkdownText))
-		{
-			RenderMarkdown(MarkdownText);
-		}
-	}
-
-	private void OnAppThemeChanged(object sender, AppThemeChangedEventArgs e)
-	{
-        ChangeTheme(Application.Current.UserAppTheme);
-	}
-
-    private static void OnSwitchThemeAutoChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        if (bindable is MarkdownView view && newValue is bool isEnabled && oldValue is bool wasEnabled)
+        try
         {
-            try
+            // Unsubscribe from theme property changes
+            if (Theme != null)
             {
-                if (wasEnabled == true)
-                {
-					if (Application.Current != null)
-					{
-						Application.Current.RequestedThemeChanged -= view.OnAppThemeChanged;
-					}
-				}
-                else if (isEnabled == true)
-				{
-					if (Application.Current != null)
-					{
-						Application.Current.RequestedThemeChanged += view.OnAppThemeChanged;
-						view.ChangeTheme(Application.Current.UserAppTheme); // call immediately
-					}
-				}
-			}
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error setting SwitchThemeAuto: {ex.Message}");
+                Theme.PropertyChanged -= OnThemePropertyChanged;
             }
-		}
-	}
 
+            // Unsubscribe from system theme changes
+            if (Application.Current != null && UseAppTheme)
+            {
+                Application.Current.RequestedThemeChanged -= OnSystemThemeChanged;
+            }
 
-
-	~MarkdownView()
-	{
-		try
-		{
-			if (Application.Current != null || SwitchThemeAuto != true)
-			{
-				Application.Current.RequestedThemeChanged -= OnAppThemeChanged;
-			}
-			_imageCache.Clear();
-			_imageCache = null;
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Error in destructor: {ex.Message}");
-		}
-	}
+            _imageCache?.Clear();
+            _imageCache = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in destructor: {ex.Message}");
+        }
+    }
 }

@@ -13,12 +13,12 @@ public partial class MainPage : ContentPage
 		BindingContext = mainPageViewModel;
 	}
 
-	protected override void OnAppearing()
-	{
-		base.OnAppearing();
-		mainPageViewModel.OnAppearing(null);
-	}
-
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+        mainPageViewModel.OnAppearing(null);
+    }
+	
     private void MarkdownView_HyperLinkClicked(object sender, LinkEventArgs e)
     {
 		DisplayAlert(Title, e.Url, "OK");

@@ -23,7 +23,7 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 
-	  <MauiXamlInflator>SourceGen</MauiXamlInflator>
+     <MauiXamlInflator>SourceGen</MauiXamlInflator>
   </PropertyGroup>
   <ItemGroup>
     <!-- App Icon -->

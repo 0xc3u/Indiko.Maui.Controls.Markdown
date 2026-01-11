@@ -3,77 +3,87 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 			 xmlns:vm="clr-namespace:Indiko.Maui.Controls.Markdown.Sample.ViewModels"
              xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
+             xmlns:theming="clr-namespace:Indiko.Maui.Controls.Markdown.Theming;assembly=Indiko.Maui.Controls.Markdown"
              x:Class="Indiko.Maui.Controls.Markdown.Sample.MainPage"
 			 x:DataType="vm:MainPageViewModel"
              BackgroundColor="{AppThemeBinding Light=White, Dark=Black}"
              Title="Indiko.Maui.Controls.Markdown.Sample">
 
+    <ContentPage.Resources>
+        <!-- Define a GitHub-style theme as a resource -->
+        <theming:MarkdownTheme x:Key="GitHubTheme">
+            <theming:MarkdownTheme.Palette>
+                <theming:MarkdownPalette 
+                    TextPrimary="#24292F"
+                    H1Color="#24292F"
+                    H2Color="#24292F"
+                    H3Color="#24292F"
+                    HyperlinkColor="#0969DA"
+                    CodeBlockBackground="#F6F8FA"
+                    CodeBlockBorder="#D0D7DE"
+                    CodeBlockText="#24292F"
+                    BlockQuoteBackground="White"
+                    BlockQuoteBorder="#D0D7DE"
+                    BlockQuoteText="#57606A"
+                    DividerColor="#D8DEE4" />
+            </theming:MarkdownTheme.Palette>
+            <theming:MarkdownTheme.PaletteDark>
+                <theming:MarkdownPaletteDark 
+                    TextPrimary="#C9D1D9"
+                    H1Color="#C9D1D9"
+                    H2Color="#C9D1D9"
+                    H3Color="#C9D1D9"
+                    HyperlinkColor="#58A6FF"
+                    CodeBlockBackground="#161B22"
+                    CodeBlockBorder="#30363D"
+                    CodeBlockText="#C9D1D9"
+                    BlockQuoteBackground="#0D1117"
+                    BlockQuoteBorder="#30363D"
+                    BlockQuoteText="#8B949E"
+                    DividerColor="#21262D" />
+            </theming:MarkdownTheme.PaletteDark>
+            <theming:MarkdownTheme.Typography>
+                <theming:MarkdownTypography 
+                    H1FontSize="28"
+                    H2FontSize="22"
+                    H3FontSize="18"
+                    BodyFontSize="14"
+                    CodeFontSize="13"
+                    LineHeight="1.5"
+                    CodeFontFamily="Consolas" />
+            </theming:MarkdownTheme.Typography>
+        </theming:MarkdownTheme>
+    </ContentPage.Resources>
+
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="10">
 
-            <Label Text="Markdown View" FontSize="Header" TextColor="{StaticResource Primary}"></Label>
+            <Label Text="Markdown View with Theming" FontSize="Header" TextColor="{StaticResource Primary}"></Label>
             
-            <idk:MarkdownView MarkdownText="{Binding MarkdownText}" 
-                          SwitchThemeAuto="True"
-                          H1FontSize="22"
-                          H1Color="{StaticResource Blue100Accent}"
-                          H1ColorLight="{StaticResource Blue100Accent}"
-                          H1ColorDark="{StaticResource Blue100Accent}"
-                          H2FontSize="20"
-                          H2Color="{StaticResource Blue200Accent}"
-                          H2ColorLight="{StaticResource Blue200Accent}"
-                          H2ColorDark="{StaticResource Blue200Accent}"
-                          H3FontSize="18"
-                          H3Color="{StaticResource Blue200Accent}"
-                          H3ColorLight="{StaticResource Blue300Accent}"
-                          H3ColorDark="{StaticResource Blue200Accent}"
-                          CodeBlockBackgroundColor="{StaticResource GrayQuote}"
-                          CodeBlockTextColor="{StaticResource Gray600}"
-                          CodeBlockTextColorLight="{StaticResource Gray600}"
-                          CodeBlockTextColorDark="{StaticResource Gray600}"
-                          CodeBlockBorderColor="{StaticResource GrayQuoteBorder}"
-                          CodeBlockFontFace="CamingoCodeRegular"
-                          CodeBlockFontSize="12"
-                          BlockQuoteBackgroundColor="{StaticResource Blue300Accent}"
-                          BlockQuoteBackgroundColorLight="{StaticResource Blue300Accent}"
-                          BlockQuoteBackgroundColorDark="{StaticResource Blue200Accent}"
-                          BlockQuoteTextColor="{StaticResource Gray600}"
-                          BlockQuoteTextColorLight="{StaticResource Gray600}"
-                          BlockQuoteTextColorDark="{StaticResource Gray600}"
-                          BlockQuoteBorderColor="{StaticResource Blue100Accent}"
-                          BlockQuoteFontFace="CamingoCodeItalic"
-                          TextFontFace="OpenSans"
-                          TextFontSize="14"                         
-
-                          TextColorLight="{StaticResource Black}"
-                          TextColorDark="{StaticResource White}"
-                          TableHeaderBackgroundColor="{StaticResource Gray200}"
-                          TableHeaderBackgroundColorLight="{StaticResource Gray200}"
-                          TableHeaderBackgroundColorDark="{StaticResource Gray200}"
-                          TableHeaderFontFace="OpenSans"
-                          TableHeaderFontSize="14"
-                          TableHeaderTextColor="{StaticResource Gray900}"
-                          TableHeaderTextColorLight="{StaticResource Gray900}"
-                          TableHeaderTextColorDark="{StaticResource Gray900}"
-                          TableRowFontFace="OpenSans"
-                          TableRowFontSize="12"
-                          TableRowTextColor="{StaticResource Gray600}"
-                          TableRowTextColorLight="{StaticResource Gray600}"
-                          TableRowTextColorDark="{StaticResource Gray600}"
-                          TableRowBackgroundColor="{StaticResource Gray100}"
-                          TableRowBackgroundColorLight="{StaticResource Gray100}"
-                          TableRowBackgroundColorDark="{StaticResource Gray100}"
-                          ImageAspect="Fill"
-                          HyperlinkColor="{StaticResource Yellow100Accent}"
-                          LineColor="{StaticResource Gray300}"
-                          LinkCommand="{Binding LinkReceivedCommand}"
-                          EMailCommand="{Binding EMailReceivedCommand}"
-                          ParagraphSpacing="1.3"
-                          OnHyperLinkClicked="MarkdownView_HyperLinkClicked"
-                          OnEmailClicked="MarkdownView_OnEmailClicked">
+            <!-- Bind Theme to CurrentTheme from ViewModel for dynamic theme switching -->
+            <idk:MarkdownView 
+                MarkdownText="{Binding MarkdownText}" 
+                Theme="{Binding CurrentTheme}"
+                UseAppTheme="True"
+                LinkCommand="{Binding LinkReceivedCommand}"
+                EMailCommand="{Binding EMailReceivedCommand}"
+                OnHyperLinkClicked="MarkdownView_HyperLinkClicked"
+                OnEmailClicked="MarkdownView_OnEmailClicked">
             </idk:MarkdownView>
 
-            <Button Text="Change Theme" Command="{Binding ThemeChangedCommand}"/>
+            <Button Text="Toggle Light/Dark Theme" Command="{Binding ThemeChangedCommand}"/>
+
+            <Label Text="Theme Options:" FontSize="Medium" FontAttributes="Bold" Margin="0,20,0,0"/>
+            
+            <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                <Button Grid.Row="0" Grid.Column="0" Text="GitHub" Command="{Binding SetGitHubThemeCommand}" />
+                <Button Grid.Row="0" Grid.Column="1" Text="Sepia" Command="{Binding SetSepiaThemeCommand}" />
+                <Button Grid.Row="0" Grid.Column="2" Text="Compact" Command="{Binding SetCompactThemeCommand}" />
+                <Button Grid.Row="0" Grid.Column="3" Text="Nord" Command="{Binding SetNordThemeCommand}" />
+                <Button Grid.Row="1" Grid.Column="0" Text="One Dark" Command="{Binding SetOneDarkThemeCommand}" />
+                <Button Grid.Row="1" Grid.Column="1" Text="One Light" Command="{Binding SetOneLightThemeCommand}" />
+                <Button Grid.Row="1" Grid.Column="2" Text="Dracula" Command="{Binding SetDraculaThemeCommand}" />
+            </Grid>
 
         </VerticalStackLayout>
     </ScrollView>

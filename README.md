@@ -9,6 +9,57 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 ## Build Status
 ![ci](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/actions/workflows/ci.yml/badge.svg)
 
+## ⚠️ Breaking Changes
+
+### Version 1.4.0 and above
+
+Version 1.4.0 introduces a new **Theming System** that changes how styling is applied to the MarkdownView. If you are upgrading from a version prior to 1.4.0, please note the following changes:
+
+#### New Theme Property
+- A new `Theme` property has been added that accepts a `MarkdownTheme` object
+- The `UseAppTheme` property enables automatic light/dark mode switching based on system theme
+
+#### New Heading Properties
+- Individual `FontFamily` and `FontAttributes` properties have been added for each heading level (H1-H6)
+- New properties: `H1FontFamily`, `H1FontAttributes`, `H2FontFamily`, `H2FontAttributes`, etc.
+- New heading colors for H4-H6: `H4Color`, `H5Color`, `H6Color`
+
+#### Migration Guide
+
+**Before (< 1.4.0):**
+```xml
+<idk:MarkdownView 
+    H1Color="Blue"
+    H1FontSize="24"
+    TextFontFace="Arial" />
+```
+
+**After (>= 1.4.0) - Using Theme (Recommended):**
+```xml
+<idk:MarkdownView 
+    Theme="{Binding CurrentTheme}"
+    UseAppTheme="True" />
+```
+
+```csharp
+// In your ViewModel or code-behind
+CurrentTheme = MarkdownThemeDefaults.GitHub;
+```
+
+**After (>= 1.4.0) - Using Individual Properties (Still Supported):**
+```xml
+<idk:MarkdownView 
+    H1Color="Blue"
+    H1FontSize="24"
+    H1FontFamily="Arial"
+    H1FontAttributes="Bold"
+    TextFontFace="Arial" />
+```
+
+> **Note:** The existing individual styling properties (like `H1Color`, `H1FontSize`, etc.) are still fully supported. The new theming system is an additional feature that provides a more organized way to manage styles. You can continue using individual properties if you prefer.
+
+---
+
 ## Installation
 
 You can install the `Indiko.Maui.Controls.Markdown` package via NuGet Package Manager or CLI:
@@ -25,17 +76,322 @@ Install-Package Indiko.Maui.Controls.Markdown
 dotnet add package Indiko.Maui.Controls.Markdown
 ```
 
+## Theming Support
+
+The `MarkdownView` control includes a powerful theming system inspired by MudBlazor's approach. Themes allow you to define a complete visual style for your markdown content, including colors, typography, and spacing, all in one reusable object.
+
+### Theme Structure
+
+A theme consists of three main components:
+
+- **`Palette`**: Color palette for light mode
+- **`PaletteDark`**: Color palette for dark mode (optional, falls back to Palette)
+- **`Typography`**: Font sizes, font families, line heights, and spacing
+
+### Using Built-in Themes
+
+The library includes several pre-built themes that you can use out of the box:
+
+| Theme | Description |
+|-------|-------------|
+| `Light` | Default light theme with neutral colors |
+| `Dark` | Dark theme optimized for dark backgrounds |
+| `GitHub` | GitHub-styled markdown appearance |
+| `OneDark` | Atom's One Dark syntax theme |
+| `OneLight` | Atom's One Light syntax theme |
+| `Dracula` | Popular Dracula color scheme |
+| `Nord` | Arctic, north-bluish color palette |
+| `Sepia` | Warm, paper-like reading experience |
+| `Compact` | Reduced font sizes and spacing |
+| `HighContrast` | High contrast for accessibility |
+| `DotNetPurple` | .NET brand purple colors |
+
+#### Using a Built-in Theme in C#
+
+```csharp
+using Indiko.Maui.Controls.Markdown.Theming;
+
+// Apply a built-in theme
+markdownView.Theme = MarkdownThemeDefaults.GitHub;
+
+// Enable automatic light/dark mode switching
+markdownView.UseAppTheme = true;
+```
+
+#### Using a Built-in Theme in XAML with Binding
+
+```xml
+<ContentPage xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
+             xmlns:theming="clr-namespace:Indiko.Maui.Controls.Markdown.Theming;assembly=Indiko.Maui.Controls.Markdown">
+    
+    <idk:MarkdownView 
+        MarkdownText="{Binding MarkdownText}" 
+        Theme="{Binding CurrentTheme}"
+        UseAppTheme="True" />
+</ContentPage>
+```
+
+```csharp
+// In your ViewModel
+public MarkdownTheme CurrentTheme { get; set; } = MarkdownThemeDefaults.GitHub;
+
+// Switch themes dynamically
+public void SwitchToOneDark()
+{
+    CurrentTheme = MarkdownThemeDefaults.OneDark;
+}
+```
+
+### Creating Custom Themes
+
+You can create fully custom themes by defining your own palette and typography settings.
+
+#### Custom Theme in C#
+
+```csharp
+using Indiko.Maui.Controls.Markdown.Theming;
+
+var customTheme = new MarkdownTheme();
+
+// Customize light palette
+customTheme.Palette.TextPrimary = Color.FromArgb("#333333");
+customTheme.Palette.H1Color = Color.FromArgb("#1a73e8");
+customTheme.Palette.H2Color = Color.FromArgb("#1557b0");
+customTheme.Palette.H3Color = Color.FromArgb("#0d47a1");
+customTheme.Palette.HyperlinkColor = Color.FromArgb("#1a73e8");
+customTheme.Palette.CodeBlockBackground = Color.FromArgb("#f5f5f5");
+customTheme.Palette.CodeBlockText = Color.FromArgb("#d32f2f");
+customTheme.Palette.BlockQuoteBackground = Color.FromArgb("#e3f2fd");
+customTheme.Palette.BlockQuoteBorder = Color.FromArgb("#1a73e8");
+
+// Customize dark palette
+customTheme.PaletteDark.TextPrimary = Color.FromArgb("#e0e0e0");
+customTheme.PaletteDark.H1Color = Color.FromArgb("#8ab4f8");
+customTheme.PaletteDark.H2Color = Color.FromArgb("#669df6");
+customTheme.PaletteDark.H3Color = Color.FromArgb("#4285f4");
+customTheme.PaletteDark.HyperlinkColor = Color.FromArgb("#8ab4f8");
+customTheme.PaletteDark.CodeBlockBackground = Color.FromArgb("#1e1e1e");
+customTheme.PaletteDark.CodeBlockText = Color.FromArgb("#f48fb1");
+
+// Customize typography
+customTheme.Typography.H1FontSize = 32;
+customTheme.Typography.H2FontSize = 26;
+customTheme.Typography.H3FontSize = 22;
+customTheme.Typography.BodyFontSize = 16;
+customTheme.Typography.CodeFontSize = 14;
+customTheme.Typography.CodeFontFamily = "Cascadia Code";
+customTheme.Typography.LineHeight = 1.6;
+customTheme.Typography.ParagraphSpacing = 1.2;
+
+// Apply the theme
+markdownView.Theme = customTheme;
+```
+
+#### Custom Theme in XAML
+
+You can define themes as resources in XAML for reuse across your application:
+
+```xml
+<ContentPage.Resources>
+    <theming:MarkdownTheme x:Key="MyCustomTheme">
+        <theming:MarkdownTheme.Palette>
+            <theming:MarkdownPalette 
+                TextPrimary="#333333"
+                H1Color="#1a73e8"
+                H2Color="#1557b0"
+                H3Color="#0d47a1"
+                HyperlinkColor="#1a73e8"
+                CodeBlockBackground="#f5f5f5"
+                CodeBlockBorder="#e0e0e0"
+                CodeBlockText="#d32f2f"
+                BlockQuoteBackground="#e3f2fd"
+                BlockQuoteBorder="#1a73e8"
+                BlockQuoteText="#666666"
+                TableHeaderBackground="#e8e8e8"
+                TableHeaderText="#333333"
+                TableRowBackground="White"
+                TableRowText="#333333"
+                DividerColor="#e0e0e0" />
+        </theming:MarkdownTheme.Palette>
+        <theming:MarkdownTheme.PaletteDark>
+            <theming:MarkdownPaletteDark 
+                TextPrimary="#e0e0e0"
+                H1Color="#8ab4f8"
+                H2Color="#669df6"
+                H3Color="#4285f4"
+                HyperlinkColor="#8ab4f8"
+                CodeBlockBackground="#1e1e1e"
+                CodeBlockBorder="#333333"
+                CodeBlockText="#f48fb1"
+                BlockQuoteBackground="#1e1e1e"
+                BlockQuoteBorder="#8ab4f8"
+                BlockQuoteText="#9e9e9e" />
+        </theming:MarkdownTheme.PaletteDark>
+        <theming:MarkdownTheme.Typography>
+            <theming:MarkdownTypography 
+                H1FontSize="32"
+                H2FontSize="26"
+                H3FontSize="22"
+                BodyFontSize="16"
+                CodeFontSize="14"
+                LineHeight="1.6"
+                CodeFontFamily="Consolas" />
+        </theming:MarkdownTheme.Typography>
+    </theming:MarkdownTheme>
+</ContentPage.Resources>
+
+<idk:MarkdownView 
+    MarkdownText="{Binding MarkdownText}" 
+    Theme="{StaticResource MyCustomTheme}"
+    UseAppTheme="True" />
+```
+
+### Palette Properties
+
+The `MarkdownPalette` class contains the following color properties:
+
+| Property | Description |
+|----------|-------------|
+| `Primary` | Primary accent color |
+| `Secondary` | Secondary accent color |
+| `Background` | Default background color |
+| `Surface` | Surface color for elevated elements |
+| `TextPrimary` | Primary text color |
+| `TextSecondary` | Secondary text color |
+| `TextDisabled` | Disabled text color |
+| `H1Color` | Color for H1 headings |
+| `H2Color` | Color for H2 headings |
+| `H3Color` | Color for H3 headings |
+| `H4Color` | Color for H4 headings |
+| `H5Color` | Color for H5 headings |
+| `H6Color` | Color for H6 headings |
+| `HyperlinkColor` | Color for hyperlinks |
+| `CodeBlockBackground` | Background color for code blocks |
+| `CodeBlockBorder` | Border color for code blocks |
+| `CodeBlockText` | Text color for code blocks |
+| `BlockQuoteBackground` | Background color for block quotes |
+| `BlockQuoteBorder` | Border color for block quotes |
+| `BlockQuoteText` | Text color for block quotes |
+| `TableHeaderBackground` | Background color for table headers |
+| `TableHeaderText` | Text color for table headers |
+| `TableRowBackground` | Background color for table rows |
+| `TableRowText` | Text color for table rows |
+| `TableBorder` | Border color for tables |
+| `DividerColor` | Color for horizontal rules |
+| `InfoColor` | Color for info alerts |
+| `WarningColor` | Color for warning alerts |
+| `ErrorColor` | Color for error alerts |
+| `SuccessColor` | Color for success alerts |
+
+The palette also provides a helper method:
+- `GetHeadingColor(int level)` - Returns the appropriate color for heading levels 1-6
+
+### Typography Properties
+
+The `MarkdownTypography` class contains the following properties:
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `DefaultFontFamily` | Default font family for body text | null |
+| `HeadingFontFamily` | Default font family for all headings (can be overridden per level) | null |
+| `CodeFontFamily` | Font family for code | "Consolas" |
+| `BlockQuoteFontFamily` | Font family for block quotes | "Consolas" |
+| `H1FontSize` | Font size for H1 | 28 |
+| `H1FontFamily` | Font family for H1 (overrides HeadingFontFamily) | null |
+| `H1FontAttributes` | Font attributes for H1 (None, Bold, Italic) | Bold |
+| `H2FontSize` | Font size for H2 | 24 |
+| `H2FontFamily` | Font family for H2 (overrides HeadingFontFamily) | null |
+| `H2FontAttributes` | Font attributes for H2 | Bold |
+| `H3FontSize` | Font size for H3 | 20 |
+| `H3FontFamily` | Font family for H3 (overrides HeadingFontFamily) | null |
+| `H3FontAttributes` | Font attributes for H3 | Bold |
+| `H4FontSize` | Font size for H4 | 18 |
+| `H4FontFamily` | Font family for H4 (overrides HeadingFontFamily) | null |
+| `H4FontAttributes` | Font attributes for H4 | Bold |
+| `H5FontSize` | Font size for H5 | 16 |
+| `H5FontFamily` | Font family for H5 (overrides HeadingFontFamily) | null |
+| `H5FontAttributes` | Font attributes for H5 | Bold |
+| `H6FontSize` | Font size for H6 | 14 |
+| `H6FontFamily` | Font family for H6 (overrides HeadingFontFamily) | null |
+| `H6FontAttributes` | Font attributes for H6 | Bold |
+| `BodyFontSize` | Font size for body text | 14 |
+| `CodeFontSize` | Font size for code | 13 |
+| `TableHeaderFontSize` | Font size for table headers | 14 |
+| `TableRowFontSize` | Font size for table rows | 13 |
+| `LineHeight` | Line height multiplier | 1.5 |
+| `HeadingLineHeight` | Line height for headings | 1.3 |
+| `ParagraphSpacing` | Spacing between paragraphs | 1.0 |
+| `ListItemSpacing` | Spacing between list items | 4 |
+| `ListIndent` | Indentation for nested lists | 20 |
+| `TextLineBreakMode` | Line break mode for text | WordWrap |
+| `HeadingLineBreakMode` | Line break mode for headings | TailTruncation |
+
+### Automatic Light/Dark Mode
+
+Set `UseAppTheme="True"` to automatically switch between `Palette` (light mode) and `PaletteDark` (dark mode) based on the system theme:
+
+```xml
+<idk:MarkdownView 
+    Theme="{Binding CurrentTheme}"
+    UseAppTheme="True" />
+```
+
+When the system theme changes, the MarkdownView will automatically re-render with the appropriate palette.
+
+### Cloning and Modifying Themes
+
+You can clone an existing theme and modify it:
+
+```csharp
+// Clone a built-in theme and customize it
+var myTheme = MarkdownThemeDefaults.GitHub.Clone();
+myTheme.Palette.HyperlinkColor = Colors.Orange;
+myTheme.Typography.H1FontSize = 36;
+
+markdownView.Theme = myTheme;
+```
+
+---
+
 ## Bindable Properties
 
 The following is a list of all customizable bindable properties:
 
+### Theme
+- **`Theme`**: A `MarkdownTheme` object that defines the complete visual style (colors, typography, spacing).
+- **`UseAppTheme`**: When `true`, automatically switches between light and dark palettes based on system theme (default: `false`).
+
 ### Headings
-- **`H1FontSize`**: The font size for H1 headings (default: `24`).
-- **`H1Color`**: The color for H1 headings (default: `Black`).
-- **`H2FontSize`**: The font size for H2 headings (default: `20`).
-- **`H2Color`**: The color for H2 headings (default: `DarkGray`).
-- **`H3FontSize`**: The font size for H3 headings (default: `18`).
-- **`H3Color`**: The color for H3 headings (default: `Gray`).
+Each heading level (H1-H6) supports individual styling with the following properties:
+
+| Level | Color Property | Font Size Property | Font Family Property | Font Attributes Property |
+|-------|---------------|-------------------|---------------------|-------------------------|
+| H1 | `H1Color` | `H1FontSize` (24) | `H1FontFamily` | `H1FontAttributes` (Bold) |
+| H2 | `H2Color` | `H2FontSize` (20) | `H2FontFamily` | `H2FontAttributes` (Bold) |
+| H3 | `H3Color` | `H3FontSize` (18) | `H3FontFamily` | `H3FontAttributes` (Bold) |
+| H4 | `H4Color` | `H4FontSize` (16) | `H4FontFamily` | `H4FontAttributes` (Bold) |
+| H5 | `H5Color` | `H5FontSize` (14) | `H5FontFamily` | `H5FontAttributes` (Bold) |
+| H6 | `H6Color` | `H6FontSize` (12) | `H6FontFamily` | `H6FontAttributes` (Bold) |
+
+**FontAttributes Values:**
+- `None` - No special formatting
+- `Bold` - Bold text
+- `Italic` - Italic text
+
+**Example - Custom H1 styling:**
+```xml
+<idk:MarkdownView 
+    H1Color="DarkBlue"
+    H1FontSize="32"
+    H1FontFamily="Georgia"
+    H1FontAttributes="Bold" />
+```
+
+**Example - Italic H3 heading:**
+```csharp
+markdownView.H3FontAttributes = FontAttributes.Italic;
+markdownView.H3Color = Colors.Purple;
+```
 
 ### Text Styling
 - **`TextFontSize`**: The font size for regular text (default: `12`).
@@ -158,7 +514,7 @@ The following is a list of all customizable bindable properties:
 
 - **Horizontal Rule**: Use `---`, `***`, or `___` for horizontal rules.
     ```markdown
-    ---
+    ---   <!-- Horizontal rule -->
     ```
 
 - **Images**: The control supports image URLs, local files, and base64‑encoded images.  
@@ -216,7 +572,7 @@ You can respond to hyperlinks in Markdown content using the `LinkCommand` and `O
 
 When a user taps on a hyperlink:
 - The `LinkCommand` is executed, if defined, with the hyperlink URL as the command parameter.
-- The `OnHyperLinkClicked` event is triggered, providing the tapped hyperlink URL in the event arguments.
+- The `OnHyperLinkClicked` event is triggered, providing the tapped hyperlink URL in the event arguments.    
 
 
 ### Email Link Handling

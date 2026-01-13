@@ -65,6 +65,7 @@
                 MarkdownText="{Binding MarkdownText}" 
                 Theme="{Binding CurrentTheme}"
                 UseAppTheme="True"
+                EnableCodeBlockCopy="True"
                 LinkCommand="{Binding LinkReceivedCommand}"
                 EMailCommand="{Binding EMailReceivedCommand}"
                 OnHyperLinkClicked="MarkdownView_HyperLinkClicked"

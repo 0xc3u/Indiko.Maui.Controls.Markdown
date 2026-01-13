@@ -400,7 +400,7 @@ markdownView.H3Color = Colors.Purple;
 
 ### Line Break Mode
 - **`LineBreakModeText`**: Line break mode for text (default: `WordWrap`).
-- **`LineBreakModeHeader`**: Line break mode for headers (default: `TailTruncation`).
+- **`LineBreakModeHeader`**: Line break mode for headings (default: `TailTruncation`).
 
 ### Blockquote
 - **`BlockQuoteBackgroundColor`**: The background color for blockquote elements (default: `LightGray`).
@@ -414,6 +414,16 @@ markdownView.H3Color = Colors.Purple;
 - **`CodeBlockTextColor`**: The text color for code blocks (default: `BlueViolet`).
 - **`CodeBlockFontFace`**: The font family for code blocks.
 - **`CodeBlockFontSize`**: The font size for code blocks (default: `12`).
+- **`EnableCodeBlockCopy`**: When `true`, displays a copy button on code blocks (default: `false`).
+- **`CodeBlockCopyButtonText`**: The text/emoji for the copy button (default: `📋`).
+- **`CodeBlockCopyButtonCopiedText`**: The text/emoji shown after copying (default: `✓`).
+
+### Alert Blocks
+- **`AlertInfoColor`**: Color for NOTE alert blocks (default: `#2196F3`).
+- **`AlertSuccessColor`**: Color for TIP alert blocks (default: `#4CAF50`).
+- **`AlertImportantColor`**: Color for IMPORTANT alert blocks (default: `#9C27B0`).
+- **`AlertWarningColor`**: Color for WARNING alert blocks (default: `#FF9800`).
+- **`AlertErrorColor`**: Color for CAUTION alert blocks (default: `#F44336`).
 
 ### Table
 - **`TableHeaderFontSize`**: The font size for table headers (default: `14`).
@@ -472,6 +482,39 @@ markdownView.H3Color = Colors.Purple;
     > This is a blockquote.
     ```
 
+- **Alert/Admonition Blocks**: Create GitHub-style alert blocks using the `> [!TYPE]` syntax. These are styled callout boxes for highlighting important information.
+
+    Supported alert types:
+    - `NOTE` - Informational notes (ℹ️ blue)
+    - `TIP` - Helpful tips and suggestions (💡 green)
+    - `IMPORTANT` - Important information (❗ purple)
+    - `WARNING` - Warning messages (⚠️ orange)
+    - `CAUTION` - Critical warnings (🛑 red)
+
+    ```markdown
+    > [!NOTE]
+    > This is a note alert. Useful for highlighting information.
+
+    > [!TIP]
+    > This is a tip alert. Provides helpful advice.
+
+    > [!IMPORTANT]
+    > This is an important alert. Crucial information for users.
+
+    > [!WARNING]
+    > This is a warning alert. Content demanding attention.
+
+    > [!CAUTION]
+    > This is a caution alert. Negative potential consequences.
+    ```
+
+    You can customize the colors for each alert type using the following properties:
+    - `AlertInfoColor` - Color for NOTE alerts (default: `#2196F3`)
+    - `AlertSuccessColor` - Color for TIP alerts (default: `#4CAF50`)
+    - `AlertImportantColor` - Color for IMPORTANT alerts (default: `#9C27B0`)
+    - `AlertWarningColor` - Color for WARNING alerts (default: `#FF9800`)
+    - `AlertErrorColor` - Color for CAUTION alerts (default: `#F44336`)
+
 - **Code Blocks**: Enclose code in triple backticks (```) for multi-line code blocks, or single backticks for inline code.
     ```markdown
     `Inline code`
@@ -481,6 +524,21 @@ markdownView.H3Color = Colors.Purple;
     Multi-line code block
     ```
     ```
+
+    **Copy-to-Clipboard Feature**: You can enable a copy button on code blocks that allows users to copy the code content to the clipboard with a single tap.
+
+    ```xml
+    <idk:MarkdownView 
+        MarkdownText="{Binding MarkdownText}"
+        EnableCodeBlockCopy="True"
+        CodeBlockCopyButtonText="📋"
+        CodeBlockCopyButtonCopiedText="✓" />
+    ```
+
+    Properties:
+    - `EnableCodeBlockCopy` - Enable/disable the copy button (default: `false`)
+    - `CodeBlockCopyButtonText` - Text/emoji for the copy button (default: `📋`)
+    - `CodeBlockCopyButtonCopiedText` - Text/emoji shown after copying (default: `✓`)
 
 - **Lists**:
     - Unordered: Use `-`, `*`, or `+` to create an unordered list.

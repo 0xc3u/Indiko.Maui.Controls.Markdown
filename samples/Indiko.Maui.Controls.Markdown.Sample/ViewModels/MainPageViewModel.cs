@@ -114,6 +114,23 @@ With .NET MAUI, you can target for instance
 
 with the **same code**.
 
+### GitHub-Style Alert Blocks
+
+> [!NOTE]
+> This is a note alert. Useful for highlighting information that users should take into account.
+
+> [!TIP]
+> This is a tip alert. Provides helpful advice on how to better use the product.
+
+> [!IMPORTANT]
+> This is an important alert. Crucial information necessary for users to succeed.
+
+> [!WARNING]
+> This is a warning alert. Critical content demanding immediate user attention.
+
+> [!CAUTION]
+> This is a caution alert. Negative potential consequences of an action.
+
 **Why you should learn mobile cross-platform**
 1. **Broader Market Reach** :globe_with_meridians:
 2. **Cost and Time Efficiency** :moneybag:
@@ -150,6 +167,9 @@ With access to the extensive .NET ecosystem, developers can easily integrate a w
 ---
 
 In summary, .NET MAUI offers a unified approach to cross-platform app development, combining ease of use, performance, and extensive ecosystem support, making it an excellent choice for modern app development. :clap:
+
+### Code Blocks with Copy Button
+Click the 📋 button to copy code to clipboard!
 
 ```csharp
 for(int n= 0; n<10; n++)

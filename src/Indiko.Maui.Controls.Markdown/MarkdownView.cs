@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Xml;
 using Indiko.Maui.Controls.Markdown.Theming;
 using Markdig;
+using Markdig.Extensions.Alerts;
 using Markdig.Extensions.CustomContainers;
 using Markdig.Extensions.Mathematics;
 using Markdig.Extensions.Tables;
@@ -950,6 +951,106 @@ public sealed class MarkdownView : ContentView
         set => SetValue(LineHeightMultiplierProperty, value);
     }
 
+    /* **************** Alert/Admonition Block Styling ***********************/
+
+    public static readonly BindableProperty AlertInfoColorProperty =
+        BindableProperty.Create(nameof(AlertInfoColor), typeof(Color), typeof(MarkdownView), Color.FromArgb("#2196F3"), propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// Color for info alert blocks (NOTE).
+    /// </summary>
+    public Color AlertInfoColor
+    {
+        get => (Color)GetValue(AlertInfoColorProperty);
+        set => SetValue(AlertInfoColorProperty, value);
+    }
+
+    public static readonly BindableProperty AlertWarningColorProperty =
+        BindableProperty.Create(nameof(AlertWarningColor), typeof(Color), typeof(MarkdownView), Color.FromArgb("#FF9800"), propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// Color for warning alert blocks (WARNING).
+    /// </summary>
+    public Color AlertWarningColor
+    {
+        get => (Color)GetValue(AlertWarningColorProperty);
+        set => SetValue(AlertWarningColorProperty, value);
+    }
+
+    public static readonly BindableProperty AlertErrorColorProperty =
+        BindableProperty.Create(nameof(AlertErrorColor), typeof(Color), typeof(MarkdownView), Color.FromArgb("#F44336"), propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// Color for error/danger alert blocks (CAUTION).
+    /// </summary>
+    public Color AlertErrorColor
+    {
+        get => (Color)GetValue(AlertErrorColorProperty);
+        set => SetValue(AlertErrorColorProperty, value);
+    }
+
+    public static readonly BindableProperty AlertSuccessColorProperty =
+        BindableProperty.Create(nameof(AlertSuccessColor), typeof(Color), typeof(MarkdownView), Color.FromArgb("#4CAF50"), propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// Color for success alert blocks (TIP).
+    /// </summary>
+    public Color AlertSuccessColor
+    {
+        get => (Color)GetValue(AlertSuccessColorProperty);
+        set => SetValue(AlertSuccessColorProperty, value);
+    }
+
+    public static readonly BindableProperty AlertImportantColorProperty =
+        BindableProperty.Create(nameof(AlertImportantColor), typeof(Color), typeof(MarkdownView), Color.FromArgb("#9C27B0"), propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// Color for important alert blocks (IMPORTANT).
+    /// </summary>
+    public Color AlertImportantColor
+    {
+        get => (Color)GetValue(AlertImportantColorProperty);
+        set => SetValue(AlertImportantColorProperty, value);
+    }
+
+    /* **************** Code Block Copy Feature ***********************/
+
+    public static readonly BindableProperty EnableCodeBlockCopyProperty =
+        BindableProperty.Create(nameof(EnableCodeBlockCopy), typeof(bool), typeof(MarkdownView), false, propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// When true, displays a copy button on code blocks that copies the code content to clipboard.
+    /// </summary>
+    public bool EnableCodeBlockCopy
+    {
+        get => (bool)GetValue(EnableCodeBlockCopyProperty);
+        set => SetValue(EnableCodeBlockCopyProperty, value);
+    }
+
+    public static readonly BindableProperty CodeBlockCopyButtonTextProperty =
+        BindableProperty.Create(nameof(CodeBlockCopyButtonText), typeof(string), typeof(MarkdownView), "📋", propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// The text or emoji to display on the code block copy button.
+    /// </summary>
+    public string CodeBlockCopyButtonText
+    {
+        get => (string)GetValue(CodeBlockCopyButtonTextProperty);
+        set => SetValue(CodeBlockCopyButtonTextProperty, value);
+    }
+
+    public static readonly BindableProperty CodeBlockCopyButtonCopiedTextProperty =
+        BindableProperty.Create(nameof(CodeBlockCopyButtonCopiedText), typeof(string), typeof(MarkdownView), "✓", propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// The text or emoji to display on the code block copy button after copying.
+    /// </summary>
+    public string CodeBlockCopyButtonCopiedText
+    {
+        get => (string)GetValue(CodeBlockCopyButtonCopiedTextProperty);
+        set => SetValue(CodeBlockCopyButtonCopiedTextProperty, value);
+    }
+
     private static void OnMarkdownTextChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is MarkdownView view && newValue is string text)
@@ -1067,6 +1168,7 @@ public sealed class MarkdownView : ContentView
                 ParagraphBlock p => RenderParagraph(p),
                 HeadingBlock h => RenderHeading(h),
                 ListBlock l => RenderList(l),
+                AlertBlock alert => RenderAlertBlock(alert),
                 QuoteBlock q => RenderQuote(q),
                 ThematicBreakBlock => new BoxView { HeightRequest = 1, BackgroundColor = LineColor },
                 Table table => RenderTable(table),
@@ -1501,6 +1603,123 @@ public sealed class MarkdownView : ContentView
         }
     }
 
+    private View RenderAlertBlock(AlertBlock alertBlock)
+    {
+        try
+        {
+            var alertType = alertBlock.Kind.ToString()?.ToUpperInvariant() ?? "NOTE";
+            
+            // Get color and icon based on alert type
+            var (color, icon, title) = GetAlertStyle(alertType);
+
+            // Create content container
+            var contentLayout = new VerticalStackLayout
+            {
+                Spacing = 4
+            };
+
+            // Render child blocks
+            foreach (var childBlock in alertBlock)
+            {
+                if (RenderBlock(childBlock) is View view)
+                {
+                    contentLayout.Children.Add(view);
+                }
+            }
+
+            // Create header with icon and title
+            var headerLayout = new HorizontalStackLayout
+            {
+                Spacing = 8,
+                Children =
+                {
+                    new Label
+                    {
+                        Text = icon,
+                        FontSize = TextFontSize + 2,
+                        TextColor = color,
+                        VerticalOptions = LayoutOptions.Center
+                    },
+                    new Label
+                    {
+                        Text = title,
+                        FontSize = TextFontSize,
+                        FontAttributes = FontAttributes.Bold,
+                        TextColor = color,
+                        VerticalOptions = LayoutOptions.Center
+                    }
+                }
+            };
+
+            // Create main container
+            var alertContainer = new VerticalStackLayout
+            {
+                Spacing = 8,
+                Padding = new Thickness(12),
+                Children =
+                {
+                    headerLayout,
+                    contentLayout
+                }
+            };
+
+            // Calculate light background color (10% opacity of the accent color)
+            var backgroundColor = color.WithAlpha(0.1f);
+
+            // Create the alert border with left accent bar
+            var alertGrid = new Grid
+            {
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = 4 },
+                    new ColumnDefinition { Width = GridLength.Star }
+                },
+                ColumnSpacing = 0
+            };
+
+            // Left accent bar
+            var accentBar = new BoxView
+            {
+                BackgroundColor = color,
+                WidthRequest = 4,
+                VerticalOptions = LayoutOptions.Fill
+            };
+
+            alertGrid.Children.Add(accentBar);
+            Grid.SetColumn(accentBar, 0);
+
+            alertGrid.Children.Add(alertContainer);
+            Grid.SetColumn(alertContainer, 1);
+
+            return new Border
+            {
+                BackgroundColor = backgroundColor,
+                Stroke = new SolidColorBrush(Colors.Transparent),
+                StrokeShape = new RoundRectangle().WithCornerRadius(4),
+                Padding = 0,
+                Content = alertGrid
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering alert block: {ex.Message}");
+            return new Label { Text = "[Error rendering alert]" };
+        }
+    }
+
+    private (Color color, string icon, string title) GetAlertStyle(string alertType)
+    {
+        return alertType.ToUpperInvariant() switch
+        {
+            "NOTE" => (AlertInfoColor, "ℹ️", "Note"),
+            "TIP" => (AlertSuccessColor, "💡", "Tip"),
+            "IMPORTANT" => (AlertImportantColor, "❗", "Important"),
+            "WARNING" => (AlertWarningColor, "⚠️", "Warning"),
+            "CAUTION" => (AlertErrorColor, "🛑", "Caution"),
+            _ => (AlertInfoColor, "ℹ️", alertType)
+        };
+    }
+
     private View RenderCode(FencedCodeBlock block)
     {
         try
@@ -1519,20 +1738,92 @@ public sealed class MarkdownView : ContentView
                 }
             }
 
+            var codeLabel = new Label
+            {
+                Text = codeText,
+                FontFamily = CodeBlockFontFace,
+                TextColor = CodeBlockTextColor,
+                FontSize = CodeBlockFontSize,
+                LineBreakMode = LineBreakMode.WordWrap,
+            };
+
+            if (!EnableCodeBlockCopy)
+            {
+                return new Border
+                {
+                    BackgroundColor = CodeBlockBackgroundColor,
+                    Stroke = new SolidColorBrush(CodeBlockBorderColor),
+                    Padding = 8,
+                    StrokeShape = new RoundRectangle().WithCornerRadius(4),
+                    Content = codeLabel
+                };
+            }
+
+            // Create copy button
+            var copyButton = new Label
+            {
+                Text = CodeBlockCopyButtonText,
+                FontSize = 14,
+                TextColor = TextColor,
+                HorizontalOptions = LayoutOptions.End,
+                VerticalOptions = LayoutOptions.Start,
+                Padding = new Thickness(4),
+            };
+
+            var tapGesture = new TapGestureRecognizer();
+            var capturedCodeText = codeText;
+            var capturedCopyButtonText = CodeBlockCopyButtonText;
+            var capturedCopiedText = CodeBlockCopyButtonCopiedText;
+            tapGesture.Tapped += async (s, e) =>
+            {
+                try
+                {
+                    await Clipboard.Default.SetTextAsync(capturedCodeText);
+                    
+                    // Visual feedback
+                    if (s is Label label)
+                    {
+                        label.Text = capturedCopiedText;
+                        await Task.Delay(1500);
+                        label.Text = capturedCopyButtonText;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error copying to clipboard: {ex.Message}");
+                }
+            };
+            copyButton.GestureRecognizers.Add(tapGesture);
+
+            // Create grid with code and copy button
+            var codeGrid = new Grid
+            {
+                RowDefinitions =
+                {
+                    new RowDefinition { Height = GridLength.Auto }
+                },
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Star },
+                    new ColumnDefinition { Width = GridLength.Auto }
+                },
+                Padding = 8
+            };
+
+            codeGrid.Children.Add(codeLabel);
+            Grid.SetColumn(codeLabel, 0);
+            Grid.SetColumnSpan(codeLabel, 2);
+
+            codeGrid.Children.Add(copyButton);
+            Grid.SetColumn(copyButton, 1);
+
             return new Border
             {
                 BackgroundColor = CodeBlockBackgroundColor,
                 Stroke = new SolidColorBrush(CodeBlockBorderColor),
-                Padding = 8,
+                Padding = 0,
                 StrokeShape = new RoundRectangle().WithCornerRadius(4),
-                Content = new Label
-                {
-                    Text = codeText,
-                    FontFamily = CodeBlockFontFace,
-                    TextColor = CodeBlockTextColor,
-                    FontSize = CodeBlockFontSize,
-                    LineBreakMode = LineBreakMode.WordWrap,
-                }
+                Content = codeGrid
             };
         }
         catch (Exception ex)
@@ -1560,20 +1851,92 @@ public sealed class MarkdownView : ContentView
                 }
             }
 
+            var codeLabel = new Label
+            {
+                Text = codeText,
+                FontFamily = CodeBlockFontFace,
+                TextColor = CodeBlockTextColor,
+                FontSize = CodeBlockFontSize,
+                LineBreakMode = LineBreakMode.WordWrap,
+            };
+
+            if (!EnableCodeBlockCopy)
+            {
+                return new Border
+                {
+                    BackgroundColor = CodeBlockBackgroundColor,
+                    Stroke = new SolidColorBrush(CodeBlockBorderColor),
+                    Padding = 8,
+                    StrokeShape = new RoundRectangle().WithCornerRadius(4),
+                    Content = codeLabel
+                };
+            }
+
+            // Create copy button
+            var copyButton = new Label
+            {
+                Text = CodeBlockCopyButtonText,
+                FontSize = 14,
+                TextColor = TextColor,
+                HorizontalOptions = LayoutOptions.End,
+                VerticalOptions = LayoutOptions.Start,
+                Padding = new Thickness(4),
+            };
+
+            var tapGesture = new TapGestureRecognizer();
+            var capturedCodeText = codeText;
+            var capturedCopyButtonText = CodeBlockCopyButtonText;
+            var capturedCopiedText = CodeBlockCopyButtonCopiedText;
+            tapGesture.Tapped += async (s, e) =>
+            {
+                try
+                {
+                    await Clipboard.Default.SetTextAsync(capturedCodeText);
+                    
+                    // Visual feedback
+                    if (s is Label label)
+                    {
+                        label.Text = capturedCopiedText;
+                        await Task.Delay(1500);
+                        label.Text = capturedCopyButtonText;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error copying to clipboard: {ex.Message}");
+                }
+            };
+            copyButton.GestureRecognizers.Add(tapGesture);
+
+            // Create grid with code and copy button
+            var codeGrid = new Grid
+            {
+                RowDefinitions =
+                {
+                    new RowDefinition { Height = GridLength.Auto }
+                },
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Star },
+                    new ColumnDefinition { Width = GridLength.Auto }
+                },
+                Padding = 8
+            };
+
+            codeGrid.Children.Add(codeLabel);
+            Grid.SetColumn(codeLabel, 0);
+            Grid.SetColumnSpan(codeLabel, 2);
+
+            codeGrid.Children.Add(copyButton);
+            Grid.SetColumn(copyButton, 1);
+
             return new Border
             {
                 BackgroundColor = CodeBlockBackgroundColor,
                 Stroke = new SolidColorBrush(CodeBlockBorderColor),
-                Padding = 8,
+                Padding = 0,
                 StrokeShape = new RoundRectangle().WithCornerRadius(4),
-                Content = new Label
-                {
-                    Text = codeText,
-                    FontFamily = CodeBlockFontFace,
-                    TextColor = CodeBlockTextColor,
-                    FontSize = CodeBlockFontSize,
-                    LineBreakMode = LineBreakMode.WordWrap,
-                }
+                Content = codeGrid
             };
         }
         catch (Exception ex)
@@ -2130,7 +2493,7 @@ public sealed class MarkdownView : ContentView
             }
 
             // Unsubscribe from system theme changes
-            if (Application.Current != null && UseAppTheme)
+            if ( Application.Current != null && UseAppTheme)
             {
                 Application.Current.RequestedThemeChanged -= OnSystemThemeChanged;
             }

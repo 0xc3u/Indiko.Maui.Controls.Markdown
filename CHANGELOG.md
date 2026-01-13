@@ -1,3 +1,15 @@
+# [1.5.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.4.0...v1.5.0) (2026-01-13)
+
+
+### Bug Fixes
+
+* Adds alert blocks and code copy feature ([c0dbb77](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/c0dbb7708e98b34fd97f54b7cf2d84ce2816db7b))
+
+
+### Features
+
+* added full theming support ([a07011c](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/a07011c4a9c3830cde0a6159693aacebf4188ac9))
+
 # [1.4.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.3.18...v1.4.0) (2026-01-10)
 
 

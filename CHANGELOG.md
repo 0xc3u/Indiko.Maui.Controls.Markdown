@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.5.0...v1.5.1) (2026-06-24)
+
+
+### Bug Fixes
+
+* Add TextHorizontalTextAlignment for body text ([46a90ab](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/46a90ab656af778c2894668aa9b91249c85e0e90))
+
 # [1.5.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.4.0...v1.5.0) (2026-01-13)
 
 

@@ -1,3 +1,11 @@
+## [1.5.2](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.5.1...v1.5.2) (2026-06-24)
+
+
+### Bug Fixes
+
+* Prevent silent Markdig failures and improve error reporting ([02a531c](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/02a531cb5dd8a5e38b96a41f99be6c5d0339c7ec))
+* Scale standalone images to fit available width ([e014e54](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/e014e544b24c1e5b260c1c3237ca960640cd3fc1))
+
 ## [1.5.1](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.5.0...v1.5.1) (2026-06-24)
 
 

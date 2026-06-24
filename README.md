@@ -647,6 +647,22 @@ When a user taps on an email address:
 - The `EMailCommand` is executed, if defined, with the tapped email address as the command parameter.
 - The `OnEmailClicked` event is triggered, providing the tapped email address in the event arguments.
 
+### Render Error Handling
+Rendering failures are no longer swallowed silently. When the control cannot render the markdown — for example, when a different, incompatible **Markdig** version is resolved at runtime than the one the control was built against (which throws `MissingMethodException`/`TypeLoadException` while building the pipeline), or when an individual block fails — the control:
+
+- Raises the **`OnRenderError`** event with a `MarkdownRenderErrorEventArgs` carrying the `Exception` and a human-readable `Message`, so your app can log or react.
+- Renders an inline error message instead of blank content. For a Markdig mismatch the message names the Markdig version actually loaded, making it easy to spot.
+
+```csharp
+markdownView.OnRenderError += (sender, e) =>
+{
+    // e.Exception and e.Message describe the failure
+    logger.LogError(e.Exception, "Markdown render failed: {Message}", e.Message);
+};
+```
+
+> **Note on Markdig:** the control calls Markdig extension methods whose API can change between major versions, so its NuGet dependency is bounded to `[1.3.2, 2.0.0)`. If your app pins Markdig outside that range, NuGet surfaces a restore warning rather than letting a silent runtime mismatch occur.
+
 ## Example Usage
 
 Here's an example of how to use the `MarkdownView` in your XAML:

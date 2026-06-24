@@ -228,6 +228,14 @@ public sealed class MarkdownView : ContentView
     public delegate void EmailClickedEventHandler(object sender, EmailEventArgs e);
     public event EmailClickedEventHandler OnEmailClicked;
 
+    /// <summary>
+    /// Raised when the control fails to render markdown — e.g. an incompatible Markdig version is
+    /// loaded at runtime (<see cref="MissingMethodException"/>/<see cref="TypeLoadException"/>), or
+    /// an individual block throws while rendering. Lets the host app log or react instead of the
+    /// failure being silently swallowed.
+    /// </summary>
+    public event EventHandler<MarkdownRenderErrorEventArgs> OnRenderError;
+
     public static readonly BindableProperty LineBreakModeTextProperty =
        BindableProperty.Create(nameof(LineBreakModeText), typeof(LineBreakMode), typeof(MarkdownView), LineBreakMode.WordWrap, propertyChanged: OnMarkdownTextChanged);
 
@@ -1161,7 +1169,8 @@ public sealed class MarkdownView : ContentView
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error rendering block: {ex.Message}");
+                    // Surface the failure (event + log) but keep rendering the remaining blocks.
+                    RaiseRenderError(ex, "Error rendering a markdown block");
                 }
             }
 
@@ -1169,9 +1178,41 @@ public sealed class MarkdownView : ContentView
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in RenderMarkdown: {ex.Message}");
-            Content = new Label { Text = "Error rendering markdown content." };
+            var message = RaiseRenderError(ex, "Error rendering markdown content");
+            Content = new Label
+            {
+                Text = message,
+                TextColor = Colors.Red,
+                LineBreakMode = LineBreakMode.WordWrap
+            };
         }
+    }
+
+    /// <summary>
+    /// Logs a render failure, raises <see cref="OnRenderError"/> so the host app can react, and
+    /// returns a user-facing message describing the failure.
+    /// </summary>
+    private string RaiseRenderError(Exception ex, string context)
+    {
+        var message = BuildRenderErrorMessage(ex, context);
+        Console.WriteLine(message);
+        OnRenderError?.Invoke(this, new MarkdownRenderErrorEventArgs { Exception = ex, Message = message });
+        return message;
+    }
+
+    private static string BuildRenderErrorMessage(Exception ex, string context)
+    {
+        // A Markdig version/API mismatch surfaces while building the pipeline as one of these
+        // exceptions. Make it actionable by naming the Markdig version actually loaded at runtime.
+        if (ex is MissingMethodException or MissingFieldException or TypeLoadException)
+        {
+            var markdigVersion = typeof(MarkdownPipelineBuilder).Assembly.GetName().Version?.ToString() ?? "unknown";
+            return $"MarkdownView: incompatible Markdig version loaded ({markdigVersion}). " +
+                   "The control was built against a different Markdig API — pin Markdig to a compatible version. " +
+                   $"({ex.GetType().Name}: {ex.Message})";
+        }
+
+        return $"MarkdownView: {context}. ({ex.GetType().Name}: {ex.Message})";
     }
 
     private View RenderBlock(Block block)

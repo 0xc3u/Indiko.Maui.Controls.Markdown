@@ -19,8 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Markdown parsing -->
-    <PackageVersion Include="Markdig" Version="1.3.2" />
+    <!--
+      Markdown parsing. The control calls Markdig extension methods whose API can change across
+      majors, so the dependency is bounded to the 1.x range: a consuming app resolving Markdig 2.x
+      then surfaces as a NuGet restore warning (NU1608) instead of a silent MissingMethodException
+      blank-render at runtime. Restore resolves the lowest in range (1.3.2).
+    -->
+    <PackageVersion Include="Markdig" Version="[1.3.2,2.0.0)" />
   </ItemGroup>
 
   <ItemGroup>

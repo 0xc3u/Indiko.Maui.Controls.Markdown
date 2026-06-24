@@ -24,7 +24,15 @@ dotnet build samples/Indiko.Maui.Controls.Markdown.Sample.sln
 dotnet pack src/Indiko.Maui.Controls.Markdown/Indiko.Maui.Controls.Markdown.csproj -c Release -p:PackageVersion=1.5.0
 ```
 
-**There is no test project** — despite what `.github/copilot-instructions.md` says about a "tests project," none exists. Verify changes by building and running the sample app.
+### Tests
+
+`tests/Indiko.Maui.Controls.Markdown.Tests` (xUnit, `net10.0`, `UseMaui=true`) renders markdown through a **real `MarkdownView` instance and asserts on the produced MAUI view tree** — no device or dispatcher needed, because `MarkdownView` builds its `Content` synchronously when `MarkdownText` is set. `MarkdownTestHarness` provides `Render(md)` plus tree-walkers (`Labels`, `Grids`, `Spans`). This is the place to add a regression test or to reproduce a "renders wrong" report (e.g. `EmphasisRenderingTests` proves the control bolds content that a user reported as plain — the real cause being indentation).
+
+```bash
+dotnet test tests/Indiko.Maui.Controls.Markdown.Tests
+```
+
+The test project is deliberately **not** in `src/Indiko.Maui.Controls.Markdown.sln`, so CI's `dotnet build` and the release pack don't touch it — run it locally. (Image tests inspect only the synchronously-built `Grid`/column structure; the async image load may fault on a background thread without a MainThread, which is harmless to the assertions.)
 
 ### Dependency versions (Central Package Management)
 

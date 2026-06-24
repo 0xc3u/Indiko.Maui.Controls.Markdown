@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.5.2...v1.6.0) (2026-06-24)
+
+
+### Features
+
+* Introduce comprehensive rendering test suite ([9201678](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/920167897cb93be51d47f4690bbb8be2dfb1f1ea))
+
 ## [1.5.2](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.5.1...v1.5.2) (2026-06-24)
 
 

@@ -2,9 +2,26 @@
 
 # Indiko.Maui.Controls.Markdown
 
-The `MarkdownView` control is a flexible component designed for MAUI applications to display and style Markdown content with ease. This control supports various Markdown syntax elements such as headings, blockquotes, code blocks, images, tables, and hyperlinks. It offers extensive customization options via bindable properties and allows you to tailor the appearance of different Markdown elements, making it perfect for integrating rich text content into your app.
+The `MarkdownView` control is a flexible component designed for MAUI applications to display and style Markdown content with ease. It renders Markdown into **native MAUI views** (Labels, Grids, Images, BoxViews) — there is **no WebView** — so content scrolls, themes, and behaves like the rest of your app. It supports a rich set of Markdown elements (headings, emphasis, lists, tables, code blocks, blockquotes, links, images, GitHub-style alerts, custom containers, emoji, and LaTeX math) and offers extensive customization through a full theming system and per-element bindable properties.
+
+> As of the latest release the control is **100% SkiaSharp-free** — math and SVG are rendered with `Microsoft.Maui.Graphics`. See [Breaking Changes](#skiasharp-dependency-removed).
 
 ![markdownview_screenshots](https://github.com/user-attachments/assets/2485eedb-015d-4ccb-acc2-c19d24ea51d7)
+
+## Features
+
+- 🧱 **Native rendering** — no WebView; every element is a real MAUI view.
+- 🔠 **Headings** `H1`–`H6`, **paragraphs**, **bold**, **italic**, **strikethrough**.
+- 🔗 **Links** and **email links** with click events *and* commands, plus bare-URL **autolinking**.
+- 📋 **Lists** — unordered, ordered, nested, and **task/checkbox** lists (`- [ ]` / `- [x]`).
+- 📊 **Tables** with per-column alignment (pipe & grid tables).
+- 💬 **Blockquotes** and 🧾 **code blocks** with an optional **copy-to-clipboard** button.
+- 🚨 **GitHub-style alerts** — `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`.
+- 📦 **Custom containers** (`::: info … :::`) and 😀 **emoji** shortcodes (`:rocket:`).
+- 🧮 **LaTeX math** blocks (`$$ … $$`) rendered with `Microsoft.Maui.Graphics` (no SkiaSharp).
+- 🖼️ **Images** from local files, remote URLs, base64, and **SVG** — with width/height/aspect/alignment attributes.
+- 🎨 **Theming system** — 11 built-in themes, light/dark auto-switching, and fully custom themes, *plus* granular per-element bindable properties.
+- 🛟 **Render-error event** — failures surface via `OnRenderError` instead of rendering blank.
 
 ## Build Status
 ![ci](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/actions/workflows/ci.yml/badge.svg)
@@ -89,6 +106,55 @@ Install-Package Indiko.Maui.Controls.Markdown
 ```bash
 dotnet add package Indiko.Maui.Controls.Markdown
 ```
+
+## Getting Started
+
+### 1. (Optional) Register in `MauiProgram.cs`
+
+```csharp
+using Indiko.Maui.Controls.Markdown;
+
+public static MauiApp CreateMauiApp()
+{
+    var builder = MauiApp.CreateBuilder();
+    builder
+        .UseMauiApp<App>()
+        .UseMarkdownView();   // optional — see note below
+
+    return builder.Build();
+}
+```
+
+> **Note:** `UseMarkdownView()` is now a **no-op** kept for backwards compatibility. Earlier versions used it to register SkiaSharp; the control no longer needs it. You can keep calling it (safe) or remove it — math and SVG render without any extra setup.
+
+### 2. Add the XAML namespace and the control
+
+```xml
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:idk="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
+    x:Class="MyApp.MainPage">
+
+    <ScrollView>
+        <idk:MarkdownView MarkdownText="{Binding MarkdownText}" />
+    </ScrollView>
+
+</ContentPage>
+```
+
+> 💡 `MarkdownView` lays its content out top-to-bottom and does not scroll on its own — wrap it in a `ScrollView` for longer documents.
+
+### 3. …or create it in C#
+
+```csharp
+var markdown = new MarkdownView
+{
+    MarkdownText = "# Hello, Markdown!\n\nThis is **bold** and this is *italic*."
+};
+```
+
+That's it. Everything else on this page — theming, per-element styling, events, and the supported syntax — is optional customization.
 
 ## Theming Support
 
@@ -350,7 +416,17 @@ Set `UseAppTheme="True"` to automatically switch between `Palette` (light mode) 
     UseAppTheme="True" />
 ```
 
-When the system theme changes, the MarkdownView will automatically re-render with the appropriate palette.
+When the system theme changes, the MarkdownView automatically re-renders with the appropriate palette.
+
+> **Behavior:** When `UseAppTheme` is `false` (the default), the theme **always uses the light `Palette`** regardless of the system mode — `PaletteDark` is only consulted when `UseAppTheme="True"` *and* the system is in dark mode. So set `UseAppTheme="True"` (and supply both palettes) if you want dark-mode support.
+
+> **Assigning a built-in theme directly in XAML** uses `x:Static` (the presets are static properties), whereas a theme exposed by your view model is bound normally:
+> ```xml
+> <!-- preset directly -->
+> <idk:MarkdownView Theme="{x:Static theming:MarkdownThemeDefaults.GitHub}" UseAppTheme="True" />
+> <!-- or from a view model -->
+> <idk:MarkdownView Theme="{Binding CurrentTheme}" UseAppTheme="True" />
+> ```
 
 ### Cloning and Modifying Themes
 
@@ -369,7 +445,9 @@ markdownView.Theme = myTheme;
 
 ## Bindable Properties
 
-The following is a list of all customizable bindable properties:
+These per-element properties let you style the control directly, without a `Theme` object. (When a `Theme` **is** set it overwrites these — see [Theming Support](#theming-support).)
+
+> **Light/dark color variants:** several color properties also expose `…Light` and `…Dark` companions — `TextColorLight`/`TextColorDark`, `H1ColorLight`/`H1ColorDark`, `H2ColorLight`/`H2ColorDark`, `H3ColorLight`/`H3ColorDark`, `HyperlinkColorLight`/`HyperlinkColorDark`, `CodeBlockBackgroundColorLight`/`Dark`, `CodeBlockTextColorLight`/`Dark`, `BlockQuoteBackgroundColorLight`/`Dark`, and `BlockQuoteTextColorLight`/`Dark`. These feed the theming system's light/dark palettes; for plain manual styling just set the base property (e.g. `TextColor`).
 
 ### Theme
 - **`Theme`**: A `MarkdownTheme` object that defines the complete visual style (colors, typography, spacing).
@@ -453,6 +531,7 @@ markdownView.H3Color = Colors.Purple;
 - **`TableHeaderFontFace`**: The font family for table headers.
 - **`TableRowFontSize`**: The font size for table rows (default: `12`).
 - **`TableRowTextColor`**: The text color for table rows (default: `Black`).
+- **`TableRowBackgroundColor`**: The background color for table rows (default: `White`).
 - **`TableRowFontFace`**: The font family for table rows.
 
 ### Image
@@ -460,17 +539,21 @@ markdownView.H3Color = Colors.Purple;
 - **`DefaultImageWidth`**: The default width for images when only aspect is specified without explicit dimensions (default: `200`).
 - **`DefaultImageHeight`**: The default height for images when only aspect is specified without explicit dimensions (default: `200`).
 
-### Hyperlinks
-- **`HyperlinkColor`**: The color for hyperlinks (default: `BlueViolet`).
-- **`LinkCommand`**: A command to execute when a hyperlink is clicked.
-- **`LinkCommandParameter`**: A parameter to pass when the hyperlink command is executed.
+### Links & Email
+- **`HyperlinkColor`**: The color for hyperlinks and email links (default: `BlueViolet`).
+- **`LinkCommand`**: A command executed when a hyperlink is tapped — the tapped URL is passed as the command parameter.
+- **`LinkCommandParameter`**: An optional parameter to pass to `LinkCommand`.
+- **`EMailCommand`**: A command executed when an email link is tapped — the email address is passed as the command parameter.
+- **`EMailCommandParameter`**: An optional parameter to pass to `EMailCommand`.
+
+See [Events & Commands](#events--commands) for the matching `OnHyperLinkClicked` / `OnEmailClicked` events.
 
 ### Horizontal Rule
 - **`LineColor`**: The color for horizontal rules (default: `LightGray`).
 
 ### Spacing
-- **`ParagraphSpacing`**: Modifies the spacing between paragraphs (default: `3`).
-- **`LineHeightMultiplier`** Modifies the line height multiplier for displayed labels (default: `1`). Directly modifies [Label.LineHeight](https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.controls.label.lineheight?view=net-maui-8.0).
+- **`ParagraphSpacing`**: A multiplier for the spacing between blocks/paragraphs (default: `1.0`).
+- **`LineHeightMultiplier`** Modifies the line height multiplier for displayed labels (default: `1.0`). Directly modifies [Label.LineHeight](https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.controls.label.lineheight?view=net-maui-8.0).
 
 ## Supported Markdown Syntax
 
@@ -481,22 +564,22 @@ markdownView.H3Color = Colors.Purple;
     ### H3
     ```
 
-- **Bold**: Wrap text with `**` or `__` to make it bold.
+- **Bold**: Wrap text with `**`.
     ```markdown
     **Bold Text**
-    __Bold Text__
     ```
 
-- **Italic**: Wrap text with `*` or `_` to make it italic.
+- **Italic**: Wrap text with `*`.
     ```markdown
     *Italic Text*
-    _Italic Text_
     ```
 
 - **Strikethrough**: Wrap text with `~~` to create strikethrough text.
     ```markdown
     ~~Strikethrough Text~~
     ```
+
+    > **Emphasis uses asterisks.** Underscore emphasis (`__bold__`, `_italic_`) is parsed but **not styled** — it renders as plain text. Use `**`/`*` instead.
 
 - **Blockquotes**: Add `>` before a paragraph to create a blockquote.
     ```markdown
@@ -536,15 +619,16 @@ markdownView.H3Color = Colors.Purple;
     - `AlertWarningColor` - Color for WARNING alerts (default: `#FF9800`)
     - `AlertErrorColor` - Color for CAUTION alerts (default: `#F44336`)
 
-- **Code Blocks**: Enclose code in triple backticks (```) for multi-line code blocks, or single backticks for inline code.
-    ```markdown
-    `Inline code`
+- **Code Blocks**: Enclose code in a fenced block (triple backticks). The optional language after the opening fence is accepted but **not** syntax-highlighted — code is shown in a single color (`CodeBlockTextColor`) and word-wrapped. Indented (4-space) code blocks are also supported.
+
+    ````markdown
+    ```csharp
+    var greeting = "Hello, world!";
+    Console.WriteLine(greeting);
     ```
-    ```markdown
-    ```
-    Multi-line code block
-    ```
-    ```
+    ````
+
+    > **Inline code** (single backticks, `` `like this` ``) is currently **not rendered** — it is dropped from the output. Use a fenced block for code you need shown.
 
     **Copy-to-Clipboard Feature**: You can enable a copy button on code blocks that allows users to copy the code content to the clipboard with a single tap.
 
@@ -561,15 +645,23 @@ markdownView.H3Color = Colors.Purple;
     - `CodeBlockCopyButtonText` - Text/emoji for the copy button (default: `📋`)
     - `CodeBlockCopyButtonCopiedText` - Text/emoji shown after copying (default: `✓`)
 
-- **Lists**:
-    - Unordered: Use `-`, `*`, or `+` to create an unordered list.
-    - Ordered: Use numbers followed by a period to create an ordered list.
+- **Lists**: unordered, ordered, **nested**, and **task/checkbox** lists are all supported.
+    - Unordered: start lines with `-`, `*`, or `+` (rendered with a `•` bullet).
+    - Ordered: start lines with a number followed by a period (the actual number is rendered).
+    - Nested: indent sub-items — each level adds indentation.
+    - Task lists: `- [ ]` (unchecked) and `- [x]` (checked) render a **read-only** checkbox + label.
 
     ```markdown
     - Item 1
+      - Nested item 1.1
+        - Nested item 1.1.1
     - Item 2
-    1. Item 1
-    2. Item 2
+
+    1. First
+    2. Second
+
+    - [x] Completed task
+    - [ ] Pending task
     ```
 
 - **Tables**: Create tables using pipes (`|`) to separate columns. You can also specify text alignment for table columns using colons (`:`).
@@ -596,7 +688,39 @@ markdownView.H3Color = Colors.Purple;
     ---   <!-- Horizontal rule -->
     ```
 
-- **Images**: The control supports image URLs, local files, and base64‑encoded images.  
+- **Math / LaTeX**: **Block** math is typeset as real LaTeX, rendered with `Microsoft.Maui.Graphics` (no SkiaSharp). Put a formula on its own lines between `$$` fences.
+    ```markdown
+    $$
+    \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
+    $$
+    ```
+    > **Inline** math (`$ ... $`) is **not** typeset — it appears as the raw formula text in an italic style. Only `$$ ... $$` blocks are rendered as LaTeX.
+
+- **Custom Containers**: Wrap content in `:::` fences; the first word after the opening fence selects the outline color.
+    ```markdown
+    ::: info
+    An informational container.
+    :::
+    ```
+    Recognized classes: `info` (blue outline), `warning` (orange), `danger` (red); any other value uses a light-gray outline. The container is drawn as a colored outline around its inner content.
+
+- **Emoji**: Use `:shortcode:` syntax — shortcodes are converted to Unicode emoji.
+    ```markdown
+    Ship it :rocket: and celebrate :tada:
+    ```
+    > ASCII smileys (e.g. `:)`) are intentionally **not** converted.
+
+- **Autolinks**: Bare URLs and email addresses are detected automatically and become tappable — no `[...](...)` needed.
+    ```markdown
+    Visit https://github.com or email me@example.com
+    ```
+
+- **Email links**: An explicit `mailto:` link, a link whose target is an email address, or a bare email address all become tappable email links (see [Email Link Handling](#email-link-handling)).
+    ```markdown
+    [Email me](mailto:support@example.com)
+    ```
+
+- **Images**: The control supports image URLs, local files, base64‑encoded images, and **SVG** (any URL ending in `.svg` is rasterized by the built-in MAUI Graphics SVG renderer).
   You can also specify optional `width`, `height`, `aspect`, `horizontal`, and `vertical` attributes using the
   curly‑brace syntax supported by Markdig's Generic Attributes extension.
 
@@ -620,6 +744,7 @@ markdownView.H3Color = Colors.Purple;
     ```markdown
     ![Alt text](http://example.com/image.jpg)                      // image URL
     ![Alt text](image.png)                                         // local file
+    ![Alt text](https://example.com/icon.svg)                      // remote SVG (rasterized)
     ![Alt text](data:image/png;base64,...)                         // base64 string
     ![Alt text](image.png){ width=150 height=75 }                  // specify both width and height (pixels)
     ![Alt text](image.png){ width=200 }                            // specify width only
@@ -636,15 +761,26 @@ markdownView.H3Color = Colors.Purple;
     [Link Text](http://example.com)
     ```
 
-## Image, Hyperlink and E-Mail Handling
+## Images
 
-### Image Handling
-The `MarkdownView` supports various sources for displaying images:
-1. **Image URLs**: Fetch and display images from the web.
-2. **Local File**: Load images from local resources or assets.
-3. **Base64 Encoded String**: Support for images encoded in base64 format.
+`MarkdownView` loads images from several sources:
 
-The `ImageAspect` property allows you to customize how images are displayed within the control.
+1. **Local file / resource** — `![alt](logo.png)` (loaded via `ImageSource.FromFile`).
+2. **Remote URL** — `![alt](https://…/pic.png)` (downloaded over HTTP and cached).
+3. **Base64 / data URI** — `![alt](data:image/png;base64,…)`, or a bare base64 string.
+4. **SVG** — any URL ending in `.svg` is downloaded and rasterized by the built-in `Microsoft.Maui.Graphics` SVG renderer (no SkiaSharp). See [Breaking Changes](#skiasharp-dependency-removed) for the supported SVG feature set.
+
+Control how images scale with the `ImageAspect` property (or a per-image `aspect=` attribute), and set the fallback size with `DefaultImageWidth` / `DefaultImageHeight`. The full per-image attribute list (`width`, `height`, `aspect`, `horizontal`, `vertical`) is documented under [Supported Markdown Syntax → Images](#supported-markdown-syntax).
+
+## Events & Commands
+
+`MarkdownView` raises **events** *and* supports `ICommand` bindings, so you can react to interactions from code-behind or a view model.
+
+| Event | Command | Fires when | Argument passed |
+|---|---|---|---|
+| `OnHyperLinkClicked` | `LinkCommand` | a hyperlink is tapped | the URL (`LinkEventArgs.Url`) |
+| `OnEmailClicked` | `EMailCommand` | an email link is tapped | the address (`EmailEventArgs.Email`) |
+| `OnRenderError` | — | markdown fails to render | `MarkdownRenderErrorEventArgs` (`.Exception`, `.Message`) |
 
 ### Hyperlink Handling
 You can respond to hyperlinks in Markdown content using the `LinkCommand` and `OnHyperLinkClicked` event. Hyperlinks are automatically detected and displayed with the color specified by the `HyperlinkColor` property.
@@ -676,6 +812,22 @@ markdownView.OnRenderError += (sender, e) =>
 ```
 
 > **Note on Markdig:** the control calls Markdig extension methods whose API can change between major versions, so its NuGet dependency is bounded to `[1.3.2, 2.0.0)`. If your app pins Markdig outside that range, NuGet surfaces a restore warning rather than letting a silent runtime mismatch occur.
+
+## Notes & Limitations
+
+The control renders a pragmatic subset of Markdown into native views. Knowing these edge cases up front saves surprises:
+
+- **Emphasis uses asterisks** — `**bold**` / `*italic*` / `~~strikethrough~~`. Underscore emphasis (`__`, `_`) is **not** styled.
+- **Inline code** (single backticks) is **not** rendered (dropped). Use a fenced code block instead.
+- **Inline math** (`$ … $`) is shown as styled raw text, not typeset; only **block math** (`$$ … $$`) is rendered as LaTeX.
+- **Inside headings**, only text and bold/italic are rendered — links, inline code, images, and strikethrough within a heading are not.
+- **Link/email labels** are shown as plain text — formatting inside a link label (e.g. `[**bold**](url)`) is not applied; an empty label falls back to the URL.
+- **Images in tables or mixed with inline text** render as the literal placeholder `[Image]`. A **standalone** image (a paragraph that contains only the image) renders fully and scales to the available width.
+- **Table cells** render only their first paragraph; multi-paragraph cells lose the extra content.
+- **No syntax highlighting** in code blocks — the language hint is accepted but code is shown in a single color.
+- **Parsed but not rendered:** footnotes, definition lists, citations, abbreviations, footers, and alphabetical/roman list markers are recognized by the parser but produce no special output.
+
+Found something here that should "just work" for your use case? [Open an issue](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/issues) — several of these are candidates for future improvement.
 
 ## Example Usage
 

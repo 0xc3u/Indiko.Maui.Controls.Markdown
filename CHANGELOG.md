@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.7.0...v1.8.0) (2026-06-24)
+
+
+### Features
+
+* Enhance inline Markdown rendering with new styles and full context support ([8082898](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/8082898a09f4f9556359614e390679e7ac237ba6))
+
 # [1.7.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.6.0...v1.7.0) (2026-06-24)
 
 

@@ -1261,6 +1261,13 @@ public sealed class MarkdownView : ContentView
             };
         }
 
+        // A paragraph whose only meaningful content is image(s) — no text — should fit the available
+        // width like a standalone image. Inline images mixed with text keep their natural size.
+        bool imageOnly = block.Inline.All(i =>
+            (i is LinkInline li && li.IsImage)
+            || i is LineBreakInline
+            || (i is LiteralInline lit && string.IsNullOrWhiteSpace(lit.Content.ToString())));
+
         // Build a one-row grid with a column per segment
         var grid = new Grid { ColumnSpacing = 0, RowSpacing = 0 };
         int columnIndex = 0;
@@ -1299,8 +1306,12 @@ public sealed class MarkdownView : ContentView
             {
                 flushText();
 
-                // Use Auto width for inline images to prevent expansion
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                // Image-only paragraphs fit the available width: a Star column measures the Image
+                // against the real width, so AspectFit scales large images down instead of
+                // overflowing (an Auto column passes infinite width → the Image keeps its native
+                // pixel size, which also defeats the horizontal/aspect attributes). Inline images
+                // mixed with text keep Auto so they don't disrupt the line flow.
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = imageOnly ? GridLength.Star : GridLength.Auto });
                 var img = new Image
                 {
                     Aspect = ImageAspect,  // Set default aspect from bindable property

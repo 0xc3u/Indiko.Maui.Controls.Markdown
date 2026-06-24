@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!--
+      MAUI Graphics rendering backend for CSharpMath — a SkiaSharp-free port of CSharpMath.SkiaSharp.
+      Targets plain net10.0: it only needs the Microsoft.Maui.Graphics abstractions (ICanvas/PathF),
+      not the full MAUI workload. The actual native drawing surface is supplied by the host app's
+      MAUI GraphicsView at run time, so net10.0 stays compatible with the net10.0-<platform> targets
+      of the consuming library.
+    -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>annotations</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>CSharpMath.MauiGraphics</RootNamespace>
+    <AssemblyName>CSharpMath.MauiGraphics</AssemblyName>
+    <Description>MAUI Graphics (Microsoft.Maui.Graphics) rendering backend for CSharpMath — a SkiaSharp-free port of CSharpMath.SkiaSharp.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Versions are managed centrally in Directory.Packages.props -->
+    <PackageReference Include="CSharpMath.Rendering" />
+    <PackageReference Include="Microsoft.Maui.Graphics" />
+  </ItemGroup>
+</Project>

@@ -43,10 +43,28 @@
     <PackageReference Include="Markdig" />
     <PackageReference Include="Microsoft.Maui.Controls" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" />
-    <PackageReference Include="SkiaSharp.Views.Maui.Controls" />
-    <PackageReference Include="CSharpMath.SkiaSharp" />
-    <PackageReference Include="Svg.Skia" />
+    <!-- Math (CSharpMath.MauiGraphics) and SVG rendering now both go through MAUI Graphics.
+         The library no longer references SkiaSharp in any form.
+         CSharpMath.Rendering is referenced directly so it flows as a NuGet dependency of the
+         published package (CSharpMath.MauiGraphics is bundled as a DLL — see the pack target below). -->
+    <PackageReference Include="CSharpMath.Rendering" />
+    <ProjectReference Include="..\CSharpMath.MauiGraphics\CSharpMath.MauiGraphics.csproj" PrivateAssets="all" />
   </ItemGroup>
+
+  <!--
+    CSharpMath.MauiGraphics is an internal helper project (IsPackable=false), so its assembly is not
+    published as its own package. Bundle its DLL into this package's lib/<tfm> folder so consumers
+    get it at runtime. Its NuGet dependencies (CSharpMath.Rendering → CSharpMath.Editor → CSharpMath)
+    flow via the direct CSharpMath.Rendering PackageReference above.
+  -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);BundleMauiGraphicsBackend</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+  <Target Name="BundleMauiGraphicsBackend" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('Filename', 'CSharpMath.MauiGraphics'))" />
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <None Include="..\Indiko.Maui.Controls.Markdown\icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\README.md" Pack="true" PackagePath="" />

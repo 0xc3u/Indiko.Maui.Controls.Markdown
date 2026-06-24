@@ -30,16 +30,14 @@
 
   <ItemGroup>
     <!--
-      SkiaSharp family — all of these bind SkiaSharp and MUST stay on the same major.
-      They are aligned on the SkiaSharp 3.x line: Svg.Skia 5.1.1 and CSharpMath.SkiaSharp 0.5.1
-      are both built against SkiaSharp 3.x/2.x, so SkiaSharp.Views stays on its 3.119.x line
-      (its 4.x release would force SkiaSharp 4.x and break that alignment).
-      SkiaSharp itself is pinned (transitive pinning is on) so every package resolves to one runtime.
+      Rendering backend. The library renders math and SVG entirely through Microsoft.Maui.Graphics
+      and no longer depends on SkiaSharp in any form (no SkiaSharp.Views handlers, no Svg.Skia).
+      CSharpMath.Rendering is the SkiaSharp-free math core (Typography is compiled in); the
+      CSharpMath.MauiGraphics project draws it onto Microsoft.Maui.Graphics.
+      Microsoft.Maui.Graphics tracks $(MauiVersion) so it stays aligned with Microsoft.Maui.Controls.
     -->
-    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
-    <PackageVersion Include="SkiaSharp.Views.Maui.Controls" Version="3.119.4" />
-    <PackageVersion Include="Svg.Skia" Version="5.1.1" />
-    <PackageVersion Include="CSharpMath.SkiaSharp" Version="0.5.1" />
+    <PackageVersion Include="CSharpMath.Rendering" Version="0.5.1" />
+    <PackageVersion Include="Microsoft.Maui.Graphics" Version="$(MauiVersion)" />
   </ItemGroup>
 
   <ItemGroup>

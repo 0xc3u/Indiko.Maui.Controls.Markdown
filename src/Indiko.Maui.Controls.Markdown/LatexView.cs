@@ -1,13 +1,17 @@
-﻿using SkiaSharp;
-using SkiaSharp.Views.Maui;
-using SkiaSharp.Views.Maui.Controls;
+using CSharpMath.MauiGraphics;
 
 namespace Indiko.Maui.Controls.Markdown;
 
-public sealed class LatexView : SKCanvasView
+/// <summary>
+/// Renders a LaTeX math formula into a native MAUI view. Backed by <see cref="GraphicsView"/> and
+/// the SkiaSharp-free <see cref="CSharpMath.MauiGraphics.MathPainter"/>, so it carries no SkiaSharp
+/// dependency. The public API (Text, FontSize, TextColor, ErrorColor, HighlightColor) is unchanged
+/// from the previous SKCanvasView-based implementation.
+/// </summary>
+public sealed class LatexView : GraphicsView
 {
-    public static readonly BindableProperty TextProperty = BindableProperty.Create(propertyName: nameof(Text),
-        returnType: typeof(string), declaringType: typeof(LatexView), propertyChanged: OnLatexChanged);
+    public static readonly BindableProperty TextProperty = BindableProperty.Create(
+        nameof(Text), typeof(string), typeof(LatexView), propertyChanged: OnLatexChanged);
 
     public string Text
     {
@@ -15,16 +19,17 @@ public sealed class LatexView : SKCanvasView
         set => SetValue(TextProperty, value);
     }
 
-    public static readonly BindableProperty FontSizeProperty = BindableProperty.Create(propertyName: nameof(FontSize),
-        returnType: typeof(float), declaringType: typeof(LatexView), defaultValue: 48f, propertyChanged: OnLatexChanged);
+    public static readonly BindableProperty FontSizeProperty = BindableProperty.Create(
+        nameof(FontSize), typeof(float), typeof(LatexView), defaultValue: 48f, propertyChanged: OnLatexChanged);
+
     public float FontSize
     {
         get => (float)GetValue(FontSizeProperty);
         set => SetValue(FontSizeProperty, value);
     }
 
-    public static readonly BindableProperty TextColorProperty =
-      BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(LatexView), defaultValue: Colors.Black, propertyChanged: OnLatexChanged);
+    public static readonly BindableProperty TextColorProperty = BindableProperty.Create(
+        nameof(TextColor), typeof(Color), typeof(LatexView), defaultValue: Colors.Black, propertyChanged: OnLatexChanged);
 
     public Color TextColor
     {
@@ -32,9 +37,8 @@ public sealed class LatexView : SKCanvasView
         set => SetValue(TextColorProperty, value);
     }
 
-
-    public static readonly BindableProperty ErrorColorProperty =
-     BindableProperty.Create(nameof(ErrorColor), typeof(Color), typeof(LatexView), defaultValue: Colors.Red, propertyChanged: OnLatexChanged);
+    public static readonly BindableProperty ErrorColorProperty = BindableProperty.Create(
+        nameof(ErrorColor), typeof(Color), typeof(LatexView), defaultValue: Colors.Red, propertyChanged: OnLatexChanged);
 
     public Color ErrorColor
     {
@@ -42,8 +46,8 @@ public sealed class LatexView : SKCanvasView
         set => SetValue(ErrorColorProperty, value);
     }
 
-    public static readonly BindableProperty HighlightColorProperty =
-    BindableProperty.Create(nameof(HighlightColor), typeof(Color), typeof(LatexView), defaultValue: Colors.Transparent, propertyChanged: OnLatexChanged);
+    public static readonly BindableProperty HighlightColorProperty = BindableProperty.Create(
+        nameof(HighlightColor), typeof(Color), typeof(LatexView), defaultValue: Colors.Transparent, propertyChanged: OnLatexChanged);
 
     public Color HighlightColor
     {
@@ -51,74 +55,70 @@ public sealed class LatexView : SKCanvasView
         set => SetValue(HighlightColorProperty, value);
     }
 
-    private static void OnLatexChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        if (oldValue != newValue)
-        {
-            var view = bindable as LatexView;
-            view?.InvalidateSurface();
-            view?.UpdateSize();
-        }
-    }
-
     public LatexView()
     {
-        PaintSurface += OnPainting;
-        SizeChanged += (s, e) => UpdateSize();
+        Drawable = new LatexDrawable(this);
+        BackgroundColor = Colors.Transparent;
     }
 
-    ~LatexView()
+    private static void OnLatexChanged(BindableObject bindable, object oldValue, object newValue)
     {
-        PaintSurface -= OnPainting;
-        SizeChanged -= (s, e) => UpdateSize();
+        if (Equals(oldValue, newValue))
+        {
+            return;
+        }
+
+        var view = (LatexView)bindable;
+        view.UpdateSize();
+        view.Invalidate();
     }
 
-	private void UpdateSize()
-	{
-		if (!string.IsNullOrEmpty(Text))
-		{
-			var painter = new CSharpMath.SkiaSharp.MathPainter
-			{
-				LaTeX = Text,
-				FontSize = FontSize,
-				AntiAlias = true,
-				DisplayErrorInline = true,
-				TextColor = TextColor?.ToSKColor() ?? SKColors.Black,  // Aggiungi controllo null
-				ErrorColor = ErrorColor?.ToSKColor() ?? SKColors.Red,
-				HighlightColor = HighlightColor?.ToSKColor() ?? SKColors.Transparent,
-				PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill
-			};
+    private void UpdateSize()
+    {
+        if (string.IsNullOrEmpty(Text))
+        {
+            WidthRequest = 0;
+            HeightRequest = 0;
+            return;
+        }
 
-			var measuredBounds = painter.Measure();
-			WidthRequest = (measuredBounds.Width * 0.5);
-			HeightRequest = (measuredBounds.Height * 0.5);
-		}
-	}
+        var bounds = CreatePainter().Measure();
+        WidthRequest = bounds.Width;
+        HeightRequest = bounds.Height;
+    }
 
-	private void OnPainting(object sender, SKPaintSurfaceEventArgs e)
-	{
-		SKImageInfo info = e.Info;
-		SKSurface surface = e.Surface;
-		SKCanvas canvas = surface.Canvas;
+    private MathPainter CreatePainter() => new()
+    {
+        LaTeX = Text,
+        FontSize = FontSize,
+        DisplayErrorInline = true,
+        AntiAlias = true,
+        PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill,
+        TextColor = TextColor ?? Colors.Black,
+        ErrorColor = ErrorColor ?? Colors.Red,
+        HighlightColor = HighlightColor ?? Colors.Transparent,
+    };
 
-		canvas.Clear();
+    private sealed class LatexDrawable : IDrawable
+    {
+        private readonly LatexView _view;
 
-		if (string.IsNullOrEmpty(Text))
-		{
-			return;
-		}
+        public LatexDrawable(LatexView view) => _view = view;
 
-		CSharpMath.SkiaSharp.MathPainter painter = new()
-		{
-			LaTeX = Text,
-			FontSize = FontSize,
-			AntiAlias = true,
-			DisplayErrorInline = true,
-			TextColor = TextColor?.ToSKColor() ?? SKColors.Black,  // Aggiungi controllo null
-			ErrorColor = ErrorColor?.ToSKColor() ?? SKColors.Red,
-			HighlightColor = HighlightColor?.ToSKColor() ?? SKColors.Transparent,
-			PaintStyle = CSharpMath.Rendering.FrontEnd.PaintStyle.Fill
-		};
-		painter.Draw(canvas);
-	}
+        public void Draw(ICanvas canvas, RectF dirtyRect)
+        {
+            if (string.IsNullOrEmpty(_view.Text))
+            {
+                return;
+            }
+
+            var painter = _view.CreatePainter();
+
+            // Measure() returns a y-up bounding box whose top edge sits at -Ascent. CSharpMath draws
+            // with an inverted y-axis (see MathPainter.Draw → DrawCore's Scale(1,-1)), so passing
+            // y = Ascent (= -Top) lands the formula's top-left at the canvas origin (0,0).
+            var bounds = painter.Measure();
+            painter.Draw(canvas, 0f, -bounds.Top);
+        }
+    }
 }

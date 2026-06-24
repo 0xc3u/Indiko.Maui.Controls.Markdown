@@ -13,8 +13,6 @@ using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Microsoft.Maui.Controls.Shapes;
-using SkiaSharp;
-using Svg.Skia;
 using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
@@ -2115,12 +2113,11 @@ public sealed class MarkdownView : ContentView
 			var latexView = new LatexView
 			{
 				Text = formularText,
-				FontSize = (float)TextFontSize * 4,
+				FontSize = (float)TextFontSize * 2,
 				HighlightColor = Colors.Transparent,
 				ErrorColor = Colors.Red,
 				HorizontalOptions = LayoutOptions.Start,
-				VerticalOptions = LayoutOptions.Center,
-				Margin = new Thickness(-10, -10)
+				VerticalOptions = LayoutOptions.Center
 			};
 
 			// Add binding for TextColor
@@ -2428,27 +2425,19 @@ public sealed class MarkdownView : ContentView
                                     comment.ParentNode.RemoveChild(comment);
                                 }
 
-                                XmlReader xmlReader = XmlReader.Create(new StringReader(xmlDocument.OuterXml));
-
-                                var svg = new SKSvg();
-                                SKPicture svgImage = svg.Load(xmlReader);
-                                var image = new SKBitmap((int)svg.Picture.CullRect.Width, (int)svg.Picture.CullRect.Height);
-                                using (var surface = SKSurface.Create(new SKImageInfo(image.Width, image.Height)))
+                                byte[] pngBytes = Svg.SvgImage.RenderToPng(xmlDocument.OuterXml);
+                                if (pngBytes != null)
                                 {
-                                    var canvas = surface.Canvas;
-                                    canvas.Clear(SKColors.Transparent);
-                                    canvas.DrawPicture(svg.Picture);
-                                    canvas.Flush();
-                                    surface.Snapshot().ReadPixels(image.Info, image.GetPixels(), image.RowBytes, 0, 0);
+                                    imageSource = ImageSource.FromStream(() => new MemoryStream(pngBytes));
+                                    if (imageUrl != null) _imageCache[imageUrl] = imageSource;
                                 }
-                                var imageStream = new MemoryStream();
-                                image.Encode(SKEncodedImageFormat.Png, 100).SaveTo(imageStream);
-                                imageStream.Position = 0;
-                                imageSource = ImageSource.FromStream(() => imageStream);
-                                if (imageUrl != null) _imageCache[imageUrl] = imageSource;
+                                else
+                                {
+                                    Console.WriteLine($"Failed to render SVG image: {imageUrl}");
+                                    imageSource = default;
+                                }
 
                                 xmlDocument = null;
-                                xmlReader.Dispose();
                             }
                             else
                             {

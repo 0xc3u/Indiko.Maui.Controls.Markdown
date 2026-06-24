@@ -11,6 +11,19 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 
 ## ⚠️ Breaking Changes
 
+### SkiaSharp dependency removed
+
+`Indiko.Maui.Controls.Markdown` **no longer depends on SkiaSharp** in any form — `SkiaSharp.Views.Maui.Controls`, `Svg.Skia`, and `CSharpMath.SkiaSharp` are gone. Math formulas and SVG images are now rendered entirely with **`Microsoft.Maui.Graphics`**, the cross-platform drawing API built into .NET MAUI.
+
+**Why:** dropping the native SkiaSharp binaries makes the package lighter and avoids native load failures that can occur when a SkiaSharp build targets a newer platform-SDK band than the one installed (for example, the `SkiaSharp.Views.Maui` handler failing to load on iOS/Mac Catalyst).
+
+**What you need to do:** for the common case, **nothing** — the public API of `MarkdownView` is unchanged.
+
+- If you previously called `builder.UseSkiaSharp()` *only* for this control, you can remove it. `builder.UseMarkdownView()` is still available (it is now a no-op) and remains safe to keep calling.
+- **SVG rendering** now uses a built-in MAUI Graphics renderer. It supports `path` (full command set including arcs), the basic shapes (`rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`), transforms, and solid `fill`/`stroke` using hex, `rgb()`/`rgba()`, and named colors. It does **not yet** support gradients, filters, embedded text, or clip/mask. If you display SVGs that rely on those features, please [open an issue](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/issues).
+
+---
+
 ### Version 1.5.0 and above
 
 Version 1.5.0 introduces a new **Theming System** that changes how styling is applied to the MarkdownView. If you are upgrading from a version prior to 1.4.0, please note the following changes:

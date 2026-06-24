@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.8.0...v1.9.0) (2026-06-24)
+
+
+### Features
+
+* Render inline LaTeX math as typeset equations ([c1920d2](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/c1920d206f5b996603a40e0cdfd03b2f7aa58671))
+
 # [1.8.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.7.0...v1.8.0) (2026-06-24)
 
 

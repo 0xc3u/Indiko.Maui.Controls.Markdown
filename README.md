@@ -18,7 +18,7 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 - 💬 **Blockquotes** and 🧾 **code blocks** with an optional **copy-to-clipboard** button.
 - 🚨 **GitHub-style alerts** — `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`.
 - 📦 **Custom containers** (`::: info … :::`) and 😀 **emoji** shortcodes (`:rocket:`).
-- 🧮 **LaTeX math** blocks (`$$ … $$`) rendered with `Microsoft.Maui.Graphics` (no SkiaSharp).
+- 🧮 **LaTeX math** — block (`$$ … $$`) and inline (`$ … $`), rendered with `Microsoft.Maui.Graphics` (no SkiaSharp).
 - 🖼️ **Images** from local files, remote URLs, base64, and **SVG** — with width/height/aspect/alignment attributes.
 - 🎨 **Theming system** — 11 built-in themes, light/dark auto-switching, and fully custom themes, *plus* granular per-element bindable properties.
 - 🛟 **Render-error event** — failures surface via `OnRenderError` instead of rendering blank.
@@ -700,13 +700,18 @@ See [Events & Commands](#events--commands) for the matching `OnHyperLinkClicked`
     ---   <!-- Horizontal rule -->
     ```
 
-- **Math / LaTeX**: **Block** math is typeset as real LaTeX, rendered with `Microsoft.Maui.Graphics` (no SkiaSharp). Put a formula on its own lines between `$$` fences.
-    ```markdown
-    $$
-    \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
-    $$
-    ```
-    > **Inline** math (`$ ... $`) is **not** typeset — it appears as the raw formula text in an italic style. Only `$$ ... $$` blocks are rendered as LaTeX.
+- **Math / LaTeX**: both **block** and **inline** math are typeset as real LaTeX, rendered with `Microsoft.Maui.Graphics` (no SkiaSharp).
+    - **Block** math — put a formula on its own lines between `$$` fences:
+      ```markdown
+      $$
+      \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
+      $$
+      ```
+    - **Inline** math — wrap a formula in single `$` within a sentence:
+      ```markdown
+      The identity $E = mc^2$ relates energy and mass.
+      ```
+    > Inline math is laid out as a wrapping flow of text + formula segments, so it wraps at segment boundaries rather than word-by-word (a MAUI text run can't break across an embedded view). In **table cells and headings**, inline math falls back to styled raw text rather than a typeset view.
 
 - **Custom Containers**: Wrap content in `:::` fences; the first word after the opening fence selects the outline color.
     ```markdown
@@ -784,6 +789,10 @@ See [Events & Commands](#events--commands) for the matching `OnHyperLinkClicked`
 
 Control how images scale with the `ImageAspect` property (or a per-image `aspect=` attribute), and set the fallback size with `DefaultImageWidth` / `DefaultImageHeight`. The full per-image attribute list (`width`, `height`, `aspect`, `horizontal`, `vertical`) is documented under [Supported Markdown Syntax → Images](#supported-markdown-syntax).
 
+> **Base64 gotchas.** If a `data:` image renders blank or shows as literal text, the cause is almost always the data itself, not the control:
+> - **The image link must be well-formed** — don't drop the closing `)` before any `{…}` attributes: `![alt](data:image/png;base64,XXXX){width=48}`. A missing `)` makes the whole thing render as plain text.
+> - **The base64 must decode to a complete, valid image.** A truncated or corrupt PNG can still have a readable header (so tools report its dimensions) yet fail to decode at render time, showing blank. Verify with e.g. `echo '<base64>' | base64 -d > test.png && sips -g pixelWidth test.png`.
+
 ## Events & Commands
 
 `MarkdownView` raises **events** *and* supports `ICommand` bindings, so you can react to interactions from code-behind or a view model.
@@ -829,7 +838,7 @@ markdownView.OnRenderError += (sender, e) =>
 
 The control renders a pragmatic subset of Markdown into native views. Knowing these edge cases up front saves surprises:
 
-- **Inline math** (`$ … $`) is shown as styled raw text, not typeset; only **block math** (`$$ … $$`) is rendered as LaTeX.
+- **Inline math** (`$ … $`) is typeset as real LaTeX in paragraphs, but wraps at segment boundaries (text around a formula doesn't reflow word-by-word). Inside **table cells / headings** it falls back to styled raw text.
 - **Super/subscript** (`^x^` / `~x~`) are approximated with a smaller font — MAUI text spans can't offset the baseline, so they aren't raised/lowered.
 - **Images in tables or mixed with inline text** render as the literal placeholder `[Image]`. A **standalone** image (a paragraph that contains only the image) renders fully and scales to the available width. (Inline emphasis, code, links, and the emphasis-extras styles *do* work in those contexts — and inside headings.)
 - **Table cells** render only their first paragraph; multi-paragraph cells lose the extra content.

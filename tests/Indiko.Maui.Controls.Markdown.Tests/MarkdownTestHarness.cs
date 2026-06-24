@@ -1,4 +1,6 @@
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+using Xunit;
 
 namespace Indiko.Maui.Controls.Markdown.Tests;
 
@@ -43,4 +45,14 @@ internal static class MarkdownTestHarness
     public static IEnumerable<Span> Spans(Element root) =>
         Labels(root).Where(l => l.FormattedText is not null)
                     .SelectMany(l => l.FormattedText.Spans);
+
+    /// <summary>Asserts two colors are equal by RGBA components (avoids reference-equality pitfalls).</summary>
+    public static void AssertColor(Color expected, Color? actual)
+    {
+        Assert.NotNull(actual);
+        Assert.Equal(expected.Red, actual.Red, 3);
+        Assert.Equal(expected.Green, actual.Green, 3);
+        Assert.Equal(expected.Blue, actual.Blue, 3);
+        Assert.Equal(expected.Alpha, actual.Alpha, 3);
+    }
 }

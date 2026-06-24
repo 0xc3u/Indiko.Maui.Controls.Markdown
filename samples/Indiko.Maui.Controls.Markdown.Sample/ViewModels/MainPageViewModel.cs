@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Indiko.Maui.Controls.Markdown.Theming;
 
@@ -93,196 +93,203 @@ public partial class MainPageViewModel : BaseViewModel
 	{
 
         MarkdownText = @"
-# Why .NET MAUI is Awesome
-MAUI.net (Multi-platform App UI) is a **modern UI toolkit** from **Microsoft** that enables developers to build **beautiful**, **high-performance**, __cross-platform apps__ from a **single codebase**.
+# Indiko.Maui.Controls.Markdown
 
-Move now from ~~xamarin~~ to maui.net !
-
-### Emojis in Text
-This is a great feature :thumbsup: and I love it :heart:! Let's celebrate :tada: with some :coffee:!
-
-### Bold and Italic with Emojis
-**Bold text** with :fire: emoji and *italic text* with :star: emoji work correctly!
-
-## Single Codebase, Multiple Platforms
-With .NET MAUI, you can target for instance
-
-- Android :robot:
-- iOS :apple:
-- macOS :computer:
-- Windows :window:
-
-with the **same code**.
-
-### GitHub-Style Alert Blocks
-
-> [!NOTE]
-> This is a note alert. Useful for highlighting information that users should take into account.
-
-> [!TIP]
-> This is a tip alert. Provides helpful advice on how to better use the product.
-
-> [!IMPORTANT]
-> This is an important alert. Crucial information necessary for users to succeed.
-
-> [!WARNING]
-> This is a warning alert. Critical content demanding immediate user attention.
-
-> [!CAUTION]
-> This is a caution alert. Negative potential consequences of an action.
-
-**Why you should learn mobile cross-platform**
-1. **Broader Market Reach** :globe_with_meridians:
-2. **Cost and Time Efficiency** :moneybag:
-3. **Consistent User Experience** :sparkles:
-
-This significantly reduces development time and effort, allowing developers to focus on building great features rather than dealing with platform-specific code.
-
-![Maui Bot](dev.png){aspect=AspectFill}
-
-
-![Clipboard](clipboard.png){width=14 height=14 vertical=Center} Cool Stuff
-
-### Data URL Images (Base64)
-Testing data URL images with base64 encoding:
-
-3x ![Heart](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAEsWlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNS41LjAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgeG1sbnM6ZXhpZj0iaHR0cDovL25zLmFkb2JlLmNvbS9leGlmLzEuMC8iCiAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyIKICAgIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIKICAgIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIKICAgIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIgogICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgZXhpZjpQaXhlbFhEaW1lbnNpb249IjE2IgogICBleGlmOlBpeGVsWURpbWVuc2lvbj0iMTYiCiAgIGV4aWY6Q29sb3JTcGFjZT0iMSIKICAgdGlmZjpJbWFnZVdpZHRoPSIxNiIKICAgdGlmZjpJbWFnZUxlbmd0aD0iMTYiCiAgIHRpZmY6UmVzb2x1dGlvblVuaXQ9IjIiCiAgIHRpZmY6WFJlc29sdXRpb249IjcyLzEiCiAgIHRpZmY6WVJlc29sdXRpb249IjcyLzEiCiAgIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiCiAgIHBob3Rvc2hvcDpJQ0NQcm9maWxlPSJzUkdCIElFQzYxOTY2LTIuMSIKICAgeG1wOk1vZGlmeURhdGU9IjIwMjUtMDgtMDJUMTM6MjY6NDUrMDI6MDAiCiAgIHhtcDpNZXRhZGF0YURhdGU9IjIwMjUtMDgtMDJUMTM6MjY6NDUrMDI6MDAiPgogICA8eG1wTU06SGlzdG9yeT4KICAgIDxyZGY6U2VxPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJwcm9kdUNCeS1wcm9kdWN0ZWQiCiAgICAgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWZmaW5pdHkgUGhvdG8gMiAyLjYuMyIKICAgICAgc3RFdnQ6d2hlbj0iMjAyNS0wOC0wMlQxMzoyNjo0NSswMjowMCIvPgogICAgPC9yZGY6U2VxPgogICA8L3htcE1NOkhpc3Rvcnk+CiAgPC9yZGY6RGVzY3JpcHRpb24+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+r7zYUAAAAYFpQ0NQc1JHQiBJRUM2MTk2Ni0yLjEAACiRdZHPK0RRFMc/ZmgmQ6NYSBaTsDJi1MRGmUlDSRqj/Nq8eeaHmh+v92bSZKtspyix8WvBX8BWWStFpGTNldig5zwzNZPMuZ17Pvd77zndey7YIik1bdQPQDqT08OhgGd+YdHjeMGJDRcd1CuqoY3NzExR0z7uqLPijdeqVfvcv+ZaiRkq1DmFR1VNzwlPCE+t5TSLt4Xb1KSyInwq3KfLBYVvLT1a4meLEyX+sliPhINgaxH2JKo4WsVqUk8Ly8vpTqfyavk+1kuaYpm5WYld4p0YhAkRwMMk4wTxM8iIzH68+OiXFTXyB37zp8lKriqzRgGdVRIkydEnal6qxyTGRY/JSFGw+v+3r0Z8yFeq3hSAhifTfOsBxxZ8F03z89A0v4/A/ggXmUp+9gCG30UvVrTufXBvwNllRYvuwPkmtD9oiq78SnZxWzwOryfQvACt19C4VOpZeZ/je4isy1ddwe4e9Mp59/IP7rdnr0lUWjkAAAAJcEhZcwAACxMAAAsTAQCanBgAAADqSURBVDiNzdK9LkRBGMbx365iO9eg0LgCovBRb6JiKpWL4ApIKLgDleqUm7gFIRsKCiGyUWh0G90WEsWZMxnjBFvxNDPvM+/zn3eS4a/VyYuKZfTxhkHgPvoL2MAszgMXXwAVuzjMeBNsx/0ZetnZXuAoASrm8ISZYsJJXHuF/475wHM3Gkst4SZYhsXeRWgAo5amnzTKAdcYTxEe4yYBQv2mgykA+zGTJoBjXP0ifImTpkiASNzE4zfhB2w1t5cTCLxgBXct4Vusxp6kbtkVeMUahpk9xHo8+6ROaTSq6m+7E8vTUH/vf6gPDdkuW1yOeC0AAAAASUVORK5CYII=){width=13 height=13}
-
-## Image Sizing Tests
-
-**Large image** — must fit (scale down to) the screen width, not overflow:
-
-![Large remote image](https://picsum.photos/1200/800)
-
-**Explicit width** `{width=150}` — should render exactly 150px wide, left-aligned:
-
-![Width 150](https://picsum.photos/1200/800){width=150}
-
-**Centered** `{width=200 horizontal=Center}`:
-
-![Centered](https://picsum.photos/800/500){width=200 horizontal=Center}
-
-**Right-aligned** `{width=200 horizontal=End}`:
-
-![Right aligned](https://picsum.photos/800/500){width=200 horizontal=End}
-
-**Inline icon** in a sentence `{width=16 height=16}` — should stay small and inline:
-Here is an inline icon ![icon](clipboard.png){width=16 height=16} that stays in the text flow.
-
-## Modern UI Development
-
-> .NET MAUI leverages the latest in UI development, including declarative syntax with XAML or C#, hot reload for rapid UI iteration, and a rich set of controls and layouts that adapt to different screen sizes and devices. :100:
-
-## Performance
-
-Leveraging the power of .NET 6 and beyond, .NET MAUI apps boast high performance.
-The framework is optimized for speed and responsiveness, ensuring a smooth user experience across all platforms.
-
-## Extensibility and Ecosystem
-With access to the extensive .NET ecosystem, developers can easily integrate a wide range of libraries and tools into their MAUI apps, from databases and authentication services to powerful UI components.
-
-## Developer Productivity
-
-.NET MAUI comes with powerful development tools, including Visual Studio integration, which provides a rich editing, debugging, and deployment experience, further boosting developer productivity.
+A complete **feature showcase**. Every element below is rendered into _native MAUI views_ (there is no WebView), and styled by the active theme. Use the buttons under this view to switch themes live. :tada:
 
 ---
 
-In summary, .NET MAUI offers a unified approach to cross-platform app development, combining ease of use, performance, and extensive ecosystem support, making it an excellent choice for modern app development. :clap:
+## 1. Headings
 
-### Code Blocks with Copy Button
-Click the 📋 button to copy code to clipboard!
+# Heading level 1
+## Heading level 2
+### Heading level 3
+#### Heading level 4
+##### Heading level 5
+###### Heading level 6
+
+---
+
+## 2. Text formatting
+
+This paragraph mixes inline styles: **bold** (`**`), __also bold__ (`__`), *italic* (`*`), _also italic_ (`_`), and ***bold + italic*** (`***`).
+
+More inline styles: ~~strikethrough~~, ==highlighted== (`==`), E = mc^2^ (superscript `^`), H~2~O (subscript `~`), and ++inserted++ (`++`).
+
+Inline code sits in a sentence like `var answer = 42;` — and emoji shortcodes render too: :rocket: :fire: :heart: :coffee: :100:
+
+This line ends with a hard break
+and continues on the next line.
+
+---
+
+## 3. Links & email
+
+- Inline link: [.NET MAUI documentation](https://learn.microsoft.com/dotnet/maui/)
+- Formatted link label: [**bold** _italic_ link](https://dotnet.microsoft.com)
+- Bare URL autolink: https://github.com/0xc3u/Indiko.Maui.Controls.Markdown
+- Email link: [support@example.com](mailto:support@example.com)
+- Bare email autolink: hello@example.com
+
+---
+
+## 4. Lists
+
+**Unordered**
+
+- First item
+- Second item
+  - Nested item
+    - Deeper nested item
+- Third item
+
+**Ordered**
+
+1. Step one
+2. Step two
+3. Step three
+
+**Task list**
+
+- [x] Remove the SkiaSharp dependency
+- [x] Render math & SVG with MAUI Graphics
+- [ ] Take over the world
+
+---
+
+## 5. Blockquotes
+
+> Blockquotes are great for callouts and quotations.
+> They can span multiple lines and contain **formatting** and `inline code`.
+
+---
+
+## 6. Alert blocks
+
+> [!NOTE]
+> Useful information that users should take into account.
+
+> [!TIP]
+> Helpful advice for doing things better.
+
+> [!IMPORTANT]
+> Key information users need to succeed.
+
+> [!WARNING]
+> Critical content demanding immediate attention.
+
+> [!CAUTION]
+> Warns about risks or negative outcomes.
+
+---
+
+## 7. Custom containers
+
+::: info
+An **info** container — drawn with a blue outline.
+:::
+
+::: warning
+A **warning** container — drawn with an orange outline.
+:::
+
+::: danger
+A **danger** container — drawn with a red outline.
+:::
+
+---
+
+## 8. Code
+
+Inline code: run `dotnet build` then `dotnet test`.
+
+A fenced block (set `EnableCodeBlockCopy=""True""` on the control to show a 📋 copy button):
 
 ```csharp
-for(int n= 0; n<10; n++)
+public static class Greeter
 {
-    Console.WriteLine(n);
-}
-```
-
-```csharp
-public class SimpleProgram
-{
-    public static void Main(string[] args)
+    public static void Main()
     {
-        string message = ""Hello, World!"";
+        string message = ""Hello, .NET MAUI!"";
         Console.WriteLine(message);
-        Console.WriteLine(""This is a simple C# program."");
-        message = null;
-        if (message == null)
-            Console.WriteLine(""Message is null!"");
     }
 }
 ```
 
-```int b= 0;```
+---
 
-[More about Maui.net](https://learn.microsoft.com/en-us/dotnet/maui/?view=net-maui-8.0)
+## 9. Tables
 
-### Table Support
-The MarkdownView supports basic tables as well as tables with alignments.
+| Feature   | Supported | Notes            |
+|-----------|-----------|------------------|
+| Headings  | Yes       | H1–H6            |
+| Tables    | Yes       | with alignment   |
+| Math      | Yes       | block & inline   |
 
-Header 1 | Header 2 | Header 3 
-----------|----------|----------
-A1 | B1 | C1 
-A2 | B2 | C2 
-A3 | B3 | C3 
+**Column alignment** (`:---` left, `:--:` center, `---:` right):
 
- #### Table with alignments
+| Left | Center | Right |
+|:-----|:------:|------:|
+| a    | b      | c     |
+| dd   | ee     | ff    |
 
-Left  |  Center |  Right 
-:---------|:--------:|---------:
-A1 | B1 | C1 
-A2 | B2 | C2 
-A3 | B3 | C3 
+---
 
-### Math formula Support
+## 10. Math (LaTeX)
 
-$$
-$E = mc^2
-$$
+Inline math flows within text — the identity $E = mc^2$ relates energy and mass, and $a^2 + b^2 = c^2$ is the Pythagorean theorem.
+
+Block math is centered on its own line:
 
 $$
-\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
 $$
 
 $$
-\pi r^2
+\frac{n!}{k!(n-k)!} = \binom{n}{k}
 $$
 
-### Lokal SVG Image
-![Lokal SVG](dotnet_bot){aspect=AspectFill}
+---
 
-### Web Source SVG Image
-![Web Source SVG](https://www.svgrepo.com/show/530402/honor.svg){aspect=AspectFill}
+## 11. Images
 
-### E-Mail Links
-Contact us at [support@example.com](support@example.com).
-[Link1](https://google.com) | [Link2](https://bing.com)
+**Local image** (from app resources):
 
-### Nested lists
+![Dev bot](dev.png){aspect=AspectFill}
 
-- Item 1
-  - Subitem 1.1
-    - Sub-subitem 1.1.1
-  - Subitem 1.2
-- Item 2
+**Local SVG** — rendered by the built-in MAUI Graphics SVG renderer:
 
-1. First
-   1.1. Sub-first
-       1.1.1. Sub-sub-first
-2. Second
+![.NET bot](dotnet_bot){aspect=AspectFit width=120}
 
-- Fruits
-  1. Apple
-  2. Banana
-     - Ripe
-     - Unripe
-- Vegetables
+**Remote SVG** (downloaded and rasterized):
 
+![Honor badge](https://www.svgrepo.com/show/530402/honor.svg){width=120 horizontal=Center}
 
-**Subject :** Hello Markdown View
+**Remote raster image** — scales down to fit the available width:
 
+![Remote](https://picsum.photos/1200/800)
 
+**Sized & centered** `{width=200 horizontal=Center}`:
+
+![Centered](https://picsum.photos/800/500){width=200 horizontal=Center}
+
+**Inline icon** in a sentence ![icon](clipboard.png){width=16 height=16} stays in the text flow.
+
+**Base64 (data URI)** — an image decoded from an inline base64 string:
+
+![Square](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAARElEQVR42u3PQREAAAQAMH2k0V0fKvi622MBFpU9n4WAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAwNUCrlbILdN94G4AAAAASUVORK5CYII=){width=48 height=48}
+
+---
+
+## 12. Horizontal rule
+
+Content above the rule.
+
+---
+
+Content below the rule.
+
+**That's every supported feature — happy authoring!** :clap:
 ".Trim();
 
     }

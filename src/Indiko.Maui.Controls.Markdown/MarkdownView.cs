@@ -13,6 +13,7 @@ using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Layouts;
 using Image = Microsoft.Maui.Controls.Image;
 
 namespace Indiko.Maui.Controls.Markdown;
@@ -1266,6 +1267,14 @@ public sealed class MarkdownView : ContentView
         // Does this paragraph contain any images?
         bool containsImage = block.Inline.Any(i => i is LinkInline li && li.IsImage);
 
+        // Inline math ($…$) is rendered as real LaTeX, which is a view — and a MAUI Label's
+        // FormattedString can't host a view mid-text. So a (non-image) paragraph that contains inline
+        // math is laid out as a wrapping flow of text-run labels + LatexView segments instead.
+        if (!containsImage && block.Inline.Any(i => i is MathInline))
+        {
+            return RenderParagraphWithInlineMath(block);
+        }
+
         if (!containsImage)
         {
             // Only text – return a single label
@@ -1470,6 +1479,60 @@ public sealed class MarkdownView : ContentView
         flushText();
 
         return grid;
+    }
+
+    // Lays out a paragraph that mixes text and inline math as a wrapping FlexLayout: contiguous
+    // non-math inlines become text labels, and each $…$ run becomes a body-sized LatexView. Items
+    // wrap at segment boundaries (MAUI can't word-wrap across an embedded view).
+    private View RenderParagraphWithInlineMath(ParagraphBlock block)
+    {
+        var flex = new FlexLayout
+        {
+            Direction = FlexDirection.Row,
+            Wrap = FlexWrap.Wrap,
+            AlignItems = FlexAlignItems.Center,
+        };
+
+        var run = new List<Inline>();
+
+        void FlushTextRun()
+        {
+            if (run.Count == 0)
+            {
+                return;
+            }
+
+            flex.Children.Add(new Label
+            {
+                FormattedText = BuildFormattedString(run),
+                LineBreakMode = LineBreakModeText,
+                HorizontalTextAlignment = TextHorizontalTextAlignment,
+                VerticalOptions = LayoutOptions.Center,
+            });
+            run.Clear();
+        }
+
+        foreach (var inline in block.Inline)
+        {
+            if (inline is MathInline math)
+            {
+                FlushTextRun();
+                flex.Children.Add(new LatexView
+                {
+                    Text = math.Content.ToString(),
+                    FontSize = (float)TextFontSize,
+                    TextColor = TextColor,
+                    VerticalOptions = LayoutOptions.Center,
+                });
+            }
+            else
+            {
+                run.Add(inline);
+            }
+        }
+
+        FlushTextRun();
+        return flex;
     }
 
     private View RenderHeading(HeadingBlock block)
@@ -2267,7 +2330,9 @@ public sealed class MarkdownView : ContentView
     // Approximation factor for super/subscript — MAUI Spans cannot offset the baseline, so we shrink.
     private const double SubSupScale = 0.75;
 
-    private FormattedString RenderInlines(ContainerInline inlines)
+    private FormattedString RenderInlines(ContainerInline inlines) => BuildFormattedString(inlines);
+
+    private FormattedString BuildFormattedString(IEnumerable<Inline> inlines)
     {
         var formatted = new FormattedString();
         if (inlines == null) return formatted;
@@ -2328,7 +2393,9 @@ public sealed class MarkdownView : ContentView
                     break;
 
                 case MathInline math:
-                    // Inline math is shown as styled raw text (only block $$…$$ is typeset as LaTeX).
+                    // Fallback for inline math in contexts that can't host a view (table cells,
+                    // headings): shown as styled raw text. Inline math in a normal paragraph is
+                    // typeset as real LaTeX — see RenderParagraphWithInlineMath.
                     formatted.Spans.Add(CreateSpan(math.Content.ToString(), style with
                     {
                         FontAttributes = style.FontAttributes | FontAttributes.Italic,

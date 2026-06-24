@@ -20,7 +20,8 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 **What you need to do:** for the common case, **nothing** — the public API of `MarkdownView` is unchanged.
 
 - If you previously called `builder.UseSkiaSharp()` *only* for this control, you can remove it. `builder.UseMarkdownView()` is still available (it is now a no-op) and remains safe to keep calling.
-- **SVG rendering** now uses a built-in MAUI Graphics renderer. It supports `path` (full command set including arcs), the basic shapes (`rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`), transforms, and solid `fill`/`stroke` using hex, `rgb()`/`rgba()`, and named colors. It does **not yet** support gradients, filters, embedded text, or clip/mask. If you display SVGs that rely on those features, please [open an issue](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/issues).
+- **SVG rendering** now uses a built-in MAUI Graphics renderer. It supports `path` (full command set including arcs), the basic shapes (`rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`), transforms, solid `fill`/`stroke` using hex/`rgb()`/`rgba()`/named colors, and **linear & radial gradient fills** (incl. `gradientUnits`, `gradientTransform`, multi-stop, and `href` inheritance). It is a pragmatic subset and does **not** support filters, embedded text, or clip/mask. Two minor approximations: gradient *strokes* fall back to a representative solid color (MAUI's canvas only supports gradient fills), and a radial gradient's focal point (`fx`/`fy`) and `spreadMethod` are ignored.
+  - If you display SVGs that rely on any unsupported feature, please [open an issue](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/issues).
 
 ---
 

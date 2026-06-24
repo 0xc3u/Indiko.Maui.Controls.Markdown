@@ -60,6 +60,45 @@ internal static class SvgPaint
         return false;
     }
 
+    /// <summary>
+    /// Extracts the fragment id from a <c>url(#id)</c> paint reference (used for gradient fills/strokes).
+    /// </summary>
+    public static bool TryGetUrlId(string? value, out string id)
+    {
+        id = string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        value = value!.Trim();
+        if (!value.StartsWith("url(", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        int open = value.IndexOf('(');
+        int close = value.IndexOf(')', open + 1);
+        if (close < 0)
+        {
+            return false;
+        }
+
+        string inner = value.Substring(open + 1, close - open - 1).Trim().Trim('"', '\'');
+        if (inner.StartsWith('#'))
+        {
+            inner = inner.Substring(1);
+        }
+
+        if (inner.Length == 0)
+        {
+            return false;
+        }
+
+        id = inner;
+        return true;
+    }
+
     private static bool TryParseRgb(string value, out Color color)
     {
         color = Colors.Black;

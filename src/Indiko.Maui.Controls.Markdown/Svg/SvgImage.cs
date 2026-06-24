@@ -18,10 +18,25 @@ namespace Indiko.Maui.Controls.Markdown.Svg;
 internal sealed class SvgImage : IDrawable
 {
     private readonly XElement _root;
+    private readonly Dictionary<string, XElement> _gradients = new(StringComparer.Ordinal);
 
     private SvgImage(XElement root)
     {
         _root = root;
+
+        // Index every gradient definition by id up front (they may live in <defs> or anywhere).
+        foreach (XElement el in root.DescendantsAndSelf())
+        {
+            string ln = el.Name.LocalName.ToLowerInvariant();
+            if (ln is "lineargradient" or "radialgradient")
+            {
+                string? id = el.Attribute("id")?.Value;
+                if (!string.IsNullOrEmpty(id))
+                {
+                    _gradients[id!] = el;
+                }
+            }
+        }
 
         (ViewBoxX, ViewBoxY, ViewBoxWidth, ViewBoxHeight) = ParseViewBox(root.Attribute("viewBox")?.Value);
         IntrinsicWidth = ParseLength(root.Attribute("width")?.Value, 0f);
@@ -215,17 +230,45 @@ internal sealed class SvgImage : IDrawable
         }
     }
 
-    private static void FillAndStroke(ICanvas canvas, PathF path, RenderState s)
+    private void FillAndStroke(ICanvas canvas, PathF path, RenderState s)
     {
         if (s.FillEnabled)
         {
-            canvas.FillColor = s.Fill.WithAlpha(s.Fill.Alpha * s.FillOpacity * s.Opacity);
-            canvas.FillPath(path, s.FillRule);
+            if (s.FillGradientId is not null)
+            {
+                RectF bounds = path.GetBoundsByFlattening();
+                Paint? paint = bounds.Width > 0 && bounds.Height > 0
+                    ? SvgGradient.Create(_gradients, s.FillGradientId, bounds, s.FillOpacity * s.Opacity, s.CurrentColor)
+                    : null;
+
+                // An unresolvable gradient (missing def, no stops) is left unpainted rather than
+                // filled solid black.
+                if (paint is not null)
+                {
+                    canvas.SetFillPaint(paint, bounds);
+                    canvas.FillPath(path, s.FillRule);
+                }
+            }
+            else
+            {
+                canvas.FillColor = s.Fill.WithAlpha(s.Fill.Alpha * s.FillOpacity * s.Opacity);
+                canvas.FillPath(path, s.FillRule);
+            }
         }
 
         if (s.StrokeEnabled && s.StrokeWidth > 0)
         {
-            canvas.StrokeColor = s.Stroke.WithAlpha(s.Stroke.Alpha * s.StrokeOpacity * s.Opacity);
+            Color strokeColor = s.Stroke;
+            if (s.StrokeGradientId is not null)
+            {
+                // MAUI's ICanvas has no gradient stroke; approximate with a representative stop colour.
+                if (!SvgGradient.TryGetRepresentativeColor(_gradients, s.StrokeGradientId, s.CurrentColor, out strokeColor))
+                {
+                    return;
+                }
+            }
+
+            canvas.StrokeColor = strokeColor.WithAlpha(strokeColor.Alpha * s.StrokeOpacity * s.Opacity);
             canvas.StrokeSize = s.StrokeWidth;
             canvas.DrawPath(path);
         }
@@ -356,8 +399,10 @@ internal sealed class SvgImage : IDrawable
     {
         public bool FillEnabled;
         public Color Fill;
+        public string? FillGradientId;
         public bool StrokeEnabled;
         public Color Stroke;
+        public string? StrokeGradientId;
         public float StrokeWidth;
         public float Opacity;
         public float FillOpacity;
@@ -392,13 +437,31 @@ internal sealed class SvgImage : IDrawable
             string? fill = Prop(element, style, "fill");
             if (fill is not null)
             {
-                s.FillEnabled = SvgPaint.TryParseColor(fill, s.CurrentColor, out s.Fill);
+                if (SvgPaint.TryGetUrlId(fill, out string fillId))
+                {
+                    s.FillGradientId = fillId;
+                    s.FillEnabled = true;
+                }
+                else
+                {
+                    s.FillGradientId = null;
+                    s.FillEnabled = SvgPaint.TryParseColor(fill, s.CurrentColor, out s.Fill);
+                }
             }
 
             string? stroke = Prop(element, style, "stroke");
             if (stroke is not null)
             {
-                s.StrokeEnabled = SvgPaint.TryParseColor(stroke, s.CurrentColor, out s.Stroke);
+                if (SvgPaint.TryGetUrlId(stroke, out string strokeId))
+                {
+                    s.StrokeGradientId = strokeId;
+                    s.StrokeEnabled = true;
+                }
+                else
+                {
+                    s.StrokeGradientId = null;
+                    s.StrokeEnabled = SvgPaint.TryParseColor(stroke, s.CurrentColor, out s.Stroke);
+                }
             }
 
             string? strokeWidth = Prop(element, style, "stroke-width");

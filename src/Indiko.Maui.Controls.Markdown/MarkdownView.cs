@@ -655,6 +655,21 @@ public sealed class MarkdownView : ContentView
         set => SetValue(TextFontFaceProperty, value);
     }
 
+    public static readonly BindableProperty TextHorizontalTextAlignmentProperty =
+      BindableProperty.Create(nameof(TextHorizontalTextAlignment), typeof(TextAlignment), typeof(MarkdownView), TextAlignment.Start, propertyChanged: OnMarkdownTextChanged);
+
+    /// <summary>
+    /// Gets or sets the horizontal alignment of body (prose) text: paragraphs, list items and
+    /// blockquote text. Supports <see cref="TextAlignment.Justify"/>. Headings and table cells are
+    /// not affected (tables keep their per-column markdown alignment).
+    /// Default is <see cref="TextAlignment.Start"/>.
+    /// </summary>
+    public TextAlignment TextHorizontalTextAlignment
+    {
+        get => (TextAlignment)GetValue(TextHorizontalTextAlignmentProperty);
+        set => SetValue(TextHorizontalTextAlignmentProperty, value);
+    }
+
     /* ****** Line Block Styling ******** */
 
     public static readonly BindableProperty LineColorProperty =
@@ -1200,7 +1215,8 @@ public sealed class MarkdownView : ContentView
             return new Label
             {
                 FormattedText = RenderInlines(block.Inline),
-                LineBreakMode = LineBreakMode.WordWrap
+                LineBreakMode = LineBreakMode.WordWrap,
+                HorizontalTextAlignment = TextHorizontalTextAlignment
             };
         }
 
@@ -1223,6 +1239,7 @@ public sealed class MarkdownView : ContentView
                 FontSize = TextFontSize,
                 TextColor = TextColor,
                 LineBreakMode = LineBreakMode.WordWrap,
+                HorizontalTextAlignment = TextHorizontalTextAlignment,
                 VerticalOptions = LayoutOptions.Center
             };
             // Place the label in the current column

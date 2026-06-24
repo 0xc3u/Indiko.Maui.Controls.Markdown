@@ -397,6 +397,13 @@ markdownView.H3Color = Colors.Purple;
 - **`TextFontSize`**: The font size for regular text (default: `12`).
 - **`TextColor`**: The color for regular text (default: `Black`).
 - **`TextFontFace`**: The font family for regular text.
+- **`TextHorizontalTextAlignment`**: The horizontal alignment of body (prose) text — paragraphs, list items, and blockquote text. Accepts `Start` (default), `Center`, `End`, or `Justify`. Headings and table cells are not affected (tables keep their per-column alignment).
+
+  ```xml
+  <idk:MarkdownView 
+      MarkdownText="{Binding MarkdownText}"
+      TextHorizontalTextAlignment="Justify" />
+  ```
 
 ### Line Break Mode
 - **`LineBreakModeText`**: Line break mode for text (default: `WordWrap`).

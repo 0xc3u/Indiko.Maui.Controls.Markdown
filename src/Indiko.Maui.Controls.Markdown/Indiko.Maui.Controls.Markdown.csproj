@@ -7,6 +7,10 @@
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Enable the nullable annotation context so `?` annotations are valid (silences CS8632).
+         'annotations' (not 'enable') exposes the nullable API surface without turning on the
+         in-code nullable warnings, which would require a full null-safety audit of MarkdownView. -->
+    <Nullable>annotations</Nullable>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">31.0</SupportedOSPlatformVersion>
@@ -35,12 +39,13 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.44.0" />
-    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
-    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.20" />
-    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
-    <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
-    <PackageReference Include="Svg.Skia" Version="3.4.0" />
+    <!-- Versions are managed centrally in Directory.Packages.props -->
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="Microsoft.Maui.Controls" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" />
+    <PackageReference Include="CSharpMath.SkiaSharp" />
+    <PackageReference Include="Svg.Skia" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Indiko.Maui.Controls.Markdown\icon.png" Pack="true" PackagePath="" />

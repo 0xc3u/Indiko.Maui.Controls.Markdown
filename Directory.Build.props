@@ -1,0 +1,12 @@
+<Project>
+
+  <!--
+    Repo-wide MSBuild defaults. Imported automatically by every project under this folder.
+    Keep MAUI's version in one place so the explicit package references (managed centrally in
+    Directory.Packages.props) and MAUI's own implicit references stay on the same version.
+  -->
+  <PropertyGroup>
+    <MauiVersion>10.0.71</MauiVersion>
+  </PropertyGroup>
+
+</Project>

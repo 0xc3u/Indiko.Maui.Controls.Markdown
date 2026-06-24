@@ -19,13 +19,13 @@ public partial class MainPage : ContentPage
         mainPageViewModel.OnAppearing(null);
     }
 	
-    private void MarkdownView_HyperLinkClicked(object sender, LinkEventArgs e)
+    private async void MarkdownView_HyperLinkClicked(object sender, LinkEventArgs e)
     {
-		DisplayAlert(Title, e.Url, "OK");
+		await DisplayAlertAsync(Title, e.Url, "OK");
     }
 
-    private void MarkdownView_OnEmailClicked(object sender, EmailEventArgs e)
+    private async void MarkdownView_OnEmailClicked(object sender, EmailEventArgs e)
     {
-        DisplayAlert(Title, e.Email, "OK");
+        await DisplayAlertAsync(Title, e.Email, "OK");
     }
 }

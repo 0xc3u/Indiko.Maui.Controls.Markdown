@@ -58,7 +58,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="10">
 
-            <Label Text="Markdown View with Theming" FontSize="Header" TextColor="{StaticResource Primary}"></Label>
+            <Label Text="Markdown View with Theming" FontSize="32" TextColor="{StaticResource Primary}"></Label>
             
             <!-- Bind Theme to CurrentTheme from ViewModel for dynamic theme switching -->
             <idk:MarkdownView 
@@ -74,7 +74,7 @@
 
             <Button Text="Toggle Light/Dark Theme" Command="{Binding ThemeChangedCommand}"/>
 
-            <Label Text="Theme Options:" FontSize="Medium" FontAttributes="Bold" Margin="0,20,0,0"/>
+            <Label Text="Theme Options:" FontSize="16" FontAttributes="Bold" Margin="0,20,0,0"/>
             
             <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
                 <Button Grid.Row="0" Grid.Column="0" Text="GitHub" Command="{Binding SetGitHubThemeCommand}" />

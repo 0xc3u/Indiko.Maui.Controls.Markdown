@@ -45,10 +45,11 @@
     <None Remove="Resources\Images\dotnet_bot.svg" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
-    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.20" />
-    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
+    <!-- Versions are managed centrally in Directory.Packages.props -->
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Maui.Controls" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\" />

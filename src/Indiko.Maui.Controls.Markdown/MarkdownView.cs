@@ -1253,7 +1253,6 @@ public sealed class MarkdownView : ContentView
                 var attrs = link.TryGetAttributes();
                 bool hasExplicitSize = false;
                 bool hasCustomHorizontal = false;
-                bool hasCustomVertical = false;
                 bool hasCustomAspect = false;
 
                 if (attrs != null && attrs.Properties != null)
@@ -1326,7 +1325,6 @@ public sealed class MarkdownView : ContentView
                         if (parsedVertical.HasValue)
                         {
                             img.VerticalOptions = parsedVertical.Value;
-                            hasCustomVertical = true;
                         }
                     }
                 }
@@ -2434,16 +2432,14 @@ public sealed class MarkdownView : ContentView
         if (string.IsNullOrWhiteSpace(value))
             return null;
 
+        // The legacy *AndExpand options are deprecated in .NET MAUI (StackLayout expansion was
+        // removed); they collapse to their non-expand equivalents, which we map for back-compat.
         return value.Trim().ToLowerInvariant() switch
         {
-            "start" => LayoutOptions.Start,
-            "center" => LayoutOptions.Center,
-            "end" => LayoutOptions.End,
-            "fill" => LayoutOptions.Fill,
-            "fillandexpand" => LayoutOptions.FillAndExpand,
-            "startandexpand" => LayoutOptions.StartAndExpand,
-            "centerandexpand" => LayoutOptions.CenterAndExpand,
-            "endandexpand" => LayoutOptions.EndAndExpand,
+            "start" or "startandexpand" => LayoutOptions.Start,
+            "center" or "centerandexpand" => LayoutOptions.Center,
+            "end" or "endandexpand" => LayoutOptions.End,
+            "fill" or "fillandexpand" => LayoutOptions.Fill,
             _ => null
         };
     }

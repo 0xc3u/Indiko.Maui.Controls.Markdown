@@ -140,6 +140,7 @@ public sealed class MarkdownView : ContentView
 
             // Apply palette colors
             TextColor = palette.TextPrimary;
+            HighlightColor = palette.HighlightColor;
             H1Color = palette.H1Color;
             H2Color = palette.H2Color;
             H3Color = palette.H3Color;
@@ -164,6 +165,13 @@ public sealed class MarkdownView : ContentView
             TableHeaderTextColor = palette.TableHeaderText;
             TableRowBackgroundColor = palette.TableRowBackground;
             TableRowTextColor = palette.TableRowText;
+
+            // Alert / container accent colors
+            AlertInfoColor = palette.InfoColor;
+            AlertWarningColor = palette.WarningColor;
+            AlertErrorColor = palette.ErrorColor;
+            AlertSuccessColor = palette.SuccessColor;
+            AlertImportantColor = palette.ImportantColor;
 
             // Apply typography settings
             TextFontFace = typography.DefaultFontFamily;
@@ -685,6 +693,16 @@ public sealed class MarkdownView : ContentView
     {
         get => (Color)GetValue(LineColorProperty);
         set => SetValue(LineColorProperty, value);
+    }
+
+    /// <summary>Background color used for highlighted/marked inline text (<c>==text==</c>).</summary>
+    public static readonly BindableProperty HighlightColorProperty =
+    BindableProperty.Create(nameof(HighlightColor), typeof(Color), typeof(MarkdownView), Color.FromArgb("#FFF59D"), propertyChanged: OnMarkdownTextChanged);
+
+    public Color HighlightColor
+    {
+        get => (Color)GetValue(HighlightColorProperty);
+        set => SetValue(HighlightColorProperty, value);
     }
 
     /* ****** Code Block Styling ******** */
@@ -1464,39 +1482,20 @@ public sealed class MarkdownView : ContentView
 
             if (block.Inline != null)
             {
+                // Route heading inlines through the shared recursive renderer using the heading's
+                // font/colour as the base style, so emphasis, inline code, links, etc. all work and
+                // combine with the heading styling.
+                var headingStyle = new InlineStyle(
+                    headingFontAttributes,
+                    TextDecorations.None,
+                    GetTextColorForBlockLevel(block.Level),
+                    null,
+                    headingFontFamily,
+                    GetFontsizeForBlockLevel(block.Level));
+
                 foreach (var inline in block.Inline)
                 {
-                    if (inline is LiteralInline literal)
-                    {
-                        formatted.Spans.Add(new Span
-                        {
-                            Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
-                            FontSize = GetFontsizeForBlockLevel(block.Level),
-                            FontAttributes = headingFontAttributes,
-                            TextColor = GetTextColorForBlockLevel(block.Level),
-                            FontFamily = headingFontFamily
-                        });
-                    }
-                    else if (inline is EmphasisInline em)
-                    {
-                        var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
-                        // Combine heading font attributes with emphasis attributes
-                        var emphasisAttributes = em.DelimiterCount == 2 ? FontAttributes.Bold : FontAttributes.Italic;
-                        var combinedAttributes = headingFontAttributes | emphasisAttributes;
-                        
-                        formatted.Spans.Add(new Span
-                        {
-                            Text = text,
-                            FontSize = GetFontsizeForBlockLevel(block.Level),
-                            FontAttributes = combinedAttributes,
-                            TextColor = GetTextColorForBlockLevel(block.Level),
-                            FontFamily = headingFontFamily
-                        });
-                    }
-                    else if (inline is LineBreakInline)
-                    {
-                        formatted.Spans.Add(new Span { Text = "\n" });
-                    }
+                    RenderInline(formatted, inline, headingStyle);
                 }
             }
 
@@ -2255,115 +2254,209 @@ public sealed class MarkdownView : ContentView
         }
     }
 
+    // Resolved inline styling, accumulated as the renderer walks nested inlines (e.g. bold inside a
+    // link, or a code span inside emphasis). Carried by value so each nesting level gets its own copy.
+    private readonly record struct InlineStyle(
+        FontAttributes FontAttributes,
+        TextDecorations Decorations,
+        Color TextColor,
+        Color BackgroundColor,
+        string FontFamily,
+        double FontSize);
+
+    // Approximation factor for super/subscript — MAUI Spans cannot offset the baseline, so we shrink.
+    private const double SubSupScale = 0.75;
+
     private FormattedString RenderInlines(ContainerInline inlines)
     {
         var formatted = new FormattedString();
-
         if (inlines == null) return formatted;
+
+        var baseStyle = new InlineStyle(
+            FontAttributes.None, TextDecorations.None, TextColor, null, TextFontFace, TextFontSize);
 
         foreach (var inline in inlines)
         {
-            try
-            {
-                switch (inline)
-                {
-                    case LiteralInline literal:
-                        formatted.Spans.Add(new Span
-                        {
-                            Text = literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length),
-                            FontFamily = TextFontFace,
-                            FontSize = TextFontSize,
-                            TextColor = TextColor
-                        });
-                        break;
-
-                    case EmphasisInline em:
-                        var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
-                        formatted.Spans.Add(new Span
-                        {
-                            Text = text,
-                            TextDecorations = em.DelimiterChar == '~'
-                                ? TextDecorations.Strikethrough
-                                : TextDecorations.None,
-                            FontAttributes = em.DelimiterChar == '*' && em.DelimiterCount == 2
-                                ? FontAttributes.Bold
-                                : em.DelimiterChar == '*' && em.DelimiterCount == 1
-                                    ? FontAttributes.Italic
-                                    : FontAttributes.None,
-                            FontFamily = TextFontFace,
-                            FontSize = TextFontSize,
-                            TextColor = TextColor
-                        });
-                        break;
-
-                    case LineBreakInline:
-                        formatted.Spans.Add(new Span
-                        {
-                            Text = "\n",
-                            FontFamily = TextFontFace,
-                            FontSize = TextFontSize,
-                            TextColor = TextColor
-                        });
-                        break;
-
-                    case LinkInline link when !link.IsImage:
-                        var linkText = link.FirstChild?.ToString() ?? link.Url;
-                        var span = new Span
-                        {
-                            Text = linkText,
-                            TextColor = HyperlinkColor,
-                            TextDecorations = TextDecorations.Underline,
-                            FontFamily = TextFontFace,
-                            FontSize = TextFontSize,
-                        };
-
-                        var tap = new TapGestureRecognizer();
-
-                        if (link.Url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            tap.Tapped += (_, __) => TriggerEmailClicked(link.Url.Substring("mailto:".Length));
-                        }
-                        else if (EmailRegex.IsMatch(link.Url))
-                        {
-                            var email = EmailRegex.Match(link.Url).Value;
-                            tap.Tapped += (_, __) => TriggerEmailClicked(email);
-                        }
-                        else
-                        {
-                            tap.Tapped += (_, __) => TriggerHyperLinkClicked(link.Url);
-                        }
-
-                        span.GestureRecognizers.Add(tap);
-                        formatted.Spans.Add(span);
-                        break;
-                    case LinkInline image when image.IsImage:
-                        formatted.Spans.Add(new Span
-                        {
-                            Text = "[Image]",
-                            FontFamily = TextFontFace,
-                            FontSize = TextFontSize,
-                            TextColor = TextColor
-                        });
-                        break;
-                    case MathInline math:
-                        formatted.Spans.Add(new Span
-                        {
-                            Text = math.Content.ToString(),
-                            FontAttributes = FontAttributes.Italic,
-                            TextColor = Colors.DarkOliveGreen,
-                            FontFamily = TextFontFace,
-                            FontSize = TextFontSize
-                        });
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error rendering inline: {ex.Message}");
-            }
+            RenderInline(formatted, inline, baseStyle);
         }
 
         return formatted;
+    }
+
+    // Recursively renders a Markdig inline into spans, honouring (and combining) the inherited style.
+    private void RenderInline(FormattedString formatted, Inline inline, InlineStyle style)
+    {
+        try
+        {
+            switch (inline)
+            {
+                case LiteralInline literal:
+                    formatted.Spans.Add(CreateSpan(
+                        literal.Content.Text.Substring(literal.Content.Start, literal.Content.Length), style));
+                    break;
+
+                case CodeInline code:
+                    // Inline `code` — styled with the code-block colors and font.
+                    formatted.Spans.Add(CreateSpan(code.Content, style with
+                    {
+                        FontFamily = CodeBlockFontFace ?? style.FontFamily,
+                        TextColor = CodeBlockTextColor,
+                        BackgroundColor = CodeBlockBackgroundColor,
+                    }));
+                    break;
+
+                case EmphasisInline em:
+                    var childStyle = ApplyEmphasis(style, em);
+                    foreach (var child in em)
+                    {
+                        RenderInline(formatted, child, childStyle);
+                    }
+                    break;
+
+                case LineBreakInline:
+                    formatted.Spans.Add(CreateSpan("\n", style));
+                    break;
+
+                case LinkInline link when !link.IsImage:
+                    RenderLink(formatted, link, style);
+                    break;
+
+                case LinkInline:
+                    // Image inside inline/text context — rendered as a placeholder (real images are
+                    // rendered as views in RenderParagraph).
+                    formatted.Spans.Add(CreateSpan("[Image]", style));
+                    break;
+
+                case MathInline math:
+                    // Inline math is shown as styled raw text (only block $$…$$ is typeset as LaTeX).
+                    formatted.Spans.Add(CreateSpan(math.Content.ToString(), style with
+                    {
+                        FontAttributes = style.FontAttributes | FontAttributes.Italic,
+                        TextColor = Colors.DarkOliveGreen,
+                    }));
+                    break;
+
+                case ContainerInline container:
+                    // Fallback for any other container inline — recurse so its content isn't lost.
+                    foreach (var child in container)
+                    {
+                        RenderInline(formatted, child, style);
+                    }
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering inline: {ex.Message}");
+        }
+    }
+
+    // Merges an emphasis run into the current style. EmphasisExtras delimiters (==, ^, ~, ++) are
+    // enabled in the pipeline, so they arrive here as EmphasisInline with distinct delimiter chars.
+    private InlineStyle ApplyEmphasis(InlineStyle style, EmphasisInline em)
+    {
+        switch (em.DelimiterChar)
+        {
+            case '*':
+            case '_':
+                var attr = em.DelimiterCount switch
+                {
+                    1 => FontAttributes.Italic,
+                    2 => FontAttributes.Bold,
+                    _ => FontAttributes.Bold | FontAttributes.Italic,
+                };
+                return style with { FontAttributes = style.FontAttributes | attr };
+
+            case '~':
+                // ~~strike~~ (count 2) vs ~subscript~ (count 1).
+                return em.DelimiterCount >= 2
+                    ? style with { Decorations = style.Decorations | TextDecorations.Strikethrough }
+                    : style with { FontSize = style.FontSize * SubSupScale };
+
+            case '^':
+                // ^superscript^ — approximated with a smaller font (no baseline shift on Spans).
+                return style with { FontSize = style.FontSize * SubSupScale };
+
+            case '=':
+                // ==highlight== / marked text.
+                return style with { BackgroundColor = HighlightColor };
+
+            case '+':
+                // ++inserted++ → underline.
+                return em.DelimiterCount >= 2
+                    ? style with { Decorations = style.Decorations | TextDecorations.Underline }
+                    : style;
+
+            default:
+                return style;
+        }
+    }
+
+    // Renders a hyperlink/email link, preserving formatting inside the label and making every
+    // resulting span tappable.
+    private void RenderLink(FormattedString formatted, LinkInline link, InlineStyle style)
+    {
+        var linkStyle = style with
+        {
+            TextColor = HyperlinkColor,
+            Decorations = style.Decorations | TextDecorations.Underline,
+        };
+
+        int start = formatted.Spans.Count;
+        foreach (var child in link)
+        {
+            RenderInline(formatted, child, linkStyle);
+        }
+
+        // Empty label (e.g. a bare autolink) → fall back to the URL text.
+        if (formatted.Spans.Count == start)
+        {
+            formatted.Spans.Add(CreateSpan(link.Url, linkStyle));
+        }
+
+        Action onTap;
+        if (link.Url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+        {
+            var email = link.Url.Substring("mailto:".Length);
+            onTap = () => TriggerEmailClicked(email);
+        }
+        else if (EmailRegex.IsMatch(link.Url))
+        {
+            var email = EmailRegex.Match(link.Url).Value;
+            onTap = () => TriggerEmailClicked(email);
+        }
+        else
+        {
+            var url = link.Url;
+            onTap = () => TriggerHyperLinkClicked(url);
+        }
+
+        for (int i = start; i < formatted.Spans.Count; i++)
+        {
+            var tap = new TapGestureRecognizer();
+            tap.Tapped += (_, __) => onTap();
+            formatted.Spans[i].GestureRecognizers.Add(tap);
+        }
+    }
+
+    private Span CreateSpan(string text, InlineStyle style)
+    {
+        var span = new Span
+        {
+            Text = text,
+            FontFamily = style.FontFamily,
+            FontSize = style.FontSize,
+            FontAttributes = style.FontAttributes,
+            TextDecorations = style.Decorations,
+            TextColor = style.TextColor,
+        };
+
+        if (style.BackgroundColor is not null)
+        {
+            span.BackgroundColor = style.BackgroundColor;
+        }
+
+        return span;
     }
 
     private async Task<ImageSource> LoadImageAsync(string imageUrl)

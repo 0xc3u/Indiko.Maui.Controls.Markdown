@@ -11,7 +11,7 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 ## Features
 
 - 🧱 **Native rendering** — no WebView; every element is a real MAUI view.
-- 🔠 **Headings** `H1`–`H6`, **paragraphs**, **bold**, **italic**, **strikethrough**.
+- 🔠 **Headings** `H1`–`H6`, **paragraphs**, **bold**/**italic**/**strikethrough**, **inline code**, `==highlight==`, and super/subscript.
 - 🔗 **Links** and **email links** with click events *and* commands, plus bare-URL **autolinking**.
 - 📋 **Lists** — unordered, ordered, nested, and **task/checkbox** lists (`- [ ]` / `- [x]`).
 - 📊 **Tables** with per-column alignment (pipe & grid tables).
@@ -339,6 +339,7 @@ The `MarkdownPalette` class contains the following color properties:
 | `TextPrimary` | Primary text color |
 | `TextSecondary` | Secondary text color |
 | `TextDisabled` | Disabled text color |
+| `HighlightColor` | Background for highlighted/marked inline text (`==text==`) |
 | `H1Color` | Color for H1 headings |
 | `H2Color` | Color for H2 headings |
 | `H3Color` | Color for H3 headings |
@@ -358,10 +359,11 @@ The `MarkdownPalette` class contains the following color properties:
 | `TableRowText` | Text color for table rows |
 | `TableBorder` | Border color for tables |
 | `DividerColor` | Color for horizontal rules |
-| `InfoColor` | Color for info alerts |
-| `WarningColor` | Color for warning alerts |
-| `ErrorColor` | Color for error alerts |
-| `SuccessColor` | Color for success alerts |
+| `InfoColor` | Color for info / `[!NOTE]` alerts |
+| `WarningColor` | Color for warning / `[!WARNING]` alerts |
+| `ErrorColor` | Color for error / `[!CAUTION]` alerts |
+| `SuccessColor` | Color for success / `[!TIP]` alerts |
+| `ImportantColor` | Color for `[!IMPORTANT]` alerts |
 
 The palette also provides a helper method:
 - `GetHeadingColor(int level)` - Returns the appropriate color for heading levels 1-6
@@ -489,6 +491,7 @@ markdownView.H3Color = Colors.Purple;
 - **`TextFontSize`**: The font size for regular text (default: `12`).
 - **`TextColor`**: The color for regular text (default: `Black`).
 - **`TextFontFace`**: The font family for regular text.
+- **`HighlightColor`**: The background color used for highlighted/marked inline text (`==text==`) (default: `#FFF59D`).
 - **`TextHorizontalTextAlignment`**: The horizontal alignment of body (prose) text — paragraphs, list items, and blockquote text. Accepts `Start` (default), `Center`, `End`, or `Justify`. Headings and table cells are not affected (tables keep their per-column alignment).
 
   ```xml
@@ -564,22 +567,28 @@ See [Events & Commands](#events--commands) for the matching `OnHyperLinkClicked`
     ### H3
     ```
 
-- **Bold**: Wrap text with `**`.
+- **Bold**: Wrap text with `**` or `__`.
     ```markdown
-    **Bold Text**
+    **Bold** and __also bold__
     ```
 
-- **Italic**: Wrap text with `*`.
+- **Italic**: Wrap text with `*` or `_`.
     ```markdown
-    *Italic Text*
+    *Italic* and _also italic_
     ```
 
-- **Strikethrough**: Wrap text with `~~` to create strikethrough text.
+- **Bold + Italic**: Combine with `***`.
     ```markdown
-    ~~Strikethrough Text~~
+    ***bold and italic***
     ```
 
-    > **Emphasis uses asterisks.** Underscore emphasis (`__bold__`, `_italic_`) is parsed but **not styled** — it renders as plain text. Use `**`/`*` instead.
+- **Strikethrough, Highlight, Super/Subscript, Inserted**: additional inline styles (Markdig "emphasis extras").
+    ```markdown
+    ~~strikethrough~~, ==highlighted==, super^script^, sub~script~, ++inserted++
+    ```
+    - `==highlight==` is drawn with the `HighlightColor` property as its background (default light yellow `#FFF59D`).
+    - `^superscript^` / `~subscript~` are **approximated** with a smaller font — MAUI text spans can't offset the baseline.
+    - `++inserted++` renders as underlined text.
 
 - **Blockquotes**: Add `>` before a paragraph to create a blockquote.
     ```markdown
@@ -628,7 +637,10 @@ See [Events & Commands](#events--commands) for the matching `OnHyperLinkClicked`
     ```
     ````
 
-    > **Inline code** (single backticks, `` `like this` ``) is currently **not rendered** — it is dropped from the output. Use a fenced block for code you need shown.
+    **Inline code**: wrap text in single backticks — it's rendered in the code font using the code-block text/background colors.
+    ```markdown
+    Run the `dotnet build` command, then `dotnet test`.
+    ```
 
     **Copy-to-Clipboard Feature**: You can enable a copy button on code blocks that allows users to copy the code content to the clipboard with a single tap.
 
@@ -817,12 +829,9 @@ markdownView.OnRenderError += (sender, e) =>
 
 The control renders a pragmatic subset of Markdown into native views. Knowing these edge cases up front saves surprises:
 
-- **Emphasis uses asterisks** — `**bold**` / `*italic*` / `~~strikethrough~~`. Underscore emphasis (`__`, `_`) is **not** styled.
-- **Inline code** (single backticks) is **not** rendered (dropped). Use a fenced code block instead.
 - **Inline math** (`$ … $`) is shown as styled raw text, not typeset; only **block math** (`$$ … $$`) is rendered as LaTeX.
-- **Inside headings**, only text and bold/italic are rendered — links, inline code, images, and strikethrough within a heading are not.
-- **Link/email labels** are shown as plain text — formatting inside a link label (e.g. `[**bold**](url)`) is not applied; an empty label falls back to the URL.
-- **Images in tables or mixed with inline text** render as the literal placeholder `[Image]`. A **standalone** image (a paragraph that contains only the image) renders fully and scales to the available width.
+- **Super/subscript** (`^x^` / `~x~`) are approximated with a smaller font — MAUI text spans can't offset the baseline, so they aren't raised/lowered.
+- **Images in tables or mixed with inline text** render as the literal placeholder `[Image]`. A **standalone** image (a paragraph that contains only the image) renders fully and scales to the available width. (Inline emphasis, code, links, and the emphasis-extras styles *do* work in those contexts — and inside headings.)
 - **Table cells** render only their first paragraph; multi-paragraph cells lose the extra content.
 - **No syntax highlighting** in code blocks — the language hint is accepted but code is shown in a single color.
 - **Parsed but not rendered:** footnotes, definition lists, citations, abbreviations, footers, and alphabetical/roman list markers are recognized by the parser but produce no special output.

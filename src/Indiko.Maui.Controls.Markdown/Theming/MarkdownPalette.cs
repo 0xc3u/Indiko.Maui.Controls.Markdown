@@ -104,6 +104,16 @@ public class MarkdownPalette : INotifyPropertyChanged
         set => SetProperty(ref _textDisabled, value, nameof(TextDisabled));
     }
 
+    private Color _highlightColor = Color.FromArgb("#FFF59D");
+    /// <summary>
+    /// Background color for highlighted/marked inline text (<c>==text==</c>).
+    /// </summary>
+    public Color HighlightColor
+    {
+        get => _highlightColor;
+        set => SetProperty(ref _highlightColor, value, nameof(HighlightColor));
+    }
+
     #endregion
 
     #region Heading Colors
@@ -373,12 +383,22 @@ public class MarkdownPalette : INotifyPropertyChanged
 
     private Color _successColor = Color.FromArgb("#4CAF50");
     /// <summary>
-    /// Color for success alerts/containers.
+    /// Color for success alerts/containers (e.g. <c>[!TIP]</c>).
     /// </summary>
     public Color SuccessColor
     {
         get => _successColor;
         set => SetProperty(ref _successColor, value, nameof(SuccessColor));
+    }
+
+    private Color _importantColor = Color.FromArgb("#9C27B0");
+    /// <summary>
+    /// Color for important alerts/containers (e.g. <c>[!IMPORTANT]</c>).
+    /// </summary>
+    public Color ImportantColor
+    {
+        get => _importantColor;
+        set => SetProperty(ref _importantColor, value, nameof(ImportantColor));
     }
 
     #endregion
@@ -397,6 +417,7 @@ public class MarkdownPalette : INotifyPropertyChanged
             TextPrimary = TextPrimary,
             TextSecondary = TextSecondary,
             TextDisabled = TextDisabled,
+            HighlightColor = HighlightColor,
             H1Color = H1Color,
             H2Color = H2Color,
             H3Color = H3Color,
@@ -419,7 +440,8 @@ public class MarkdownPalette : INotifyPropertyChanged
             InfoColor = InfoColor,
             WarningColor = WarningColor,
             ErrorColor = ErrorColor,
-            SuccessColor = SuccessColor
+            SuccessColor = SuccessColor,
+            ImportantColor = ImportantColor
         };
     }
 }
@@ -443,6 +465,9 @@ public class MarkdownPaletteDark : MarkdownPalette
         TextPrimary = Color.FromArgb("#FFFFFF");
         TextSecondary = Color.FromArgb("#B0B0B0");
         TextDisabled = Color.FromArgb("#666666");
+
+        // Highlight - a muted dark gold so light text stays readable on it
+        HighlightColor = Color.FromArgb("#665C00");
 
         // Heading Colors
         H1Color = Color.FromArgb("#FFFFFF");
@@ -480,6 +505,7 @@ public class MarkdownPaletteDark : MarkdownPalette
         WarningColor = Color.FromArgb("#FFB74D");
         ErrorColor = Color.FromArgb("#EF5350");
         SuccessColor = Color.FromArgb("#81C784");
+        ImportantColor = Color.FromArgb("#BA68C8");
     }
 
     public override MarkdownPalette Clone()
@@ -493,6 +519,7 @@ public class MarkdownPaletteDark : MarkdownPalette
         clone.TextPrimary = TextPrimary;
         clone.TextSecondary = TextSecondary;
         clone.TextDisabled = TextDisabled;
+        clone.HighlightColor = HighlightColor;
         clone.H1Color = H1Color;
         clone.H2Color = H2Color;
         clone.H3Color = H3Color;
@@ -516,6 +543,7 @@ public class MarkdownPaletteDark : MarkdownPalette
         clone.WarningColor = WarningColor;
         clone.ErrorColor = ErrorColor;
         clone.SuccessColor = SuccessColor;
+        clone.ImportantColor = ImportantColor;
         return clone;
     }
 }

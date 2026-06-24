@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.6.0...v1.7.0) (2026-06-24)
+
+
+### Features
+
+* Add SVG linear and radial gradient fill support ([3619699](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/36196994db7917a27df39b0c5b8ff4247de43b6c))
+
 # [1.6.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.5.2...v1.6.0) (2026-06-24)
 
 

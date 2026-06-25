@@ -1,3 +1,15 @@
+# [1.10.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.9.0...v1.10.0) (2026-06-25)
+
+
+### Bug Fixes
+
+* windows namespace issues ([11101c5](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/11101c5a3398523f000cffe506460d3dfedefe0e))
+
+
+### Features
+
+* Add tap-to-zoom full-screen image popup and heading line break control ([b6bec6b](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/b6bec6bac05d270bd2b20dd567a96388735be454))
+
 # [1.9.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.8.0...v1.9.0) (2026-06-24)
 
 

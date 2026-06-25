@@ -10,7 +10,14 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Indiko.Maui.Controls.Markdown.Controls;
+// Alias WinUI types that clash with MAUI's implicit global usings
+// (Microsoft.Maui.Controls / Microsoft.Maui.Graphics / Microsoft.Maui).
 using WImage = Microsoft.UI.Xaml.Controls.Image;
+using WStretch = Microsoft.UI.Xaml.Media.Stretch;
+using WScrollMode = Microsoft.UI.Xaml.Controls.ScrollMode;
+using WScrollBarVisibility = Microsoft.UI.Xaml.Controls.ScrollBarVisibility;
+using WHorizontalAlignment = Microsoft.UI.Xaml.HorizontalAlignment;
+using WVerticalAlignment = Microsoft.UI.Xaml.VerticalAlignment;
 
 namespace Indiko.Maui.Controls.Markdown.Handlers;
 
@@ -38,17 +45,17 @@ public sealed class ZoomImageViewHandler : ViewHandler<ZoomImageView, ScrollView
 
     protected override ScrollViewer CreatePlatformView()
     {
-        _image = new WImage { Stretch = Stretch.Uniform };
+        _image = new WImage { Stretch = WStretch.Uniform };
 
         var scroll = new ScrollViewer
         {
             ZoomMode = ZoomMode.Enabled,
-            HorizontalScrollMode = ScrollMode.Auto,
-            VerticalScrollMode = ScrollMode.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center,
+            HorizontalScrollMode = WScrollMode.Auto,
+            VerticalScrollMode = WScrollMode.Auto,
+            HorizontalScrollBarVisibility = WScrollBarVisibility.Hidden,
+            VerticalScrollBarVisibility = WScrollBarVisibility.Hidden,
+            HorizontalContentAlignment = WHorizontalAlignment.Center,
+            VerticalContentAlignment = WVerticalAlignment.Center,
             MinZoomFactor = 1f,
             MaxZoomFactor = 5f,
             Content = _image,
@@ -85,9 +92,9 @@ public sealed class ZoomImageViewHandler : ViewHandler<ZoomImageView, ScrollView
         if (_image is null) return;
         _image.Stretch = VirtualView.Aspect switch
         {
-            Aspect.AspectFill => Stretch.UniformToFill,
-            Aspect.Fill => Stretch.Fill,
-            _ => Stretch.Uniform
+            Aspect.AspectFill => WStretch.UniformToFill,
+            Aspect.Fill => WStretch.Fill,
+            _ => WStretch.Uniform
         };
     }
 

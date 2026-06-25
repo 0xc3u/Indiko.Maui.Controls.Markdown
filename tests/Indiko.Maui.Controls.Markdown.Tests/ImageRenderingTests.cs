@@ -27,4 +27,26 @@ public class ImageRenderingTests
         Assert.All(grid.ColumnDefinitions, c => Assert.True(c.Width.IsAuto));
         Assert.DoesNotContain(grid.ColumnDefinitions, c => c.Width.IsStar);
     }
+
+    // AllowImagePopup defaults to false: rendered images stay non-interactive so existing behavior
+    // is unchanged.
+    [Fact]
+    public void Image_has_no_tap_gesture_by_default()
+    {
+        var view = new MarkdownView { MarkdownText = "![alt](photo.png)" };
+        var image = Descendants(view.Content!).OfType<Image>().First();
+
+        Assert.Empty(image.GestureRecognizers);
+    }
+
+    // Opting in with AllowImagePopup=true attaches a TapGestureRecognizer that opens the full-screen
+    // zoomable overlay.
+    [Fact]
+    public void Image_is_tappable_when_AllowImagePopup_is_enabled()
+    {
+        var view = new MarkdownView { AllowImagePopup = true, MarkdownText = "![alt](photo.png)" };
+        var image = Descendants(view.Content!).OfType<Image>().First();
+
+        Assert.Contains(image.GestureRecognizers, g => g is TapGestureRecognizer);
+    }
 }

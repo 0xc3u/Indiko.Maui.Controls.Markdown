@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Xml;
+using Indiko.Maui.Controls.Markdown.Controls;
 using Indiko.Maui.Controls.Markdown.Theming;
 using Markdig;
 using Markdig.Extensions.Alerts;
@@ -174,6 +175,10 @@ public sealed class MarkdownView : ContentView
             AlertSuccessColor = palette.SuccessColor;
             AlertImportantColor = palette.ImportantColor;
 
+            // Image popup overlay colors
+            ImagePopupBackgroundColor = palette.ImagePopupBackground;
+            ImagePopupCloseButtonColor = palette.ImagePopupCloseButton;
+
             // Apply typography settings
             TextFontFace = typography.DefaultFontFamily;
             TextFontSize = typography.BodyFontSize;
@@ -259,6 +264,20 @@ public sealed class MarkdownView : ContentView
     {
         get => (LineBreakMode)GetValue(LineBreakModeHeaderProperty);
         set => SetValue(LineBreakModeHeaderProperty, value);
+    }
+
+    /// <summary>
+    /// When <c>true</c> (the default), headings wrap onto multiple lines (<see cref="LineBreakMode.WordWrap"/>).
+    /// When <c>false</c>, headings are truncated to a single line using <see cref="LineBreakModeHeader"/>
+    /// (which defaults to <see cref="LineBreakMode.TailTruncation"/>).
+    /// </summary>
+    public static readonly BindableProperty AllowLineBreaksOnHeadlinesProperty =
+       BindableProperty.Create(nameof(AllowLineBreaksOnHeadlines), typeof(bool), typeof(MarkdownView), defaultValue: true, propertyChanged: OnMarkdownTextChanged);
+
+    public bool AllowLineBreaksOnHeadlines
+    {
+        get => (bool)GetValue(AllowLineBreaksOnHeadlinesProperty);
+        set => SetValue(AllowLineBreaksOnHeadlinesProperty, value);
     }
 
     public static readonly BindableProperty H1ColorProperty =
@@ -961,6 +980,51 @@ public sealed class MarkdownView : ContentView
         set => SetValue(DefaultImageHeightProperty, value);
     }
 
+    /// <summary>
+    /// When <c>true</c>, tapping a rendered image opens it full-screen in a native, zoomable overlay
+    /// (pinch / double-tap to zoom, drag to pan, ✕ to close). Defaults to <c>false</c> so existing
+    /// behavior is unchanged. Requires <c>UseMarkdownView()</c> to have been called in
+    /// <c>MauiProgram</c> so the native <see cref="ZoomImageView"/> handler is registered.
+    /// </summary>
+    public static readonly BindableProperty AllowImagePopupProperty =
+       BindableProperty.Create(nameof(AllowImagePopup), typeof(bool), typeof(MarkdownView), defaultValue: false, propertyChanged: OnMarkdownTextChanged);
+
+    public bool AllowImagePopup
+    {
+        get => (bool)GetValue(AllowImagePopupProperty);
+        set => SetValue(AllowImagePopupProperty, value);
+    }
+
+    /// <summary>Background color of the full-screen image overlay. Defaults to black.</summary>
+    public static readonly BindableProperty ImagePopupBackgroundColorProperty =
+       BindableProperty.Create(nameof(ImagePopupBackgroundColor), typeof(Color), typeof(MarkdownView), defaultValue: Colors.Black);
+
+    public Color ImagePopupBackgroundColor
+    {
+        get => (Color)GetValue(ImagePopupBackgroundColorProperty);
+        set => SetValue(ImagePopupBackgroundColorProperty, value);
+    }
+
+    /// <summary>Color of the overlay's close (✕) button. Defaults to white.</summary>
+    public static readonly BindableProperty ImagePopupCloseButtonColorProperty =
+       BindableProperty.Create(nameof(ImagePopupCloseButtonColor), typeof(Color), typeof(MarkdownView), defaultValue: Colors.White);
+
+    public Color ImagePopupCloseButtonColor
+    {
+        get => (Color)GetValue(ImagePopupCloseButtonColorProperty);
+        set => SetValue(ImagePopupCloseButtonColorProperty, value);
+    }
+
+    /// <summary>Maximum zoom factor (relative to the fitted size) in the image overlay. Defaults to 5.</summary>
+    public static readonly BindableProperty ImagePopupMaxZoomScaleProperty =
+       BindableProperty.Create(nameof(ImagePopupMaxZoomScale), typeof(double), typeof(MarkdownView), defaultValue: 5d);
+
+    public double ImagePopupMaxZoomScale
+    {
+        get => (double)GetValue(ImagePopupMaxZoomScaleProperty);
+        set => SetValue(ImagePopupMaxZoomScaleProperty, value);
+    }
+
     [Obsolete("This is no longer needed and will be removed in future versions.")]
     public static readonly BindableProperty ListIndentProperty =
     BindableProperty.Create(nameof(ListIndent), typeof(Thickness), typeof(MarkdownView), propertyChanged: OnMarkdownTextChanged);
@@ -1451,6 +1515,27 @@ public sealed class MarkdownView : ContentView
                     }
                 });
 
+                // Optionally make the image tappable to open a full-screen, native zoomable overlay.
+                if (AllowImagePopup)
+                {
+                    var tappableImage = img;
+                    // On Android an Image with no background doesn't reliably receive touch events,
+                    // so its tap gesture never fires. An explicit (transparent) background makes the
+                    // platform view hit-testable.
+                    img.BackgroundColor = Colors.Transparent;
+                    var tapGesture = new TapGestureRecognizer();
+                    tapGesture.Tapped += (s, e) =>
+                    {
+                        if (tappableImage.Source is null) return;
+                        _ = ImagePopup.ShowAsync(
+                            tappableImage.Source,
+                            ImagePopupBackgroundColor,
+                            ImagePopupCloseButtonColor,
+                            ImagePopupMaxZoomScale);
+                    };
+                    img.GestureRecognizers.Add(tapGesture);
+                }
+
                 grid.Children.Add(img);
                 Grid.SetColumn(img, columnIndex);
                 Grid.SetRow(img, 0);
@@ -1565,7 +1650,7 @@ public sealed class MarkdownView : ContentView
             return new Label
             {
                 FormattedText = formatted,
-                LineBreakMode = LineBreakModeHeader,
+                LineBreakMode = AllowLineBreaksOnHeadlines ? LineBreakMode.WordWrap : LineBreakModeHeader,
                 HorizontalOptions = LayoutOptions.Start,
                 VerticalOptions = LayoutOptions.Center,
                 LineHeight = LineHeightMultiplier,

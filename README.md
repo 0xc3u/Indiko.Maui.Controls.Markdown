@@ -20,6 +20,7 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 - 📦 **Custom containers** (`::: info … :::`) and 😀 **emoji** shortcodes (`:rocket:`).
 - 🧮 **LaTeX math** — block (`$$ … $$`) and inline (`$ … $`), rendered with `Microsoft.Maui.Graphics` (no SkiaSharp).
 - 🖼️ **Images** from local files, remote URLs, base64, and **SVG** — with width/height/aspect/alignment attributes.
+- 🔍 **Tap-to-zoom image popup** — opt-in full-screen native overlay with pinch/double-tap zoom, pan, and a close button (`AllowImagePopup`).
 - 🎨 **Theming system** — 11 built-in themes, light/dark auto-switching, and fully custom themes, *plus* granular per-element bindable properties.
 - 🛟 **Render-error event** — failures surface via `OnRenderError` instead of rendering blank.
 
@@ -36,7 +37,7 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 
 **What you need to do:** for the common case, **nothing** — the public API of `MarkdownView` is unchanged.
 
-- If you previously called `builder.UseSkiaSharp()` *only* for this control, you can remove it. `builder.UseMarkdownView()` is still available (it is now a no-op) and remains safe to keep calling.
+- If you previously called `builder.UseSkiaSharp()` *only* for this control, you can remove it. `builder.UseMarkdownView()` is still available and safe to keep calling — it no longer registers SkiaSharp, but it now registers the handler used by the optional [tap-to-zoom image popup](#tap-to-zoom-image-popup), so keep it if you enable `AllowImagePopup`.
 - **SVG rendering** now uses a built-in MAUI Graphics renderer. It supports `path` (full command set including arcs), the basic shapes (`rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`), transforms, solid `fill`/`stroke` using hex/`rgb()`/`rgba()`/named colors, and **linear & radial gradient fills** (incl. `gradientUnits`, `gradientTransform`, multi-stop, and `href` inheritance). It is a pragmatic subset and does **not** support filters, embedded text, or clip/mask. Two minor approximations: gradient *strokes* fall back to a representative solid color (MAUI's canvas only supports gradient fills), and a radial gradient's focal point (`fx`/`fy`) and `spreadMethod` are ignored.
   - If you display SVGs that rely on any unsupported feature, please [open an issue](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/issues).
 
@@ -119,13 +120,13 @@ public static MauiApp CreateMauiApp()
     var builder = MauiApp.CreateBuilder();
     builder
         .UseMauiApp<App>()
-        .UseMarkdownView();   // optional — see note below
+        .UseMarkdownView();   // see note below
 
     return builder.Build();
 }
 ```
 
-> **Note:** `UseMarkdownView()` is now a **no-op** kept for backwards compatibility. Earlier versions used it to register SkiaSharp; the control no longer needs it. You can keep calling it (safe) or remove it — math and SVG render without any extra setup.
+> **Note:** `UseMarkdownView()` no longer registers SkiaSharp (the control doesn't need it). It now registers the native handler that powers the [tap-to-zoom image popup](#tap-to-zoom-image-popup) — so **call it if you use `AllowImagePopup`**. If you don't use that feature, the call is optional and safe to keep or remove; math, SVG, and everything else render without any extra setup.
 
 ### 2. Add the XAML namespace and the control
 
@@ -364,6 +365,8 @@ The `MarkdownPalette` class contains the following color properties:
 | `ErrorColor` | Color for error / `[!CAUTION]` alerts |
 | `SuccessColor` | Color for success / `[!TIP]` alerts |
 | `ImportantColor` | Color for `[!IMPORTANT]` alerts |
+| `ImagePopupBackground` | Background color of the [tap-to-zoom image popup](#tap-to-zoom-image-popup) overlay (default black) |
+| `ImagePopupCloseButton` | Color of the image popup's close (✕) button (default white) |
 
 The palette also provides a helper method:
 - `GetHeadingColor(int level)` - Returns the appropriate color for heading levels 1-6
@@ -501,8 +504,9 @@ markdownView.H3Color = Colors.Purple;
   ```
 
 ### Line Break Mode
+- **`AllowLineBreaksOnHeadlines`**: When `true` (default), headings wrap onto multiple lines (`WordWrap`). When `false`, headings are truncated to a single line using `LineBreakModeHeader`.
 - **`LineBreakModeText`**: Line break mode for text (default: `WordWrap`).
-- **`LineBreakModeHeader`**: Line break mode for headings (default: `TailTruncation`).
+- **`LineBreakModeHeader`**: Line break mode for headings when `AllowLineBreaksOnHeadlines` is `false` (default: `TailTruncation`).
 
 ### Blockquote
 - **`BlockQuoteBackgroundColor`**: The background color for blockquote elements (default: `LightGray`).
@@ -541,6 +545,10 @@ markdownView.H3Color = Colors.Purple;
 - **`ImageAspect`**: The aspect ratio for images (default: `AspectFit`).
 - **`DefaultImageWidth`**: The default width for images when only aspect is specified without explicit dimensions (default: `200`).
 - **`DefaultImageHeight`**: The default height for images when only aspect is specified without explicit dimensions (default: `200`).
+- **`AllowImagePopup`**: When `true`, tapping a rendered image opens it full-screen in a native, zoomable overlay (default: `false`). See [Tap-to-zoom image popup](#tap-to-zoom-image-popup).
+- **`ImagePopupBackgroundColor`**: Background color of the image overlay (default: `Black`).
+- **`ImagePopupCloseButtonColor`**: Color of the overlay's close (✕) button (default: `White`).
+- **`ImagePopupMaxZoomScale`**: Maximum zoom factor, relative to the fitted size, inside the overlay (default: `5`).
 
 ### Links & Email
 - **`HyperlinkColor`**: The color for hyperlinks and email links (default: `BlueViolet`).
@@ -792,6 +800,29 @@ Control how images scale with the `ImageAspect` property (or a per-image `aspect
 > **Base64 gotchas.** If a `data:` image renders blank or shows as literal text, the cause is almost always the data itself, not the control:
 > - **The image link must be well-formed** — don't drop the closing `)` before any `{…}` attributes: `![alt](data:image/png;base64,XXXX){width=48}`. A missing `)` makes the whole thing render as plain text.
 > - **The base64 must decode to a complete, valid image.** A truncated or corrupt PNG can still have a readable header (so tools report its dimensions) yet fail to decode at render time, showing blank. Verify with e.g. `echo '<base64>' | base64 -d > test.png && sips -g pixelWidth test.png`.
+
+### Tap-to-zoom image popup
+
+Set **`AllowImagePopup="True"`** to make every rendered image tappable. Tapping one opens it **full-screen in a native overlay** — implemented with platform handlers (`UIScrollView` on iOS/Mac Catalyst, a matrix-driven `ImageView` on Android, `ScrollViewer` on Windows), so the gestures feel native:
+
+- **Pinch** to zoom in/out, **drag** to pan.
+- **Double-tap** to toggle between fitted and zoomed-in.
+- **✕** button (top-right) to close.
+
+It works for every supported image kind (local, remote, base64, SVG). The feature is **off by default**, so existing layouts are unchanged.
+
+```xml
+<idk:MarkdownView
+    MarkdownText="{Binding MarkdownText}"
+    AllowImagePopup="True"
+    ImagePopupBackgroundColor="Black"
+    ImagePopupCloseButtonColor="White"
+    ImagePopupMaxZoomScale="5" />
+```
+
+The overlay colors can be set per-instance (as above) **or via a theme** — the palette exposes `ImagePopupBackground` and `ImagePopupCloseButton` (with independent light/dark values through `Palette` / `PaletteDark`), so they follow your theme and auto light/dark switching like every other color.
+
+> **Requires `UseMarkdownView()`.** The popup uses a native handler that is registered by `builder.UseMarkdownView()` in `MauiProgram.cs` (see [Getting Started](#1-optional-register-in-mauiprogramcs)). If you enable `AllowImagePopup` without calling it, tapping an image does nothing.
 
 ## Events & Commands
 

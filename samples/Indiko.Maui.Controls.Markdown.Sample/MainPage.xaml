@@ -56,16 +56,14 @@
     </ContentPage.Resources>
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="10">
-
-            <Label Text="Markdown View with Theming" FontSize="32" TextColor="{StaticResource Primary}"></Label>
-            
+        <VerticalStackLayout Padding="20" Spacing="20">
             <!-- Bind Theme to CurrentTheme from ViewModel for dynamic theme switching -->
             <idk:MarkdownView 
                 MarkdownText="{Binding MarkdownText}" 
                 Theme="{Binding CurrentTheme}"
                 UseAppTheme="True"
                 EnableCodeBlockCopy="True"
+                AllowImagePopup="True"
                 LinkCommand="{Binding LinkReceivedCommand}"
                 EMailCommand="{Binding EMailReceivedCommand}"
                 OnHyperLinkClicked="MarkdownView_HyperLinkClicked"

@@ -96,4 +96,42 @@ public class ThemingTests
         AssertColor(Colors.Orange, clone.Palette.HighlightColor);
         AssertColor(Colors.Lime, clone.Palette.ImportantColor);
     }
+
+    [Fact]
+    public void Theme_palette_image_popup_colors_flow_to_the_properties()
+    {
+        var view = new MarkdownView
+        {
+            Theme = ThemeWith(p =>
+            {
+                p.ImagePopupBackground = Colors.Navy;
+                p.ImagePopupCloseButton = Colors.Gold;
+            }),
+        };
+
+        AssertColor(Colors.Navy, view.ImagePopupBackgroundColor);
+        AssertColor(Colors.Gold, view.ImagePopupCloseButtonColor);
+    }
+
+    [Fact]
+    public void Image_popup_palette_colors_default_to_black_and_white()
+    {
+        var view = new MarkdownView { Theme = MarkdownThemeDefaults.GitHub.Clone() };
+
+        AssertColor(Colors.Black, view.ImagePopupBackgroundColor);
+        AssertColor(Colors.White, view.ImagePopupCloseButtonColor);
+    }
+
+    [Fact]
+    public void Cloning_a_theme_copies_the_image_popup_colors()
+    {
+        var original = MarkdownThemeDefaults.GitHub.Clone();
+        original.Palette.ImagePopupBackground = Colors.Navy;
+        original.PaletteDark.ImagePopupCloseButton = Colors.Gold;
+
+        var clone = original.Clone();
+
+        AssertColor(Colors.Navy, clone.Palette.ImagePopupBackground);
+        AssertColor(Colors.Gold, clone.PaletteDark.ImagePopupCloseButton);
+    }
 }

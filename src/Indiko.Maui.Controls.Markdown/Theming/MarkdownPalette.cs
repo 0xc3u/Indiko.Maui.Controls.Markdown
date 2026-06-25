@@ -403,6 +403,30 @@ public class MarkdownPalette : INotifyPropertyChanged
 
     #endregion
 
+    #region Image Popup Colors
+
+    private Color _imagePopupBackground = Colors.Black;
+    /// <summary>
+    /// Background color of the full-screen image popup overlay (<c>AllowImagePopup</c>).
+    /// </summary>
+    public Color ImagePopupBackground
+    {
+        get => _imagePopupBackground;
+        set => SetProperty(ref _imagePopupBackground, value, nameof(ImagePopupBackground));
+    }
+
+    private Color _imagePopupCloseButton = Colors.White;
+    /// <summary>
+    /// Color of the close (✕) button in the full-screen image popup overlay.
+    /// </summary>
+    public Color ImagePopupCloseButton
+    {
+        get => _imagePopupCloseButton;
+        set => SetProperty(ref _imagePopupCloseButton, value, nameof(ImagePopupCloseButton));
+    }
+
+    #endregion
+
     /// <summary>
     /// Creates a deep copy of this palette.
     /// </summary>
@@ -441,7 +465,9 @@ public class MarkdownPalette : INotifyPropertyChanged
             WarningColor = WarningColor,
             ErrorColor = ErrorColor,
             SuccessColor = SuccessColor,
-            ImportantColor = ImportantColor
+            ImportantColor = ImportantColor,
+            ImagePopupBackground = ImagePopupBackground,
+            ImagePopupCloseButton = ImagePopupCloseButton
         };
     }
 }
@@ -544,6 +570,8 @@ public class MarkdownPaletteDark : MarkdownPalette
         clone.ErrorColor = ErrorColor;
         clone.SuccessColor = SuccessColor;
         clone.ImportantColor = ImportantColor;
+        clone.ImagePopupBackground = ImagePopupBackground;
+        clone.ImagePopupCloseButton = ImagePopupCloseButton;
         return clone;
     }
 }

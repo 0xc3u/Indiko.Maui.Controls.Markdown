@@ -27,6 +27,21 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 ## Build Status
 ![ci](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/actions/workflows/ci.yml/badge.svg)
 
+## Supported Platforms
+
+| Platform | Supported | Notes |
+| --- | --- | --- |
+| Android | ✅ | API 31+ |
+| iOS | ✅ | iOS 15+ |
+| Mac Catalyst | ✅ | macOS 15+ |
+| Windows | ✅ | WinUI 3 (Windows 10 1809+/Windows 11) |
+| Tizen | ⬜ | Not supported (TFM is not built) |
+
+The whole feature set — headings, tables, code blocks, alerts, images (local, remote, base64, SVG), LaTeX math, theming, and the tap-to-zoom image popup — works on Windows. The image popup uses a native WinUI `ScrollViewer`-based handler (pinch / ctrl+wheel zoom, pan, double-tap to toggle), registered by `UseMarkdownView()`.
+
+> **Sample app on Windows:** the sample targets `net10.0-windows10.0.19041.0`. In Visual Studio, select the **Windows Machine** target, or from the command line: `dotnet build samples/Indiko.Maui.Controls.Markdown.Sample.sln` (the Windows TFM is only built on Windows hosts).
+
+
 ## ⚠️ Breaking Changes
 
 ### SkiaSharp dependency removed

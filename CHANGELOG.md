@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.10.0...v1.11.0) (2026-08-15)
+
+
+### Features
+
+* add Windows platform support for sample app and fit-to-viewport image popup zoom ([47aa440](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/commit/47aa440c5e6100d877135116fed92488dd9495dd))
+
 # [1.10.0](https://github.com/0xc3u/Indiko.Maui.Controls.Markdown/compare/v1.9.0...v1.10.0) (2026-06-25)
 
 

@@ -8,7 +8,7 @@ A single-control .NET MAUI library (`Indiko.Maui.Controls.Markdown`) published t
 
 ## Build & release
 
-All projects target **.NET 10** (`net10.0` plus `-android`, `-ios`, `-maccatalyst`, and `-windows` on Windows). The MAUI workload is required: `dotnet workload install maui`. The sample app targets the same platform set and has a standard `Platforms/Windows` head (`WinUI.App : MauiWinUIApplication` in the `*.WinUI` namespace) so it can run on Windows — the `-windows` TFMs of both the library and the sample are only built on Windows hosts (see the `IsOSPlatform` conditions in the csproj files).
+All projects target **.NET 10** (`net10.0` plus `-android`, `-ios`, `-maccatalyst`, and `-windows` on Windows). The MAUI workload is required: `dotnet workload install maui`. The sample app targets the same platform set and has a standard `Platforms/Windows` head (`WinUI.App : MauiWinUIApplication` in the `*.WinUI` namespace) so it can run on Windows — the `-windows` TFMs of both the library and the sample are only built on Windows hosts (see the `IsOSPlatform` conditions in the csproj files). The sample's Windows build is **unpackaged + self-contained Windows App SDK** (`WindowsPackageType=None` + `WindowsAppSDKSelfContained=true` in its csproj), so its `.exe` runs straight from `bin/.../win-x64/` without MSIX deployment or a runtime install.
 
 ```bash
 # Build the library (this is exactly what CI runs)

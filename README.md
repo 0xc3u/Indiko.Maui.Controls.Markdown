@@ -39,7 +39,7 @@ The `MarkdownView` control is a flexible component designed for MAUI application
 
 The whole feature set — headings, tables, code blocks, alerts, images (local, remote, base64, SVG), LaTeX math, theming, and the tap-to-zoom image popup — works on Windows. The image popup uses a native WinUI `ScrollViewer`-based handler (pinch / ctrl+wheel zoom, pan, double-tap to toggle), registered by `UseMarkdownView()`.
 
-> **Sample app on Windows:** the sample targets `net10.0-windows10.0.19041.0`. In Visual Studio, select the **Windows Machine** target, or from the command line: `dotnet build samples/Indiko.Maui.Controls.Markdown.Sample.sln` (the Windows TFM is only built on Windows hosts).
+> **Sample app on Windows:** the sample targets `net10.0-windows10.0.19041.0`. The Windows build runs **unpackaged with a self-contained Windows App SDK**, so the `.exe` in `bin/Release/net10.0-windows10.0.19041.0/win-x64/` starts directly — no MSIX deployment or runtime install needed. In Visual Studio, select the **Windows Machine** target, or from the command line: `dotnet build samples/Indiko.Maui.Controls.Markdown.Sample.sln` (the Windows TFM is only built on Windows hosts). To build a packaged MSIX app instead, remove the `WindowsPackageType`/`WindowsAppSDKSelfContained` properties from the sample csproj.
 
 
 ## ⚠️ Breaking Changes

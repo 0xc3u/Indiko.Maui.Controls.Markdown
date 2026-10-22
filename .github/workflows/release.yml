@@ -1,0 +1,247 @@
+#
+# Build, version, tag, release and publish -- in one workflow.
+#
+# This replaces the pair it grew out of, where semantic-release tagged in one
+# workflow and release-nuget.yml was supposed to publish on that tag. A tag
+# pushed by a workflow does not start another one, so it never did: every
+# publish here waited for someone to dispatch it by hand. Chaining jobs with
+# `needs` removes the trigger from the question -- the version is computed
+# once and handed down.
+#
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - "**.md"
+
+  workflow_dispatch:
+    inputs:
+      republish:
+        description: "Publish an existing version to NuGet again, e.g. 1.2.3. Leave empty to release normally."
+        required: false
+        type: string
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_VERSION: 10.0.100
+
+# The run's own token. The personal access token this replaces expires every
+# ninety days, and the only thing it could do that this cannot -- start
+# another workflow by pushing a tag -- is the thing that never worked.
+permissions:
+  contents: write
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Build
+        run: dotnet build src/Indiko.Maui.Controls.Markdown.sln -c Release
+
+  release:
+    name: Version and release
+    runs-on: ubuntu-latest
+    needs: build
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      released: ${{ steps.version.outputs.release_needed }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The version comes from the tags and the commits since the last
+          # one, so a shallow clone would compute it from nothing.
+          fetch-depth: 0
+
+      - name: Work out the next version
+        id: version
+        env:
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: .github/scripts/next-version.sh
+
+      - name: Nothing to release
+        if: steps.version.outputs.release_needed != 'true'
+        run: |
+          echo "No feat, fix or breaking change since ${{ steps.version.outputs.previous }}." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update the changelog
+        if: steps.version.outputs.release_needed == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+          BUMP: ${{ steps.version.outputs.bump }}
+          NOTES_FILE: ${{ steps.version.outputs.notes_file }}
+        run: |
+          set -euo pipefail
+
+          # Matches the levels already in the file: h1 for a major or minor
+          # line, h2 for a patch.
+          heading='##'
+          [[ "$BUMP" == "major" || "$BUMP" == "minor" ]] && heading='#'
+
+          touch CHANGELOG.md
+
+          {
+            printf '%s [%s](https://github.com/%s/compare/%s...v%s) (%s)\n\n' \
+              "$heading" "$VERSION" "$GITHUB_REPOSITORY" "$PREVIOUS" "$VERSION" "$(date -u +%Y-%m-%d)"
+            cat "$NOTES_FILE"
+            printf '\n'
+            cat CHANGELOG.md
+          } > CHANGELOG.new
+
+          mv CHANGELOG.new CHANGELOG.md
+
+      - name: Tag and release
+        if: steps.version.outputs.release_needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+          NOTES_FILE: ${{ steps.version.outputs.notes_file }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add CHANGELOG.md
+          # [skip ci] is belt and braces: a push made with the run's own token
+          # does not start another workflow anyway.
+          git commit -m "chore(release): ${VERSION} [skip ci]"
+
+          # Tag the commit that carries the changelog, so the tag and the
+          # notes describe the same tree.
+          git tag "$TAG"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
+          git push origin "$TAG"
+
+          gh release create "$TAG" --title "$TAG" --notes-file "$NOTES_FILE"
+
+          {
+            echo "## Released $TAG"
+            echo
+            cat "$NOTES_FILE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish to NuGet
+    runs-on: windows-latest
+    needs: [ build, release ]
+
+    # After a release, or on a dispatch that names a version to publish
+    # again. `always()` is needed because the release job produces no release
+    # on a dispatch, and a skipped dependency would otherwise skip this too.
+    if: >-
+      ${{ always()
+          && needs.build.result == 'success'
+          && (needs.release.outputs.released == 'true' || inputs.republish != '') }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Decide the version to publish
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ inputs.republish }}"
+          [[ -z "$version" ]] && version="${{ needs.release.outputs.version }}"
+
+          if [[ -z "$version" ]]; then
+            echo "No version to publish." >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Pack
+        shell: bash
+        env:
+          VERSION: ${{ steps.target.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p artifacts
+          count=0
+
+          while read -r project; do
+            dotnet pack "$project" -c Release \
+              -p:PackageVersion="$VERSION" -o artifacts
+            count=$((count + 1))
+          done < <(.github/scripts/packable-projects.sh)
+
+          echo "Packed $count project(s) at $VERSION" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Push
+        shell: bash
+        env:
+          VERSION: ${{ steps.target.outputs.version }}
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          set -uo pipefail
+          shopt -s nullglob
+
+          packages=(artifacts/*.nupkg)
+
+          if (( ${#packages[@]} == 0 )); then
+            echo "No packages were produced -- nothing to push." >&2
+            exit 1
+          fi
+
+          pushed=0
+          failed=()
+
+          for package in "${packages[@]}"; do
+            name="$(basename "$package" ".${VERSION}.nupkg")"
+
+            # --skip-duplicate is what makes a re-run safe: a dispatch against
+            # an already published version skips it instead of failing.
+            if dotnet nuget push "$package" \
+                 --source https://api.nuget.org/v3/index.json \
+                 --api-key "$NUGET_API_KEY" \
+                 --skip-duplicate; then
+              pushed=$((pushed + 1))
+            else
+              failed+=("$name")
+            fi
+          done
+
+          {
+            echo "| | |"
+            echo "|---|---|"
+            echo "| pushed | $pushed |"
+            echo "| failed | ${#failed[@]} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if (( ${#failed[@]} > 0 )); then
+            printf -- '- %s\n' "${failed[@]}" >> "$GITHUB_STEP_SUMMARY"
+            printf 'failed to push: %s\n' "${failed[*]}" >&2
+            exit 1
+          fi
